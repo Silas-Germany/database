@@ -28,4 +28,6 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$sdk_version"
     // anko
     implementation "org.jetbrains.anko:anko:0.10.8"
+    implementation project(":complexOrm")
+    kapt project(":complexOrmProcessor")
 }
