@@ -1,6 +1,8 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-android-extensions"
+
+apply plugin: "kotlin-kapt" // kotlin annotation processor
 
 android {
     compileSdkVersion 27
@@ -16,11 +18,12 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
 }
+
 
 dependencies {
     // default
@@ -28,6 +31,7 @@ dependencies {
     implementation "com.android.support:appcompat-v7:$sdk_version"
     // anko
     implementation "org.jetbrains.anko:anko:0.10.8"
+    // ORM modules
     implementation project(":complexOrm")
     kapt project(":complexOrmProcessor")
 }
