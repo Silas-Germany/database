@@ -35,7 +35,7 @@ abstract class SqlTable(@SqlIgnore val map: MutableMap<String, Any?>) {
     open var id: Int? by map
 
     override fun toString(): String {
-        return map.toList().joinToString(prefix = "${this::class.simpleName}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is SqlTable -> value.map["id"] ?: "?"
                 is List<*> -> value.joinToString(

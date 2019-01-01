@@ -18,6 +18,7 @@ class Main: AbstractProcessor() {
     private lateinit var messager: Messager
     override fun init(p0: ProcessingEnvironment) {
         messager = p0.messager
+        messager.printMessage(Diagnostic.Kind.NOTE, "Create database table");
         super.init(p0)
     }
 
@@ -46,7 +47,6 @@ class Main: AbstractProcessor() {
     private lateinit var currentInterface: String
 
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        messager.printMessage(Diagnostic.Kind.WARNING, "HI");
         try {
             val stringType = String::class.asTypeName()
 
@@ -72,7 +72,7 @@ class Main: AbstractProcessor() {
             val constructorsType = Map::class.asClassName().parameterizedBy(stringType, constructorType)
             val interfaceConstructorsType = Map::class.asClassName().parameterizedBy(stringType, constructorsType)
 
-            val targetPackage = "org.sil.forchurches.rev79.model.database"
+            val targetPackage = "com.github.silasgermany.complexorm"
 
             roundEnv.getElementsAnnotatedWith(SqlTablesInterface::class.java).forEach { tablesInterface ->
                 currentInterface = "\"${tablesInterface.simpleName}\""
@@ -107,7 +107,7 @@ class Main: AbstractProcessor() {
                 .build()
 
             val kaptKotlinGeneratedDir = processingEnv.options["kapt.kotlin.generated"]
-            file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
+            file.writeTo(File(kaptKotlinGeneratedDir))
 
 
             interfacePackages[true] = mutableMapOf()
@@ -151,7 +151,7 @@ class Main: AbstractProcessor() {
                         .build())
                     .build()
 
-                file.writeTo(File(kaptKotlinGeneratedDir, "$fileName.kt"))
+                file.writeTo(File(kaptKotlinGeneratedDir))
             }
             return true
         } catch (e: IllegalAccessException) {
