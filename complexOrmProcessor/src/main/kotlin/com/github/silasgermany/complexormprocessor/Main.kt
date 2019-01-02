@@ -14,10 +14,11 @@ import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
-class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
+class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
 
     override lateinit var messager: Messager
     override lateinit var typeUtils: Types
@@ -54,7 +55,7 @@ class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
             roundEnv.rootElements.forEach { rootElement ->
                 rootElement.enclosedElements.forEach enclosedElement@{ enclosedElement ->
                     try {
-                        if (enclosedElement.asType().toString().startsWith("(")) return@enclosedElement
+                        if (enclosedElement.asType().kind == TypeKind.EXECUTABLE ) return@enclosedElement
                         typeUtils.directSupertypes(enclosedElement.asType()).forEach { superType ->
                             if (rootElement.getAnnotation(SqlAllTables::class.java) != null &&
                                 sqlTableName == superType.toString()) rootTables.add(enclosedElement)
@@ -75,26 +76,21 @@ class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
                     if ("$it".endsWith("\$annotations()")) rootAnnotations.add(rootTable, it)
                 }
             }
-            //messager.printMessage(Diagnostic.Kind.NOTE, "Result: ${rootTables.map{ it.enclosedElements }};$internTables;${rootAnnotations.map { it}}")
+            //messager.printMessage(Diagnostic.Kind.NOTE, "Result: $rootTables;$internTables;$rootAnnotations")
             val fileName = "GeneratedSqlTables"
             val file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
                         .addProperty(createNames(rootTables))
                         .addProperty(createCreateTables(rootTables))
-                        .addProperty(createDropTables(rootTables))
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))
             return true
         } catch (e: Exception) {
-            messager.printMessage(Diagnostic.Kind.ERROR, "${e.message};${e.stackTrace.joinToString()}")
-            e.stackTrace.forEach {
-             //   messager.printMessage(Diagnostic.Kind.ERROR, "$it")
-            }
+            messager.printMessage(Diagnostic.Kind.ERROR, e.message)
+            //messager.printMessage(Diagnostic.Kind.ERROR, "${e.message};${e.stackTrace.joinToString()}")
             return false
         }
     }
-
-    fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
 }

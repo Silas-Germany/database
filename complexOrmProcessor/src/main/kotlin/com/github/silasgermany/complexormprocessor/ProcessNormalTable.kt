@@ -9,7 +9,7 @@ import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.tools.Diagnostic
 
-abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlTypes {
+abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlUtils {
 
     private val tables = mutableMapOf(false to mutableMapOf<String, MutableList<String>>())
     private val constructorNames = mutableMapOf(false to mutableMapOf<String, MutableMap<String, String>>())

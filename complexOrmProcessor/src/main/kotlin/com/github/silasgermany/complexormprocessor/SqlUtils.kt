@@ -9,15 +9,17 @@ import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.util.Types
 
-interface SqlTypes {
+interface SqlUtils {
 
     val messager: Messager
     val typeUtils: Types
     val rootTables: MutableList<Element>
     val rootAnnotations: MutableMap<Element, MutableList<Element>>
 
+    fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
+
     enum class SqlTypes {
-        String, Int, SqlTable
+        String, Int, Boolean, Long, Date, SqlTable
     }
 
     val Element.type: SqlTypes
@@ -25,7 +27,9 @@ interface SqlTypes {
             return when (asType().toString()) {
                 "()java.lang.String" -> SqlTypes.String
                 "()java.lang.Integer" -> SqlTypes.Int
-                "" -> SqlTypes.Int
+                "()boolean" -> SqlTypes.Boolean
+                "()java.util.Date" -> SqlTypes.Date
+                "()long" -> SqlTypes.Long
                 else -> {
                     try {
                         val typeName = asType().toString().removePrefix("()")

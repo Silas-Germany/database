@@ -9,7 +9,7 @@ interface AllTables {
     open class User(initMap: MutableMap<String, Any?> = default): SqlTable(initMap) {
         @SqlDefault("admin")
         open val name: String by initMap
-        open val address: City by initMap
+        open val address: Long by initMap
     }
 
     open class City(initMap: MutableMap<String, Any?> = default): SqlTable(initMap) {
