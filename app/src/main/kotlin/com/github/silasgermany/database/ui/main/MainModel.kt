@@ -4,6 +4,9 @@ import com.github.silasgermany.database.sql.AllTables
 
 interface MainModel {
     class User(initMap: MutableMap<String, Any?> = default): AllTables.User(initMap) {
-        val name: String by initMap
+        override var name: String by initMap
+    }
+    class City(initMap: MutableMap<String, Any?> = default): AllTables.City(initMap) {
+        override var name: String by initMap
     }
 }

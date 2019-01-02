@@ -5,8 +5,29 @@ import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import javax.lang.model.element.Element
 
 interface SqlTypes {
+
+    enum class SqlTypes {
+        String, Int
+    }
+
+    val Element.type get() = when (asType().toString()) {
+        "()java.lang.String" -> SqlTypes.String
+        "()java.lang.Integer" -> SqlTypes.Int
+        else -> throw IllegalArgumentException("Couldn't find type ${asType()}")
+    }
+
+    val Element.sql: String
+        get() = simpleName.underScore
+
+    val CharSequence.underScore: String
+        get() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
+
+    val CharSequence.reverseUnderScore: String
+        get() = replace("_[a-zA-Z]".toRegex()) { match -> match.value[1].toUpperCase().toString() }
+
 
     val stringType get() = String::class.asTypeName()
 
@@ -14,6 +35,8 @@ interface SqlTypes {
     val nullablePairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
     val mapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
     val nullableMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
+
+    val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
 
     val mapPairType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
     val mapNullablePairType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairType)
