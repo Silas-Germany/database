@@ -1,16 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexorm.*
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
-import java.io.File
-import javax.annotation.processing.ProcessingEnvironment
-import javax.lang.model.element.Element
-import javax.tools.Diagnostic
-
-abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlUtils {
-
+/*
+abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlUtils
     private val tables = mutableMapOf(false to mutableMapOf<String, MutableList<String>>())
     private val constructorNames = mutableMapOf(false to mutableMapOf<String, MutableMap<String, String>>())
     private val normalColumns =
@@ -232,3 +223,4 @@ abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv:
             "(\"${value.second.first}\" to ${value.second.second?.let { "\"$it\"" } ?: "null"})"
 
 }
+*/

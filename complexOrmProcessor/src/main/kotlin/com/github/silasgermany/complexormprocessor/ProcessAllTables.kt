@@ -2,10 +2,12 @@ package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexorm.SqlDefault
 import com.github.silasgermany.complexorm.SqlExtra
+import com.github.silasgermany.complexorm.SqlIgnore
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.PropertySpec
 import org.jetbrains.annotations.NotNull
 import javax.lang.model.element.Element
+import javax.lang.model.type.TypeMirror
 
 interface ProcessAllTables: SqlUtils {
 
@@ -23,48 +25,30 @@ interface ProcessAllTables: SqlUtils {
                         if (!column.simpleName.startsWith("get")) null
                         else {
                             val columnName = column.sql.removePrefix("get_")
-                            var columnExtra = ""
-                            if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
-                            val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
-                            val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
-                            annotations?.getAnnotation(SqlExtra::class.java)?.extra?.let { columnExtra += " $it" }
                             val columnType = column.type
-                            if (defaultValue != null) {
-                                columnExtra += " DEFAULT " + when(columnType) {
-                                    SqlUtils.SqlTypes.String -> "'$defaultValue'"
-                                    SqlUtils.SqlTypes.Boolean -> when (defaultValue) {
-                                        "false" -> "0"
-                                        "true" -> "1"
-                                        else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values")
-                                    }
-                                    SqlUtils.SqlTypes.Date,
-                                    SqlUtils.SqlTypes.SqlTable -> {
-                                        throw IllegalArgumentException("Default value not allowed for ${columnType.name}")
-                                    }
-                                    SqlUtils.SqlTypes.Long,
-                                    SqlUtils.SqlTypes.Int -> {
-                                        try {
-                                            defaultValue.toLong().toString()
-                                        } catch (e: Exception) {
-                                            throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values")
-                                        }
-                                    }
-                                }
-                            }
-                            val sqlType = when (column.type) {
+                            var columnExtra = ""
+                            // check whether nullable
+                            if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
+                            // check annotations
+                            val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                            if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
+                            val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
+                            columnExtra += defaultValue(columnType, defaultValue)
+                            annotations?.getAnnotation(SqlExtra::class.java)?.extra?.let { columnExtra += " $it" }
+                            // get type
+                            val sqlType = when (columnType) {
                                 SqlUtils.SqlTypes.String -> {
                                     "TEXT"
                                 }
                                 SqlUtils.SqlTypes.Boolean,
                                 SqlUtils.SqlTypes.Date,
+                                SqlUtils.SqlTypes.LocalDate,
                                 SqlUtils.SqlTypes.Long,
                                 SqlUtils.SqlTypes.Int -> {
                                     "INTEGER"
                                 }
                                 SqlUtils.SqlTypes.SqlTable -> {
-                                    val foreignTable = column.asType().toString()
-                                        .run { substring(lastIndexOf('.') + 1) }.underScore
-                                    foreignKeys.add("FOREIGN KEY ('${columnName}_id') REFERENCES '$foreignTable'(id)")
+                                    foreignKeys.add(foreignTableReference(columnName, column.asType()))
                                     return@mapNotNull "${columnName}_id$columnExtra"
                                 }
                             }
@@ -76,6 +60,37 @@ interface ProcessAllTables: SqlUtils {
         return PropertySpec.builder("createTableCommands", listType)
             .initializer(CodeBlock.of("listOf(\n$createTableCommands\n)"))
             .build()
+    }
+
+    private fun defaultValue(type: SqlUtils.SqlTypes, defaultValue: String?): String {
+        defaultValue ?: return ""
+        return " DEFAULT " + when(type) {
+            SqlUtils.SqlTypes.String -> "'$defaultValue'"
+            SqlUtils.SqlTypes.Boolean -> when (defaultValue) {
+                "false" -> "0"
+                "true" -> "1"
+                else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values")
+            }
+            SqlUtils.SqlTypes.Date,
+            SqlUtils.SqlTypes.LocalDate,
+            SqlUtils.SqlTypes.SqlTable -> {
+                throw IllegalArgumentException("Default value not allowed for ${type.name}")
+            }
+            SqlUtils.SqlTypes.Long,
+            SqlUtils.SqlTypes.Int -> {
+                try {
+                    defaultValue.toLong().toString()
+                } catch (e: Exception) {
+                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values")
+                }
+            }
+        }
+    }
+
+    private fun foreignTableReference(columnName: String, columnType: TypeMirror): String {
+        val foreignTable = columnType.toString()
+            .run { substring(lastIndexOf('.') + 1) }.underScore
+        return "FOREIGN KEY ('${columnName}_id') REFERENCES '$foreignTable'(id)"
     }
 }
 

@@ -1,8 +1,6 @@
 package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexorm.SqlAllTables
-import com.github.silasgermany.complexorm.SqlIgnore
-import com.github.silasgermany.complexorm.SqlIgnoreFunction
 import com.github.silasgermany.complexorm.SqlTable
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -33,9 +31,7 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(
-            SqlAllTables::class.java.canonicalName,
-            SqlIgnore::class.java.canonicalName,
-            SqlIgnoreFunction::class.java.canonicalName
+            SqlAllTables::class.java.canonicalName
         )
     }
 

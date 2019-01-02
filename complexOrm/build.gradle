@@ -4,6 +4,8 @@ apply plugin: "kotlin"
 dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    // local-time
+    implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
 }
 
 sourceCompatibility = "7"

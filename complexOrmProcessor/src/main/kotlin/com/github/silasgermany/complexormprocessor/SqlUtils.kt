@@ -19,7 +19,7 @@ interface SqlUtils {
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
 
     enum class SqlTypes {
-        String, Int, Boolean, Long, Date, SqlTable
+        String, Int, Boolean, Long, Date, LocalDate, SqlTable
     }
 
     val Element.type: SqlTypes
@@ -29,6 +29,7 @@ interface SqlUtils {
                 "()java.lang.Integer" -> SqlTypes.Int
                 "()boolean" -> SqlTypes.Boolean
                 "()java.util.Date" -> SqlTypes.Date
+                "()org.threeten.bp.LocalDate" -> SqlTypes.LocalDate
                 "()long" -> SqlTypes.Long
                 else -> {
                     try {

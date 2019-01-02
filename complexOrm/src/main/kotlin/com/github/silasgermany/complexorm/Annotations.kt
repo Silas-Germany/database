@@ -2,10 +2,6 @@ package com.github.silasgermany.complexorm
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlTablesInterface
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
 annotation class SqlAllTables
 
 
@@ -30,11 +26,3 @@ annotation class SqlExtra(val extra: String)
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 annotation class SqlIgnore
-
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnoreFunction
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnoreClass
