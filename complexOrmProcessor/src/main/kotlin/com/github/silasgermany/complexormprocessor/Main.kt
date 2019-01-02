@@ -88,6 +88,8 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
                 .addType(
                     TypeSpec.objectBuilder(fileName)
                         .addProperty(createConstructors())
+                        .addProperty(createNormalColumnsInfo())
+                        .addProperty(createJoinColumnsInfo())
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))

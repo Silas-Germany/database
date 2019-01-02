@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.github.silasgermany.complexorm.SqlIgnore
 import com.squareup.kotlinpoet.PropertySpec
 import javax.lang.model.element.Element
 
@@ -8,13 +9,58 @@ interface ProcessNormalTables: SqlUtils {
     val internTables: MutableMap<Element, MutableList<Element>>
 
     fun createConstructors(): PropertySpec {
-        val constructors = internTables.toList().joinToString { (file, tables) ->
-            "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(postfix = ")"){ table ->
+        val constructors = internTables.toList().joinToString(",") { (file, tables) ->
+            "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
                 "\n\t\"${table.sql}\" to { it: Map<String, Any?> -> $table(it as MutableMap<String, Any?>)}"
             }
         }
         return PropertySpec.builder("constructors", interfaceConstructorsType)
             .initializer("mapOf($constructors)")
+            .build()
+    }
+
+    fun createNormalColumnsInfo(): PropertySpec {
+        val normalColumnInfo = internTables.toList().joinToString(",") { (file, tables) ->
+            "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
+                "\n\t\"${table.sql}\" to mapOf(" + table.enclosedElements.mapNotNull { column ->
+                    val columnName = column.sql.removePrefix("get_")
+                    val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                    if (!column.simpleName.startsWith("get")) null
+                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
+                    else if (column.type == SqlUtils.SqlTypes.SqlTables) null
+                    else "\n\t\t\"$columnName\" to \"${column.asType().toString().removePrefix("()")}\""
+                }.joinToString(",", postfix = ")")
+            }
+        }
+        return PropertySpec.builder("normalColumns", interfaceColumnsType)
+            .initializer("mapOf($normalColumnInfo)")
+            .build()
+    }
+
+    fun createJoinColumnsInfo(): PropertySpec {
+        val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
+            val fileInfo = tables.mapNotNull { table ->
+                val tableInfo = table.enclosedElements.mapNotNull { column ->
+                    val columnName = column.sql.removePrefix("get_")
+                    val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                    if (!column.simpleName.startsWith("get")) null
+                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
+                    else if (column.type != SqlUtils.SqlTypes.SqlTables) null
+                    else {
+                        val foreignTableName = column.asType().toString()
+                            .run { substring(lastIndexOf('.') + 1) }
+                            .removeSuffix(">").underScore
+                        "\n\t\t\"$columnName\" to \"$foreignTableName\""
+                    }
+                }
+                if (tableInfo.isEmpty()) null
+                else "\n\t\"${table.sql}\" to mapOf(" + tableInfo.joinToString(",", postfix = ")")
+            }
+            if (fileInfo.isEmpty()) null
+            else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
+        }.joinToString(",")
+        return PropertySpec.builder("joinColumns", interfaceColumnsType)
+            .initializer("mapOf($joinColumnInfo)")
             .build()
     }
 }

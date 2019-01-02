@@ -22,7 +22,7 @@ interface ProcessAllTables: SqlUtils {
                 val columnName = column.sql.removePrefix("get_")
                 val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
                 if (!column.simpleName.startsWith("get")) null
-                else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
+                else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
                 else if (column.type != SqlUtils.SqlTypes.SqlTables) null
                 else "${table.sql}_$columnName"
             }
