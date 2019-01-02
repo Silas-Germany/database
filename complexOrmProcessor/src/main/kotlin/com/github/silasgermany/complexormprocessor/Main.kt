@@ -16,7 +16,7 @@ import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
-class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
+class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables {
 
     override lateinit var messager: Messager
     override lateinit var typeUtils: Types
@@ -41,7 +41,7 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
 
     override val rootTables = mutableListOf<Element>()
     override val rootAnnotations = mutableMapOf<Element, MutableList<Element>>()
-    private val internTables = mutableMapOf<Element, MutableList<Element>>()
+    override val internTables = mutableMapOf<Element, MutableList<Element>>()
 
     private val targetPackage = "com.github.silasgermany.complexorm"
 
@@ -73,13 +73,21 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
                 }
             }
             //messager.printMessage(Diagnostic.Kind.NOTE, "Result: $rootTables;$internTables;$rootAnnotations")
-            val fileName = "GeneratedSqlTables"
-            val file = FileSpec.builder(targetPackage, fileName)
+            var fileName = "GeneratedSqlSchema"
+            var file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
                         .addProperty(createNames())
                         .addProperty(createDropTables())
                         .addProperty(createCreateTables())
+                        .build()
+                ).build()
+            file.writeTo(File(kaptKotlinGeneratedDir))
+            fileName = "GeneratedSqlTables"
+            file = FileSpec.builder(targetPackage, fileName)
+                .addType(
+                    TypeSpec.objectBuilder(fileName)
+                        .addProperty(createConstructors())
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))

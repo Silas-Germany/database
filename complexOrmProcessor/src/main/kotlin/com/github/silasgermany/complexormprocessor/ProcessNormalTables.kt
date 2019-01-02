@@ -1,7 +1,25 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.squareup.kotlinpoet.PropertySpec
+import javax.lang.model.element.Element
+
+interface ProcessNormalTables: SqlUtils {
+
+    val internTables: MutableMap<Element, MutableList<Element>>
+
+    fun createConstructors(): PropertySpec {
+        val constructors = internTables.toList().joinToString { (file, tables) ->
+            "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(postfix = ")"){ table ->
+                "\n\t\"${table.sql}\" to { it: Map<String, Any?> -> $table(it as MutableMap<String, Any?>)}"
+            }
+        }
+        return PropertySpec.builder("constructors", interfaceConstructorsType)
+            .initializer("mapOf($constructors)")
+            .build()
+    }
+}
 /*
-abstract class ProcessNormalTable(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlUtils
+abstract class ProcessNormalTables(tablesInterfaces: Set<Element>, processingEnv: ProcessingEnvironment): SqlUtils
     private val tables = mutableMapOf(false to mutableMapOf<String, MutableList<String>>())
     private val constructorNames = mutableMapOf(false to mutableMapOf<String, MutableMap<String, String>>())
     private val normalColumns =

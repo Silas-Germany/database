@@ -29,7 +29,7 @@ interface ProcessAllTables: SqlUtils {
         } + rootTables.map { it.sql }
         return PropertySpec.builder("dropTableCommands", listType)
             .initializer("listOf(\n${tableNames.joinToString(",\n") {
-                "\"DROP TABLE IF EXISTS '$it'\"" }};\n)"
+                "\"DROP TABLE IF EXISTS '$it';\"" }}\n)"
             )
             .build()
     }
