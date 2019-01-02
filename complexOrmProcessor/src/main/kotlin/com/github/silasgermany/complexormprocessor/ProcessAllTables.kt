@@ -20,7 +20,7 @@ interface ProcessAllTables: SqlUtils {
         val tableNames = rootTables.flatMap { table ->
             table.enclosedElements.mapNotNull { column ->
                 val columnName = column.sql.removePrefix("get_")
-                val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                 if (!column.simpleName.startsWith("get")) null
                 else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
                 else if (column.type != SqlUtils.SqlTypes.SqlTables) null
@@ -48,7 +48,7 @@ interface ProcessAllTables: SqlUtils {
                             // check whether nullable
                             if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
                             // check annotations
-                            val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                            val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                             if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
                             val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
                             columnExtra += defaultValue(columnType, defaultValue)

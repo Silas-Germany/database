@@ -40,7 +40,8 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
     }
 
     override val rootTables = mutableListOf<Element>()
-    override val rootAnnotations = mutableMapOf<Element, MutableList<Element>>()
+    override val rootAnnotations = mutableMapOf<String?, MutableList<Element>>()
+    override val internAnnotations = mutableMapOf<Element, MutableList<Element>>()
     override val internTables = mutableMapOf<Element, MutableList<Element>>()
 
     private val targetPackage = "com.github.silasgermany.complexorm"
@@ -69,7 +70,14 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
             }
             rootTables.forEach { rootTable ->
                 rootTable.enclosedElements.forEach {
-                    if ("$it".endsWith("\$annotations()")) rootAnnotations.add(rootTable, it)
+                    if ("$it".endsWith("\$annotations()")) rootAnnotations.add(rootTable.sql, it)
+                }
+            }
+            internTables.forEach {
+                it.value.forEach { table ->
+                    table.enclosedElements.forEach { column ->
+                        if ("$column".endsWith("\$annotations()")) internAnnotations.add(table, column)
+                    }
                 }
             }
             //messager.printMessage(Diagnostic.Kind.NOTE, "Result: $rootTables;$internTables;$rootAnnotations")
@@ -90,6 +98,8 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
                         .addProperty(createConstructors())
                         .addProperty(createNormalColumnsInfo())
                         .addProperty(createJoinColumnsInfo())
+                        .addProperty(createConnectedColumnsInfo())
+                        .addProperty(createReverseConnectedColumnsInfo())
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))

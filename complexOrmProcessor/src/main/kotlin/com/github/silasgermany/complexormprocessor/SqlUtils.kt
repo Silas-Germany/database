@@ -14,7 +14,9 @@ interface SqlUtils {
     val messager: Messager
     val typeUtils: Types
     val rootTables: MutableList<Element>
-    val rootAnnotations: MutableMap<Element, MutableList<Element>>
+    val rootAnnotations: MutableMap<String?, MutableList<Element>>
+    val internAnnotations: MutableMap<Element, MutableList<Element>>
+    val internTables: MutableMap<Element, MutableList<Element>>
 
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
 
@@ -36,6 +38,9 @@ interface SqlUtils {
                     try {
                         if (typeName.startsWith("java.util.List")) return SqlTypes.SqlTables
                         if (rootTables.any { it.toString() == typeName }) return SqlTypes.SqlTable
+                        if (internTables.any { file -> file.value.any { it.toString() == typeName } }) {
+                            return SqlTypes.SqlTable
+                        }
                     } catch (e: Exception) {
                         throw IllegalArgumentException("Problem (${e.message}) with $typeName;")
                     }

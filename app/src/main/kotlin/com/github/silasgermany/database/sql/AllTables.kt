@@ -11,7 +11,7 @@ interface AllTables {
         open val name: String by initMap
         open val firstName: String by initMap
         open val lastName: String by initMap
-        open val addresses: List<City> by initMap
+        open val cities: List<City> by initMap
     }
 
     open class City(initMap: MutableMap<String, Any?> = default): SqlTable(initMap) {
