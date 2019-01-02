@@ -77,15 +77,16 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables {
             val file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
-                        .addProperty(createNames(rootTables))
-                        .addProperty(createCreateTables(rootTables))
+                        .addProperty(createNames())
+                        .addProperty(createDropTables())
+                        .addProperty(createCreateTables())
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))
             return true
         } catch (e: Exception) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.message)
-            //messager.printMessage(Diagnostic.Kind.ERROR, "${e.message};${e.stackTrace.joinToString()}")
+            //messager.printMessage(Diagnostic.Kind.ERROR, e.message)
+            messager.printMessage(Diagnostic.Kind.ERROR, "${e.message};${e.stackTrace.joinToString()}")
             return false
         }
     }

@@ -19,26 +19,27 @@ interface SqlUtils {
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
 
     enum class SqlTypes {
-        String, Int, Boolean, Long, Date, LocalDate, SqlTable
+        String, Int, Boolean, Long, Date, LocalDate, SqlTable, SqlTables
     }
 
     val Element.type: SqlTypes
         get() {
-            return when (asType().toString()) {
-                "()java.lang.String" -> SqlTypes.String
-                "()java.lang.Integer" -> SqlTypes.Int
-                "()boolean" -> SqlTypes.Boolean
-                "()java.util.Date" -> SqlTypes.Date
-                "()org.threeten.bp.LocalDate" -> SqlTypes.LocalDate
-                "()long" -> SqlTypes.Long
+            val typeName = asType().toString().removePrefix("()")
+            return when (typeName) {
+                "java.lang.String" -> SqlTypes.String
+                "java.lang.Integer" -> SqlTypes.Int
+                "boolean" -> SqlTypes.Boolean
+                "java.util.Date" -> SqlTypes.Date
+                "org.threeten.bp.LocalDate" -> SqlTypes.LocalDate
+                "long" -> SqlTypes.Long
                 else -> {
                     try {
-                        val typeName = asType().toString().removePrefix("()")
+                        if (typeName.startsWith("java.util.List")) return SqlTypes.SqlTables
                         if (rootTables.any { it.toString() == typeName }) return SqlTypes.SqlTable
-                        throw IllegalArgumentException("Couldn't find type ${asType()}")
                     } catch (e: Exception) {
-                        throw IllegalArgumentException("Problem (${e.message}) with ${asType()};$rootTables;${rootTables.any { it.toString() == asType().toString().removePrefix("()")}}")
+                        throw IllegalArgumentException("Problem (${e.message}) with $typeName;")
                     }
+                    throw IllegalArgumentException("Couldn't find type ${asType()}")
                 }
             }
         }
