@@ -1,35 +1,5 @@
 package com.github.silasgermany.complexorm
 
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlTablesInterface
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlAllTables
-
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlReverseJoinColumn(val connectedColumn: String)
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlReverseConnectedColumn(val connectedColumn: String = "")
-
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnore
-
-@Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnoreFunction
-
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnoreClass
-
 abstract class SqlTable(@SqlIgnore val map: MutableMap<String, Any?>) {
 
     open var id: Int? by map

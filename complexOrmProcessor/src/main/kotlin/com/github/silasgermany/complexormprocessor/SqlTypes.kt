@@ -5,19 +5,38 @@ import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
+import javax.lang.model.util.Types
 
 interface SqlTypes {
 
+    val messager: Messager
+    val typeUtils: Types
+    val rootTables: MutableList<Element>
+    val rootAnnotations: MutableMap<Element, MutableList<Element>>
+
     enum class SqlTypes {
-        String, Int
+        String, Int, SqlTable
     }
 
-    val Element.type get() = when (asType().toString()) {
-        "()java.lang.String" -> SqlTypes.String
-        "()java.lang.Integer" -> SqlTypes.Int
-        else -> throw IllegalArgumentException("Couldn't find type ${asType()}")
-    }
+    val Element.type: SqlTypes
+        get() {
+            return when (asType().toString()) {
+                "()java.lang.String" -> SqlTypes.String
+                "()java.lang.Integer" -> SqlTypes.Int
+                "" -> SqlTypes.Int
+                else -> {
+                    try {
+                        val typeName = asType().toString().removePrefix("()")
+                        if (rootTables.any { it.toString() == typeName }) return SqlTypes.SqlTable
+                        throw IllegalArgumentException("Couldn't find type ${asType()}")
+                    } catch (e: Exception) {
+                        throw IllegalArgumentException("Problem (${e.message}) with ${asType()};$rootTables;${rootTables.any { it.toString() == asType().toString().removePrefix("()")}}")
+                    }
+                }
+            }
+        }
 
     val Element.sql: String
         get() = simpleName.underScore
@@ -47,12 +66,15 @@ interface SqlTypes {
     val interfaceColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, columnsType)
     val interfaceNullableColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, nullableColumnsType)
     val interfaceComplexColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, complexColumnsType)
-    val interfaceNullableComplexColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, nullableComplexColumnsType)
+    val interfaceNullableComplexColumnsType
+        get() = Map::class.asClassName().parameterizedBy(
+            stringType,
+            nullableComplexColumnsType
+        )
 
     val nullableAnyType get() = Any::class.asTypeName().copy(true)
     val databaseMapType get() = MutableMap::class.asClassName().parameterizedBy(stringType, nullableAnyType)
-    val constructorType get() = LambdaTypeName. get(null, databaseMapType, returnType = SqlTable::class.asTypeName())
+    val constructorType get() = LambdaTypeName.get(null, databaseMapType, returnType = SqlTable::class.asTypeName())
     val constructorsType get() = Map::class.asClassName().parameterizedBy(stringType, constructorType)
     val interfaceConstructorsType get() = Map::class.asClassName().parameterizedBy(stringType, constructorsType)
-
 }

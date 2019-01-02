@@ -1,35 +1,69 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.github.silasgermany.complexorm.SqlDefault
+import com.github.silasgermany.complexorm.SqlExtra
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.PropertySpec
 import org.jetbrains.annotations.NotNull
-import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 
 interface ProcessAllTables: SqlTypes {
 
-    val messager: Messager
-
-    fun createNameList(rootTables: List<Element>): PropertySpec {
+    fun createNames(rootTables: List<Element>): PropertySpec {
         return PropertySpec.builder("tableNames", listType)
             .initializer("listOf(\n${rootTables.joinToString(",\n") { "\"${it.sql}\"" }}\n)")
             .build()
     }
 
-    fun createCreateTableList(rootTables: List<Element>): PropertySpec {
+    fun createDropTables(rootTables: List<Element>): PropertySpec {
+        return PropertySpec.builder("dropTableCommands", listType)
+            .initializer("listOf(\n${rootTables.joinToString(",\n") {
+                "\"DROP TABLE IF EXISTS '${it.sql}'\"" }}\n)"
+            )
+            .build()
+    }
+
+    fun createCreateTables(rootTables: List<Element>): PropertySpec {
         val createTableCommands = rootTables.joinToString(",\n") { table ->
-            val columns = table.enclosedElements.mapNotNull { column ->
-                if (!column.simpleName.startsWith("get")) null
-                else {
-                    var columnInfo = when (column.type) {
-                        SqlTypes.SqlTypes.String -> "TEXT"
-                        SqlTypes.SqlTypes.Int -> "INTEGER"
-                    }
-                    if(column.getAnnotation(NotNull::class.java) != null) columnInfo += " NOT NULL"
-                    "'${column.sql.removePrefix("get_")}' $columnInfo"
-                }
-            }.joinToString()
-            "\"\"\"CREATE TABLE IF NOT EXISTS '${table.sql}'('id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, $columns)\"\"\""
+            val foreignKeys = mutableListOf<String>()
+            val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
+                    table.enclosedElements.mapNotNull { column ->
+                        if (!column.simpleName.startsWith("get")) null
+                        else {
+                            val columnName = column.sql.removePrefix("get_")
+                            var columnExtra = ""
+                            if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
+                            val annotations = rootAnnotations[table]?.find { "$it".startsWith(columnName) }
+                            val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
+                            annotations?.getAnnotation(SqlExtra::class.java)?.extra?.let { columnExtra += " $it" }
+                            val columnType = column.type
+                            if (defaultValue != null) {
+                                columnExtra += " DEFAULT " + when(columnType) {
+                                    SqlTypes.SqlTypes.String -> "'$defaultValue'"
+                                    SqlTypes.SqlTypes.SqlTable -> {
+                                        throw IllegalArgumentException("Default value not allowed for connected tables")
+                                    }
+                                    else -> defaultValue
+                                }
+                            }
+                            val sqlType = when (column.type) {
+                                SqlTypes.SqlTypes.String -> {
+                                    "TEXT"
+                                }
+                                SqlTypes.SqlTypes.Int -> {
+                                    "INTEGER"
+                                }
+                                SqlTypes.SqlTypes.SqlTable -> {
+                                    val foreignTable = column.asType().toString()
+                                        .run { substring(lastIndexOf('.') + 1) }.underScore
+                                    foreignKeys.add("FOREIGN KEY ('${columnName}_id') REFERENCES '$foreignTable'(id)")
+                                    return@mapNotNull "${columnName}_id$columnExtra"
+                                }
+                            }
+                            "'$columnName' $sqlType$columnExtra"
+                        }
+                    } + foreignKeys
+            "\"\"\"CREATE TABLE IF NOT EXISTS '${table.sql}'(${columns.joinToString()})\"\"\""
         }
         return PropertySpec.builder("createTableCommands", listType)
             .initializer(CodeBlock.of("listOf(\n$createTableCommands\n)"))
@@ -38,8 +72,7 @@ interface ProcessAllTables: SqlTypes {
 }
 
     /*
-    
-    
+ FOREIGN KEY (creator_id) REFERENCES user(id),
 CREATE TABLE IF NOT EXISTS aggregate_ministry_output(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 'actual' INTEGER NOT NULL, 'comment' TEXT, 'creator_id' INTEGER NOT NULL, 'deliverable_id' INTEGER NOT NULL, 'month' TEXT NOT NULL, 'state_language_id' INTEGER NOT NULL, 'value' INTEGER NOT NULL, 'is_online' INTEGER NOT NULL DEFAULT -1, FOREIGN KEY (creator_id) REFERENCES user(id), FOREIGN KEY (deliverable_id) REFERENCES deliverable(id), FOREIGN KEY (state_language_id) REFERENCES state_Language(id));
 CREATE TABLE IF NOT EXISTS app(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 'jwt' TEXT, 'last_login' INTEGER, 'last_sync' INTEGER, 'ministry_benchmark_criteria' TEXT, 'is_online' INTEGER NOT NULL DEFAULT -1);
 CREATE TABLE IF NOT EXISTS church_ministry(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 'church_team_id' INTEGER NOT NULL, 'facilitator_id' INTEGER, 'ministry_id' INTEGER NOT NULL, 'status' INTEGER NOT NULL DEFAULT 0, 'is_online' INTEGER NOT NULL DEFAULT -1, FOREIGN KEY (church_team_id) REFERENCES church_Team(id), FOREIGN KEY (facilitator_id) REFERENCES user(id), FOREIGN KEY (ministry_id) REFERENCES ministry(id));

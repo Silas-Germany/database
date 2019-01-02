@@ -20,7 +20,7 @@ import javax.tools.Diagnostic
 class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
 
     override lateinit var messager: Messager
-    private lateinit var typeUtils: Types
+    override lateinit var typeUtils: Types
     private lateinit var kaptKotlinGeneratedDir: String
 
     override fun init(p0: ProcessingEnvironment) {
@@ -42,7 +42,8 @@ class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
         return SourceVersion.latestSupported()
     }
 
-    private val rootTables = mutableListOf<Element>()
+    override val rootTables = mutableListOf<Element>()
+    override val rootAnnotations = mutableMapOf<Element, MutableList<Element>>()
     private val internTables = mutableMapOf<Element, MutableList<Element>>()
 
     private val targetPackage = "com.github.silasgermany.complexorm"
@@ -55,7 +56,8 @@ class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
                     try {
                         if (enclosedElement.asType().toString().startsWith("(")) return@enclosedElement
                         typeUtils.directSupertypes(enclosedElement.asType()).forEach { superType ->
-                            if (sqlTableName == superType.toString()) rootTables.add(enclosedElement)
+                            if (rootElement.getAnnotation(SqlAllTables::class.java) != null &&
+                                sqlTableName == superType.toString()) rootTables.add(enclosedElement)
                             typeUtils.directSupertypes(superType).forEach {
                                 if (sqlTableName == it.toString()) internTables.add(rootElement, enclosedElement)
                             }
@@ -68,19 +70,25 @@ class Main: AbstractProcessor(), SqlTypes, ProcessAllTables {
                     }
                 }
             }
-        //    messager.printMessage(Diagnostic.Kind.NOTE, "Result: ${rootTables.map{ it.enclosedElements }};$internTables")
+            rootTables.forEach { rootTable ->
+                rootTable.enclosedElements.forEach {
+                    if ("$it".endsWith("\$annotations()")) rootAnnotations.add(rootTable, it)
+                }
+            }
+            //messager.printMessage(Diagnostic.Kind.NOTE, "Result: ${rootTables.map{ it.enclosedElements }};$internTables;${rootAnnotations.map { it}}")
             val fileName = "GeneratedSqlTables"
             val file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
-                        .addProperty(createNameList(rootTables))
-                        .addProperty(createCreateTableList(rootTables))
+                        .addProperty(createNames(rootTables))
+                        .addProperty(createCreateTables(rootTables))
+                        .addProperty(createDropTables(rootTables))
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))
             return true
         } catch (e: Exception) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.message)
+            messager.printMessage(Diagnostic.Kind.ERROR, "${e.message};${e.stackTrace.joinToString()}")
             e.stackTrace.forEach {
              //   messager.printMessage(Diagnostic.Kind.ERROR, "$it")
             }
