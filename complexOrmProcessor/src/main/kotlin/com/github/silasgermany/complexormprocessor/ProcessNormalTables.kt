@@ -2,6 +2,7 @@ package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexorm.SqlIgnore
 import com.github.silasgermany.complexorm.SqlReverseConnectedColumn
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
 interface ProcessNormalTables: SqlUtils {
@@ -13,6 +14,7 @@ interface ProcessNormalTables: SqlUtils {
             }
         }
         return PropertySpec.builder("constructors", interfaceConstructorsType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($constructors)")
             .build()
     }
@@ -36,6 +38,7 @@ interface ProcessNormalTables: SqlUtils {
             }
         }
         return PropertySpec.builder("normalColumns", interfaceColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
             .build()
     }
@@ -67,6 +70,7 @@ interface ProcessNormalTables: SqlUtils {
             else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
         }.joinToString(",")
         return PropertySpec.builder("joinColumns", interfaceColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($joinColumnInfo)")
             .build()
     }
@@ -97,6 +101,7 @@ interface ProcessNormalTables: SqlUtils {
             else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
         }.joinToString(",")
         return PropertySpec.builder("connectedColumns", interfaceNullableColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($joinColumnInfo)")
             .build()
     }
@@ -132,6 +137,7 @@ interface ProcessNormalTables: SqlUtils {
             else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
         }.joinToString(",")
         return PropertySpec.builder("reverseConnectedColumns", interfaceNullableComplexColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($joinColumnInfo)")
             .build()
     }

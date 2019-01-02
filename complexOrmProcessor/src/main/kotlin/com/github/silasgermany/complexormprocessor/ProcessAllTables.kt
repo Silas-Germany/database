@@ -4,6 +4,7 @@ import com.github.silasgermany.complexorm.SqlDefault
 import com.github.silasgermany.complexorm.SqlExtra
 import com.github.silasgermany.complexorm.SqlIgnore
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import org.jetbrains.annotations.NotNull
 import javax.lang.model.type.TypeMirror
@@ -12,6 +13,7 @@ interface ProcessAllTables: SqlUtils {
 
     fun createNames(): PropertySpec {
         return PropertySpec.builder("tableNames", listType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("listOf(\n${rootTables.joinToString(",\n") { "\"${it.sql}\"" }}\n)")
             .build()
     }
@@ -28,6 +30,7 @@ interface ProcessAllTables: SqlUtils {
             }
         } + rootTables.map { it.sql }
         return PropertySpec.builder("dropTableCommands", listType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer("listOf(\n${tableNames.joinToString(",\n") {
                 "\"DROP TABLE IF EXISTS '$it';\"" }}\n)"
             )
@@ -80,6 +83,7 @@ interface ProcessAllTables: SqlUtils {
             "\"\"\"CREATE TABLE IF NOT EXISTS '${table.sql}'(${columns.joinToString()});\"\"\""
         } + relatedTables
         return PropertySpec.builder("createTableCommands", listType)
+            .addModifiers(KModifier.OVERRIDE)
             .initializer(CodeBlock.of("listOf(\n${createTableCommands.joinToString(",\n")}\n)"))
             .build()
     }

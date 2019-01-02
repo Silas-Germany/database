@@ -1,5 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.github.silasgermany.complexorm.GeneratedSqlSchemaInterface
+import com.github.silasgermany.complexorm.GeneratedSqlTablesInterface
 import com.github.silasgermany.complexorm.SqlAllTables
 import com.github.silasgermany.complexorm.SqlTable
 import com.squareup.kotlinpoet.FileSpec
@@ -85,6 +87,7 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
             var file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
+                        .addSuperinterface(GeneratedSqlSchemaInterface::class)
                         .addProperty(createNames())
                         .addProperty(createDropTables())
                         .addProperty(createCreateTables())
@@ -95,6 +98,7 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
             file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
+                        .addSuperinterface(GeneratedSqlTablesInterface::class)
                         .addProperty(createConstructors())
                         .addProperty(createNormalColumnsInfo())
                         .addProperty(createJoinColumnsInfo())
