@@ -12,12 +12,13 @@ class MainFragment: Activity() {
         super.onCreate(savedInstanceState)
 
         val user = MainModel.User()
+        user.id = 1
         user.name = "silas"
         user.lastName = "from Germany"
         val firstTable = Write.write(user)
         verticalLayout {
             gravity = Gravity.CENTER
-            textView("hello world: $firstTable ") {
+            textView(firstTable) {
                 textSize = 16f
             }
         }

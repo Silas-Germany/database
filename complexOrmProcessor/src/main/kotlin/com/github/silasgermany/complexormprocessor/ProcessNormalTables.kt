@@ -24,7 +24,7 @@ interface ProcessNormalTables: SqlUtils {
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = internTables.toList().joinToString(",") { (file, tables) ->
             "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
-                "\n\t\"${table.sql}\" to mapOf(" + table.enclosedElements.mapNotNull { column ->
+                "\n\t\"${table.sql}\" to mapOf(\n\t\t\"id\" to SqlTypes.Int," + table.enclosedElements.mapNotNull { column ->
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }

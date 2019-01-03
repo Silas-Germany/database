@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import org.threeten.bp.LocalDate
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -21,18 +22,22 @@ object Write: SqlUtils {
         val insertValues = mutableMapOf<String, String>()
         table.map.forEach { (key, value) ->
             val sqlKey = key.sql
-            if (normalColumns[sqlKey] != null) {
-                val formatedValue = when (value) {
+            val normalColumnType = normalColumns[sqlKey]
+            if (normalColumnType != null) {
+                when (normalColumnType) {
                     SqlTypes.String -> "'$value'"
                     SqlTypes.Int -> value
-                    SqlTypes.SqlTable,
-                    SqlTypes.SqlTables -> throw IllegalArgumentException("Normal table shouldn't have SqlTable inside")
+                    SqlTypes.Boolean -> value
+                    SqlTypes.Long -> value
                     SqlTypes.Date -> (value as Date).time
-                    else -> value
-                }
-                insertValues[key] = formatedValue.toString()
+                    SqlTypes.LocalDate -> (value as LocalDate).toEpochDay()
+                    SqlTypes.SqlTable,
+                    SqlTypes.SqlTables -> {
+                        throw IllegalArgumentException("Normal table shouldn't have SqlTable inside")
+                    }
+                }.run { insertValues[key] = toString() }
             }
         }
-        return "INSERT INTO (${insertValues.keys.joinToString()}) VALUES (${insertValues.values.joinToString()});${normalColumns.keys};${table.map.keys}"
+        return "INSERT INTO (${insertValues.keys.joinToString()}) VALUES (${insertValues.values.joinToString()});"
     }
 }
