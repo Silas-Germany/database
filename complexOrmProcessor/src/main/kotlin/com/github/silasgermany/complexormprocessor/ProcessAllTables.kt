@@ -69,6 +69,9 @@ interface ProcessAllTables: SqlUtils {
                                 SqlTypes.Int -> {
                                     "INTEGER"
                                 }
+                                SqlTypes.Float -> {
+                                    "REAL"
+                                }
                                 SqlTypes.ByteArray -> "BLOB"
                                 SqlTypes.SqlTables -> {
                                     relatedTables.add(relatedTable(table.sql, columnName, column.asType()))
@@ -97,7 +100,7 @@ interface ProcessAllTables: SqlUtils {
             SqlTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
-                else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values")
+                else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values (not $defaultValue)")
             }
             SqlTypes.Date,
             SqlTypes.LocalDate,
@@ -106,12 +109,19 @@ interface ProcessAllTables: SqlUtils {
                 throw IllegalArgumentException("Default value not allowed for ${type.name}: $defaultValue")
             }
             SqlTypes.ByteArray -> "$defaultValue"
+            SqlTypes.Float -> {
+                try {
+                    defaultValue.toFloat().toString()
+                } catch (e: Exception) {
+                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values (not $defaultValue)")
+                }
+            }
             SqlTypes.Long,
             SqlTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values: $defaultValue")
+                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values (not $defaultValue)")
                 }
             }
         }

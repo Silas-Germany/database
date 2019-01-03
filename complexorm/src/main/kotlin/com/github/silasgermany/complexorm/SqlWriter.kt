@@ -26,8 +26,8 @@ object SqlWriter: SqlUtils {
     private fun reverseConnectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.reverseConnectedColumns[first]?.get(second) }
 
     fun write(table: SqlTable): String {
-        SQLiteDatabase.openOrCreateDatabase(File("/tmp/database.db"), null).run {
-            beginTransaction()
+        SQLiteDatabase.openOrCreateDatabase(File("/data/local/tmp/database.db"), null).run {
+            beginTransactionNonExclusive()
             try {
                 return write(table).also { setTransactionSuccessful() }
             } finally {
@@ -54,6 +54,7 @@ object SqlWriter: SqlUtils {
                     SqlTypes.Int -> contentValues.put(key, value as Int)
                     SqlTypes.Boolean -> contentValues.put(key, value as Boolean)
                     SqlTypes.Long -> contentValues.put(key, value as Long)
+                    SqlTypes.Float -> contentValues.put(key, value as Float)
                     SqlTypes.Date -> contentValues.put(key, (value as Date).time)
                     SqlTypes.LocalDate -> contentValues.put(key, (value as LocalDate).toEpochDay())
                     SqlTypes.ByteArray -> contentValues.put(key, value as ByteArray)
@@ -61,7 +62,7 @@ object SqlWriter: SqlUtils {
                     SqlTypes.SqlTables -> {
                         throw IllegalArgumentException("Normal table shouldn't have SqlTable inside")
                     }
-                }
+                }.let {  } // this is checking, that when is exhaustive
             }
             joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {

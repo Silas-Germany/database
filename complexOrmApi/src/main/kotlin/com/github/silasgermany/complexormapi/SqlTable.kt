@@ -2,8 +2,8 @@ package com.github.silasgermany.complexormapi
 
 abstract class SqlTable(val map: MutableMap<String, Any?>) {
 
-    open val id: Int? get() = map["_id"] as Int?
-    private val _id: Int? by map
+    open val id: Long? get() = map["_id"] as Long?
+    private val _id: Long? by map
     fun transferId() {
         map.remove("id")?.let { map["_id"] = it }
     }

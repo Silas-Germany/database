@@ -5,6 +5,7 @@ enum class SqlTypes {
     Int,
     Boolean,
     Long,
+    Float,
     Date,
     LocalDate,
     ByteArray,
