@@ -25,11 +25,12 @@ interface ProcessNormalTables: SqlUtils {
         val normalColumnInfo = internTables.toList().joinToString(",") { (file, tables) ->
             "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
                 "\n\t\"${table.sql}\" to mapOf(\n\t\t\"_id\" to SqlTypes.Long" + table.enclosedElements.mapNotNull { column ->
+                    if (!column.simpleName.startsWith("get")) return@mapNotNull null
+                    if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
-                    if (!column.simpleName.startsWith("get")) null
-                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
+                    if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
@@ -50,11 +51,12 @@ interface ProcessNormalTables: SqlUtils {
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
             val fileInfo = tables.mapNotNull { table ->
                 val tableInfo = table.enclosedElements.mapNotNull { column ->
+                    if (!column.simpleName.startsWith("get")) return@mapNotNull null
+                    if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
-                    if (!column.simpleName.startsWith("get")) null
-                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
+                    if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
@@ -83,11 +85,12 @@ interface ProcessNormalTables: SqlUtils {
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
             val fileInfo = tables.mapNotNull { table ->
                 val tableInfo = table.enclosedElements.mapNotNull { column ->
+                    if (!column.simpleName.startsWith("get")) return@mapNotNull null
+                    if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
-                    if (!column.simpleName.startsWith("get")) null
-                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
+                    if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (column.type != SqlTable) null
@@ -115,11 +118,12 @@ interface ProcessNormalTables: SqlUtils {
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
             val fileInfo = tables.mapNotNull { table ->
                 val tableInfo = table.enclosedElements.mapNotNull { column ->
+                    if (!column.simpleName.startsWith("get")) return@mapNotNull null
+                    if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function:")) return@mapNotNull null
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".sql.startsWith(columnName) }
-                    if (!column.simpleName.startsWith("get")) null
-                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
+                    if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null &&
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null) null

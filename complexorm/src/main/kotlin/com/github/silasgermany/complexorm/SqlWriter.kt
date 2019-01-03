@@ -74,7 +74,7 @@ object SqlWriter: SqlUtils {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
                         if (connectedEntry.id == null) write(connectedEntry)
-                        contentValues.put("${key}_id", connectedEntry.id.toString())
+                        contentValues.put("${key.sql}_id", connectedEntry.id.toString())
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})")
@@ -95,6 +95,8 @@ object SqlWriter: SqlUtils {
                     val innerContentValues = ContentValues()
                     innerContentValues.put("${identifier.second}_id", table.id)
                     (value as List<*>).forEach { joinTableEntry ->
+                        joinTableEntry as SqlTable
+                        if (joinTableEntry.id == null) write(joinTableEntry)
                         innerContentValues.put("${joinTable}_id", (joinTableEntry as SqlTable).id)
                         Log.e("DATABASE", "Insert in ${identifier.second}_$sqlKey: ${innerContentValues.valueSet()}")
                         insertOrThrow("${identifier.second}_$sqlKey", null, innerContentValues)

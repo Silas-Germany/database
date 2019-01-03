@@ -1,9 +1,6 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.SqlDefault
-import com.github.silasgermany.complexormapi.SqlIgnore
-import com.github.silasgermany.complexormapi.SqlProperty
-import com.github.silasgermany.complexormapi.SqlTypes
+import com.github.silasgermany.complexormapi.*
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
@@ -22,10 +19,11 @@ interface ProcessAllTables: SqlUtils {
     fun createDropTables(): PropertySpec {
         val tableNames = rootTables.flatMap { table ->
             table.enclosedElements.mapNotNull { column ->
-                val columnName = column.sql.removePrefix("get_")
+                if (!column.simpleName.startsWith("get")) return@mapNotNull null
+                if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
+                val columnName = column.sql.removeSuffix("\$delegate")
                 val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
-                if (!column.simpleName.startsWith("get")) null
-                else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
+                if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
                 else if (column.type != SqlTypes.SqlTables) null
                 else "${table.sql}_$columnName"
             }
@@ -44,19 +42,24 @@ interface ProcessAllTables: SqlUtils {
             val foreignKeys = mutableListOf<String>()
             val columns = arrayOf("'_id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
                     table.enclosedElements.mapNotNull { column ->
-                        if (!column.simpleName.startsWith("get")) null
+                        if (!column.simpleName.startsWith("get")
+                            || column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) {
+                            return@mapNotNull null
+                        }
                         else {
-                            val columnName = column.sql.removePrefix("get_")
-                            val columnType = column.type
+                            val columnName = column.sql.removePrefix("\$delegate")
                             var columnExtra = ""
                             // check whether nullable
                             if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
                             // check annotations
                             val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                             if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
-                            val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
-                            columnExtra += defaultValue(columnType, defaultValue)
+                            val columnType = column.type
+                            annotations?.getAnnotation(SqlDefault::class.java)?.value?.let {
+                                columnExtra += defaultValue(columnType, it)
+                            }
                             annotations?.getAnnotation(SqlProperty::class.java)?.extra?.let { columnExtra += " $it" }
+                            annotations?.getAnnotation(SqlUnique::class.java)?.let { columnExtra += " UNIQUE" }
                             // get type
                             val sqlType = when (columnType) {
                                 SqlTypes.String -> {
