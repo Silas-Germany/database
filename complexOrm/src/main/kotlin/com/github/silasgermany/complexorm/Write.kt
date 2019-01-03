@@ -7,9 +7,9 @@ import kotlin.reflect.KClass
 @SqlAllTables
 object Write: SqlUtils {
 
-    val sqlSchema =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
-    val sqlTables =
+    //private val sqlSchema =
+      //  Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
+    private val sqlTables =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
 
     private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name

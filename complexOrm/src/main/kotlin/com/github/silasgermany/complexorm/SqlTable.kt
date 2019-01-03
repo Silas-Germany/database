@@ -1,6 +1,6 @@
 package com.github.silasgermany.complexorm
 
-abstract class SqlTable(@SqlIgnore val map: MutableMap<String, Any?>) {
+abstract class SqlTable(val map: MutableMap<String, Any?>) {
 
     open val id: Int? get() = map["_id"] as Int?
     private val _id: Int? by map
