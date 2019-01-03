@@ -24,19 +24,20 @@ interface ProcessNormalTables: SqlUtils {
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = internTables.toList().joinToString(",") { (file, tables) ->
             "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
-                "\n\t\"${table.sql}\" to mapOf(\n\t\t\"id\" to SqlTypes.Int," + table.enclosedElements.mapNotNull { column ->
+                "\n\t\"${table.sql}\" to mapOf(\n\t\t\"_id\" to SqlTypes.Int" + table.enclosedElements.mapNotNull { column ->
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!column.simpleName.startsWith("get")) null
+                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
                     else if (column.type == SqlTable ||
                         column.type == SqlTables) null
-                    else "\n\t\t\"$columnName\" to SqlTypes.${column.type}"
-                }.joinToString(",", postfix = ")")
+                    else ",\n\t\t\"$columnName\" to SqlTypes.${column.type}"
+                }.joinToString("", postfix = ")")
             }
         }
         return PropertySpec.builder("normalColumns", interfaceColumnsType2)
@@ -53,6 +54,7 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!column.simpleName.startsWith("get")) null
+                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
@@ -85,6 +87,7 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!column.simpleName.startsWith("get")) null
+                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (column.type != SqlTable) null
@@ -116,6 +119,7 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!column.simpleName.startsWith("get")) null
+                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null &&
