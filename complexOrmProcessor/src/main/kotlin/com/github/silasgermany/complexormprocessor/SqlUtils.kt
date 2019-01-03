@@ -1,6 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexorm.SqlTable
+import com.github.silasgermany.complexorm.SqlTypes
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
@@ -19,10 +20,6 @@ interface SqlUtils {
     val internTables: MutableMap<Element, MutableList<Element>>
 
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
-
-    enum class SqlTypes {
-        String, Int, Boolean, Long, Date, LocalDate, SqlTable, SqlTables
-    }
 
     val Element.type: SqlTypes
         get() {
@@ -64,6 +61,7 @@ interface SqlUtils {
     val pairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType)
     val nullablePairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
     val mapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
+    val mapType2 get() = Map::class.asClassName().parameterizedBy(stringType, SqlTypes::class.asTypeName())
     val nullableMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
 
     val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
@@ -71,10 +69,12 @@ interface SqlUtils {
     val mapPairType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
     val mapNullablePairType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairType)
     val columnsType get() = Map::class.asClassName().parameterizedBy(stringType, mapType)
+    val columnsType2 get() = Map::class.asClassName().parameterizedBy(stringType, mapType2)
     val nullableColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, nullableMapType)
     val complexColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, mapPairType)
     val nullableComplexColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, mapNullablePairType)
     val interfaceColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, columnsType)
+    val interfaceColumnsType2 get() = Map::class.asClassName().parameterizedBy(stringType, columnsType2)
     val interfaceNullableColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, nullableColumnsType)
     val interfaceComplexColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, complexColumnsType)
     val interfaceNullableComplexColumnsType

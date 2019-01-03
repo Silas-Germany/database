@@ -12,3 +12,4 @@
 .idea
 complexOrm/build
 complexOrmProcessor/build
+app/release

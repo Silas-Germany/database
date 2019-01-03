@@ -4,17 +4,22 @@ import android.app.Activity
 import android.os.Bundle
 import android.view.Gravity
 import com.github.silasgermany.complexorm.Write
-import org.jetbrains.anko.button
+import org.jetbrains.anko.textView
 import org.jetbrains.anko.verticalLayout
 
 class MainFragment: Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val firstTable = Write.write(MainModel.User())
+        val user = MainModel.User()
+        user.name = "silas"
+        user.lastName = "from Germany"
+        val firstTable = Write.write(user)
         verticalLayout {
             gravity = Gravity.CENTER
-            button("hello world: $firstTable ")
+            textView("hello world: $firstTable ") {
+                textSize = 16f
+            }
         }
     }
 }

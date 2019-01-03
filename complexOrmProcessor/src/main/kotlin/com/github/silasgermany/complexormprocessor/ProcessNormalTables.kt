@@ -2,6 +2,8 @@ package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexorm.SqlIgnore
 import com.github.silasgermany.complexorm.SqlReverseConnectedColumn
+import com.github.silasgermany.complexorm.SqlTypes.SqlTable
+import com.github.silasgermany.complexorm.SqlTypes.SqlTables
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
@@ -31,13 +33,13 @@ interface ProcessNormalTables: SqlUtils {
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
-                    else if (column.type == SqlUtils.SqlTypes.SqlTables ||
-                        column.type == SqlUtils.SqlTypes.SqlTables) null
-                    else "\n\t\t\"$columnName\" to \"${column.asType().toString().removePrefix("()")}\""
+                    else if (column.type == SqlTable ||
+                        column.type == SqlTables) null
+                    else "\n\t\t\"$columnName\" to SqlTypes.${column.type}"
                 }.joinToString(",", postfix = ")")
             }
         }
-        return PropertySpec.builder("normalColumns", interfaceColumnsType)
+        return PropertySpec.builder("normalColumns", interfaceColumnsType2)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
             .build()
@@ -55,7 +57,7 @@ interface ProcessNormalTables: SqlUtils {
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
-                    else if (column.type != SqlUtils.SqlTypes.SqlTables) null
+                    else if (column.type != SqlTables) null
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
@@ -85,7 +87,7 @@ interface ProcessNormalTables: SqlUtils {
                     if (!column.simpleName.startsWith("get")) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                    else if (column.type != SqlUtils.SqlTypes.SqlTable) null
+                    else if (column.type != SqlTable) null
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
@@ -118,7 +120,7 @@ interface ProcessNormalTables: SqlUtils {
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null &&
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null) null
-                    else if (column.type != SqlUtils.SqlTypes.SqlTables) throw IllegalArgumentException("Reverse connected tables have to be of type List<*>")
+                    else if (column.type != SqlTables) throw IllegalArgumentException("Reverse connected tables have to be of type List<*>")
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }

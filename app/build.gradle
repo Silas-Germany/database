@@ -5,6 +5,10 @@ apply plugin: "kotlin-android-extensions"
 apply plugin: "kotlin-kapt" // kotlin annotation processor
 
 android {
+    signingConfigs {
+        config {
+        }
+    }
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.github.silasgermany.database"
@@ -24,14 +28,13 @@ android {
     sourceSets { main.java.srcDir("src/main/kotlin") }
 }
 
-
 dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$sdk_version"
     // anko
-    implementation "org.jetbrains.anko:anko:0.10.8"
+    implementation 'org.jetbrains.anko:anko:0.10.8'
     // ORM modules
-    implementation project(":complexOrm")
+    implementation project(':complexOrm')
     kapt project(":complexOrmProcessor")
 }

@@ -3,6 +3,7 @@ package com.github.silasgermany.complexormprocessor
 import com.github.silasgermany.complexorm.SqlDefault
 import com.github.silasgermany.complexorm.SqlExtra
 import com.github.silasgermany.complexorm.SqlIgnore
+import com.github.silasgermany.complexorm.SqlTypes
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
@@ -25,7 +26,7 @@ interface ProcessAllTables: SqlUtils {
                 val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                 if (!column.simpleName.startsWith("get")) null
                 else if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                else if (column.type != SqlUtils.SqlTypes.SqlTables) null
+                else if (column.type != SqlTypes.SqlTables) null
                 else "${table.sql}_$columnName"
             }
         } + rootTables.map { it.sql }
@@ -58,21 +59,21 @@ interface ProcessAllTables: SqlUtils {
                             annotations?.getAnnotation(SqlExtra::class.java)?.extra?.let { columnExtra += " $it" }
                             // get type
                             val sqlType = when (columnType) {
-                                SqlUtils.SqlTypes.String -> {
+                                SqlTypes.String -> {
                                     "TEXT"
                                 }
-                                SqlUtils.SqlTypes.Boolean,
-                                SqlUtils.SqlTypes.Date,
-                                SqlUtils.SqlTypes.LocalDate,
-                                SqlUtils.SqlTypes.Long,
-                                SqlUtils.SqlTypes.Int -> {
+                                SqlTypes.Boolean,
+                                SqlTypes.Date,
+                                SqlTypes.LocalDate,
+                                SqlTypes.Long,
+                                SqlTypes.Int -> {
                                     "INTEGER"
                                 }
-                                SqlUtils.SqlTypes.SqlTables -> {
+                                SqlTypes.SqlTables -> {
                                     relatedTables.add(relatedTable(table.sql, columnName, column.asType()))
                                     return@mapNotNull null
                                 }
-                                SqlUtils.SqlTypes.SqlTable -> {
+                                SqlTypes.SqlTable -> {
                                     foreignKeys.add(foreignTableReference(columnName, column.asType()))
                                     return@mapNotNull "${columnName}_id$columnExtra"
                                 }
@@ -88,23 +89,23 @@ interface ProcessAllTables: SqlUtils {
             .build()
     }
 
-    private fun defaultValue(type: SqlUtils.SqlTypes, defaultValue: String?): String {
+    private fun defaultValue(type: SqlTypes, defaultValue: String?): String {
         defaultValue ?: return ""
         return " DEFAULT " + when(type) {
-            SqlUtils.SqlTypes.String -> "'$defaultValue'"
-            SqlUtils.SqlTypes.Boolean -> when (defaultValue) {
+            SqlTypes.String -> "'$defaultValue'"
+            SqlTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
                 else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values")
             }
-            SqlUtils.SqlTypes.Date,
-            SqlUtils.SqlTypes.LocalDate,
-            SqlUtils.SqlTypes.SqlTables,
-            SqlUtils.SqlTypes.SqlTable -> {
+            SqlTypes.Date,
+            SqlTypes.LocalDate,
+            SqlTypes.SqlTables,
+            SqlTypes.SqlTable -> {
                 throw IllegalArgumentException("Default value not allowed for ${type.name}: $defaultValue")
             }
-            SqlUtils.SqlTypes.Long,
-            SqlUtils.SqlTypes.Int -> {
+            SqlTypes.Long,
+            SqlTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {
