@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexormapi
 
 interface GeneratedSqlTablesInterface {
     val constructors: Map<String, Map<String, (Map<String, Any?>) -> SqlTable>>

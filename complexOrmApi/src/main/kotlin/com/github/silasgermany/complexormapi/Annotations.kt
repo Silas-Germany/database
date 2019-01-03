@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexormapi
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
@@ -20,7 +20,11 @@ annotation class SqlDefault(val value: String)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlExtra(val extra: String)
+annotation class SqlProperty(val extra: String)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class SqlUnique
 
 
 @Target(AnnotationTarget.PROPERTY)

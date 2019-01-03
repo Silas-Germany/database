@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexormapi
 
 interface GeneratedSqlSchemaInterface {
     val tableNames: List<String>

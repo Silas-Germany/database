@@ -1,9 +1,9 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexorm.GeneratedSqlSchemaInterface
-import com.github.silasgermany.complexorm.GeneratedSqlTablesInterface
-import com.github.silasgermany.complexorm.SqlAllTables
-import com.github.silasgermany.complexorm.SqlTable
+import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
+import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
+import com.github.silasgermany.complexormapi.SqlAllTables
+import com.github.silasgermany.complexormapi.SqlTable
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File

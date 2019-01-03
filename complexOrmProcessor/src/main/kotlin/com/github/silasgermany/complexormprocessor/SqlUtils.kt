@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexorm.SqlTable
-import com.github.silasgermany.complexorm.SqlTypes
+import com.github.silasgermany.complexormapi.SqlTable
+import com.github.silasgermany.complexormapi.SqlTypes
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
@@ -27,10 +27,14 @@ interface SqlUtils {
             return when (typeName) {
                 "java.lang.String" -> SqlTypes.String
                 "java.lang.Integer" -> SqlTypes.Int
+                "int" -> SqlTypes.Int
                 "boolean" -> SqlTypes.Boolean
+                "java.lang.Boolean" -> SqlTypes.Boolean
                 "java.util.Date" -> SqlTypes.Date
                 "org.threeten.bp.LocalDate" -> SqlTypes.LocalDate
+                "byte[]" -> SqlTypes.LocalDate
                 "long" -> SqlTypes.Long
+                "java.lang.Long" -> SqlTypes.Long
                 else -> {
                     try {
                         if (typeName.startsWith("java.util.List")) return SqlTypes.SqlTables
@@ -41,15 +45,15 @@ interface SqlUtils {
                     } catch (e: Exception) {
                         throw IllegalArgumentException("Problem (${e.message}) with $typeName;")
                     }
-                    throw IllegalArgumentException("Couldn't find type ${asType()}")
+                    throw IllegalArgumentException("Couldn't find type ${asType()}: $this")
                 }
             }
         }
 
     val Element.sql: String
-        get() = simpleName.underScore
+        get() = simpleName.sql
 
-    val CharSequence.underScore: String
+    val CharSequence.sql: String
         get() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
     val CharSequence.reverseUnderScore: String

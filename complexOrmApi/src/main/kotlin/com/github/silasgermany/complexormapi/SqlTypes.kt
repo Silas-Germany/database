@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexormapi
 
 enum class SqlTypes {
     String,
@@ -7,6 +7,7 @@ enum class SqlTypes {
     Long,
     Date,
     LocalDate,
+    ByteArray,
     SqlTable,
     SqlTables
 }

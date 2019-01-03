@@ -1,10 +1,8 @@
 package com.github.silasgermany.database.sql
 
-import com.github.silasgermany.complexorm.SqlAllTables
-import com.github.silasgermany.complexorm.SqlDefault
-import com.github.silasgermany.complexorm.SqlTable
 
-@SqlAllTables
+//@SqlAllTables
+/*
 interface AllTables {
     open class User(initMap: MutableMap<String, Any?> = default): SqlTable(initMap) {
         @SqlDefault("admin")
@@ -18,3 +16,4 @@ interface AllTables {
         open val name: String? by initMap
     }
 }
+        */

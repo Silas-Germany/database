@@ -1,9 +1,9 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexorm.SqlIgnore
-import com.github.silasgermany.complexorm.SqlReverseConnectedColumn
-import com.github.silasgermany.complexorm.SqlTypes.SqlTable
-import com.github.silasgermany.complexorm.SqlTypes.SqlTables
+import com.github.silasgermany.complexormapi.SqlIgnore
+import com.github.silasgermany.complexormapi.SqlReverseConnectedColumn
+import com.github.silasgermany.complexormapi.SqlTypes.SqlTable
+import com.github.silasgermany.complexormapi.SqlTypes.SqlTables
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
@@ -63,7 +63,7 @@ interface ProcessNormalTables: SqlUtils {
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
-                            .underScore.removeSuffix(">")
+                            .sql.removeSuffix(">")
                         "\n\t\t\"$columnName\" to \"$foreignTableName\""
                     }
                 }
@@ -94,7 +94,7 @@ interface ProcessNormalTables: SqlUtils {
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
-                            .removeSuffix(">").underScore
+                            .removeSuffix(">").sql
                             .takeUnless { it == columnName }?.let { "\"$it\"" } ?: "null"
                         "\n\t\t\"$columnName\" to $foreignTableName"
                     }
@@ -117,9 +117,8 @@ interface ProcessNormalTables: SqlUtils {
                 val tableInfo = table.enclosedElements.mapNotNull { column ->
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
-                    val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
+                    val annotations = internAnnotations[table]?.find { "$it".sql.startsWith(columnName) }
                     if (!column.simpleName.startsWith("get")) null
-                    else if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
                     else if (annotations?.getAnnotation(SqlIgnore::class.java) != null &&
                         rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
                     else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null &&
@@ -128,7 +127,7 @@ interface ProcessNormalTables: SqlUtils {
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
-                            .removeSuffix(">").underScore
+                            .removeSuffix(">").sql
                         val reverseColumnAnnotation = annotations?.getAnnotation(SqlReverseConnectedColumn::class.java)
                             ?: rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java)
                         val reverseColumn = reverseColumnAnnotation!!.connectedColumn

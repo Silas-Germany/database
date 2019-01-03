@@ -1,9 +1,9 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexorm.SqlDefault
-import com.github.silasgermany.complexorm.SqlExtra
-import com.github.silasgermany.complexorm.SqlIgnore
-import com.github.silasgermany.complexorm.SqlTypes
+import com.github.silasgermany.complexormapi.SqlDefault
+import com.github.silasgermany.complexormapi.SqlIgnore
+import com.github.silasgermany.complexormapi.SqlProperty
+import com.github.silasgermany.complexormapi.SqlTypes
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
@@ -56,7 +56,7 @@ interface ProcessAllTables: SqlUtils {
                             if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
                             val defaultValue = annotations?.getAnnotation(SqlDefault::class.java)?.value
                             columnExtra += defaultValue(columnType, defaultValue)
-                            annotations?.getAnnotation(SqlExtra::class.java)?.extra?.let { columnExtra += " $it" }
+                            annotations?.getAnnotation(SqlProperty::class.java)?.extra?.let { columnExtra += " $it" }
                             // get type
                             val sqlType = when (columnType) {
                                 SqlTypes.String -> {
@@ -69,6 +69,7 @@ interface ProcessAllTables: SqlUtils {
                                 SqlTypes.Int -> {
                                     "INTEGER"
                                 }
+                                SqlTypes.ByteArray -> "BLOB"
                                 SqlTypes.SqlTables -> {
                                     relatedTables.add(relatedTable(table.sql, columnName, column.asType()))
                                     return@mapNotNull null
@@ -104,12 +105,13 @@ interface ProcessAllTables: SqlUtils {
             SqlTypes.SqlTable -> {
                 throw IllegalArgumentException("Default value not allowed for ${type.name}: $defaultValue")
             }
+            SqlTypes.ByteArray -> "$defaultValue"
             SqlTypes.Long,
             SqlTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values")
+                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values: $defaultValue")
                 }
             }
         }
@@ -117,13 +119,13 @@ interface ProcessAllTables: SqlUtils {
 
     private fun foreignTableReference(columnName: String, columnType: TypeMirror): String {
         val foreignTable = columnType.toString()
-            .run { substring(lastIndexOf('.') + 1) }.underScore
+            .run { substring(lastIndexOf('.') + 1) }.sql
         return "FOREIGN KEY ('${columnName}_id') REFERENCES '$foreignTable'(id)"
     }
 
     private fun relatedTable(rootName: String, columnName: String, columnType: TypeMirror): String {
         val foreignTable = columnType.toString()
-            .run { substring(lastIndexOf('.') + 1) }.removeSuffix(">").underScore
+            .run { substring(lastIndexOf('.') + 1) }.removeSuffix(">").sql
         return "\"\"\"CREATE TABLE IF NOT EXISTS '${rootName}_$columnName'(" +
                 "'${rootName}_id' INTEGER NOT NULL, " +
                 "'${foreignTable}_id' INTEGER NOT NULL, " +

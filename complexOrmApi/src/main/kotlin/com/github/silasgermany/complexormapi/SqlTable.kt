@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexormapi
 
 abstract class SqlTable(val map: MutableMap<String, Any?>) {
 

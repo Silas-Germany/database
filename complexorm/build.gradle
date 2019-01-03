@@ -1,0 +1,28 @@
+apply plugin: 'com.android.library'
+apply plugin: "kotlin-android"
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 3
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets { main.java.srcDir("src/main/kotlin") }
+}
+
+dependencies {
+    // default
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    // local-time
+    implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
+    // ORM annotations
+    implementation project(':complexOrmApi')
+}
