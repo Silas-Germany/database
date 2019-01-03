@@ -1,6 +1,15 @@
 package com.github.silasgermany.complexorm
 
-class SqlRead {
+import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
+import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
+
+class SqlReader {
+
+    private val sqlSchema =
+        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
+    private val sqlTables =
+        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
+
 /*
     private val constructors get() = GeneratedSqlTables.constructors[interfaceName]!!
 

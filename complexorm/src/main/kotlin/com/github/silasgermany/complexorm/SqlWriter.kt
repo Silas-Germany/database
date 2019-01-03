@@ -1,14 +1,19 @@
 package com.github.silasgermany.complexorm
 
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
+import com.github.silasgermany.complexormapi.SqlAllTables
+import com.github.silasgermany.complexormapi.SqlTable
+import com.github.silasgermany.complexormapi.SqlTypes
 import org.threeten.bp.LocalDate
+import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 
 @SqlAllTables
-object Write: SqlUtils {
+object SqlWriter: SqlUtils {
 
-    //private val sqlSchema =
-      //  Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
     private val sqlTables =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
 
@@ -21,35 +26,51 @@ object Write: SqlUtils {
     private fun reverseConnectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.reverseConnectedColumns[first]?.get(second) }
 
     fun write(table: SqlTable): String {
+        SQLiteDatabase.openOrCreateDatabase(File("/tmp/database.db"), null).run {
+            beginTransaction()
+            try {
+                return write(table).also { setTransactionSuccessful() }
+            } finally {
+                endTransaction()
+            }
+        }
+    }
+
+    private fun SQLiteDatabase.write(table: SqlTable): String {
+        val contentValues = ContentValues()
         table.transferId()
         val identifier = getIdentifier(table::class)
         val normalColumns = getNormalColumns(identifier)
         val joinColumns = joinColumns(identifier)
         val connectedColumn = connectedColumn(identifier)
         val reverseConnectedColumn = reverseConnectedColumn(identifier)
-        val insertValues = mutableMapOf<String, String>()
         var additionalInserts = ""
         table.map.forEach { (key, value) ->
             val sqlKey = key.sql
-            normalColumns?.get(sqlKey)?.let {
-                when (it) {
-                    SqlTypes.String -> "'$value'"
-                    SqlTypes.Int -> value
-                    SqlTypes.Boolean -> value
-                    SqlTypes.Long -> value
-                    SqlTypes.Date -> (value as Date).time
-                    SqlTypes.LocalDate -> (value as LocalDate).toEpochDay()
+            normalColumns?.get(sqlKey)?.also {
+                if (value == null) contentValues.putNull(key)
+                else when (it) {
+                    SqlTypes.String -> contentValues.put(key, value as String)
+                    SqlTypes.Int -> contentValues.put(key, value as Int)
+                    SqlTypes.Boolean -> contentValues.put(key, value as Boolean)
+                    SqlTypes.Long -> contentValues.put(key, value as Long)
+                    SqlTypes.Date -> contentValues.put(key, (value as Date).time)
+                    SqlTypes.LocalDate -> contentValues.put(key, (value as LocalDate).toEpochDay())
+                    SqlTypes.ByteArray -> contentValues.put(key, value as ByteArray)
                     SqlTypes.SqlTable,
                     SqlTypes.SqlTables -> {
                         throw IllegalArgumentException("Normal table shouldn't have SqlTable inside")
                     }
-                }.run { insertValues[key] = toString() }
+                }
             }
             joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {
-                    additionalInserts += "DELETE FROM ${identifier.second}_$sqlKey WHERE ${identifier.second}_id = ${table.id};"
+                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.id}", null)
+                    val innerContentValues = ContentValues()
+                    innerContentValues.put("${identifier.second}_id", table.id)
                     (value as List<*>).forEach { joinTableEntry ->
-                        additionalInserts += "INSERT INTO ${identifier.second}_$sqlKey(${identifier.second}_id, ${joinTable}_id) VALUES (${table.id}, ${(joinTableEntry as SqlTable).id});"
+                        innerContentValues.put("${joinTable}_id", (joinTableEntry as SqlTable).id)
+                        insertOrThrow("${identifier.second}_$sqlKey", null, innerContentValues)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value")
@@ -60,7 +81,7 @@ object Write: SqlUtils {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
                         if (connectedEntry.id == null) additionalInserts += write(connectedEntry)
-                        insertValues["${key}_id"] = connectedEntry.id.toString()
+                        contentValues.put("${key}_id", connectedEntry.id.toString())
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value")
@@ -68,15 +89,17 @@ object Write: SqlUtils {
             }
             reverseConnectedColumn?.get(sqlKey)?.let { joinTableData ->
                 try {
+                    val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
-                        additionalInserts += "INSERT INTO ${joinTableData.first}(${joinTableData.second
-                            ?: identifier.second}_id) VALUES (${table.id}) WHERE _id = ${(joinTableEntry as SqlTable).id};"
+                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
+                        update(joinTableData.first, innerContentValues, "_id = ${(joinTableEntry as SqlTable).id}", null)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value")
                 }
             }
         }
-        return "INSERT INTO ${identifier.first}(${insertValues.keys.joinToString()}) VALUES (${insertValues.values.joinToString()});"
+        table.map["_id"] = insertOrThrow(identifier.first, null, contentValues).toInt()
+        return table.toString()
     }
 }
