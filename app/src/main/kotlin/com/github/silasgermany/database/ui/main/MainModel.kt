@@ -5,11 +5,16 @@ import com.github.silasgermany.database.sql.OtherTables
 
 interface MainModel {
 
-    class User(initMap: MutableMap<String, Any?> = default): OtherTables.User(initMap) {
-        override val name: String? by initMap
-        override val spokenLanguages: List<OtherTables.Language> by initMap
-        override val interfaceLanguage: OtherTables.Language? by initMap
-        @SqlReverseConnectedColumn("champion")
-        val championedLanguages: List<OtherTables.Language> by initMap
+    class Language(initMap: MutableMap<String, Any?> = default): OtherTables.Language(initMap) {
+        override var attitude: String? by initMap
+        override var name: String by initMap
     }
+    class User(initMap: MutableMap<String, Any?> = default): OtherTables.User(initMap) {
+        override var name: String? by initMap
+        override var spokenLanguages: List<Language> by initMap
+        override var interfaceLanguage: Language? by initMap
+        @SqlReverseConnectedColumn("champion")
+        var championedLanguages: List<Language> by initMap
+    }
+
 }

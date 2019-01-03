@@ -2,7 +2,6 @@ package com.github.silasgermany.complexorm
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
 import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
 import com.github.silasgermany.complexormapi.SqlTable
 import com.github.silasgermany.complexormapi.SqlTypes
@@ -10,8 +9,6 @@ import kotlin.reflect.KClass
 
 class SqlReader(table: KClass<*>): SqlUtils{
 
-    private val sqlSchema =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
     private val sqlTables =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
 

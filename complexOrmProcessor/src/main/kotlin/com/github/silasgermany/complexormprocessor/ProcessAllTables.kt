@@ -42,7 +42,7 @@ interface ProcessAllTables: SqlUtils {
         val relatedTables = mutableListOf<String>()
         val createTableCommands = rootTables.map { table ->
             val foreignKeys = mutableListOf<String>()
-            val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
+            val columns = arrayOf("'_id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
                     table.enclosedElements.mapNotNull { column ->
                         if (!column.simpleName.startsWith("get")) null
                         else {
@@ -64,7 +64,9 @@ interface ProcessAllTables: SqlUtils {
                                 }
                                 SqlTypes.Boolean,
                                 SqlTypes.Date,
-                                SqlTypes.LocalDate,
+                                SqlTypes.LocalDate -> {
+                                    "NUMERIC"
+                                }
                                 SqlTypes.Long,
                                 SqlTypes.Int -> {
                                     "INTEGER"

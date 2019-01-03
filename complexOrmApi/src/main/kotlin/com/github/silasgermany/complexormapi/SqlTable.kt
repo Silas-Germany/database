@@ -11,7 +11,7 @@ abstract class SqlTable(val map: MutableMap<String, Any?>) {
     override fun toString(): String {
         return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
-                is SqlTable -> value.map["id"] ?: "?"
+                is SqlTable -> value.id ?: "?"
                 is List<*> -> value.joinToString(
                     prefix = "[",
                     postfix = "]"
