@@ -73,8 +73,8 @@ object SqlWriter: SqlUtils {
                 try {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
-                        if (connectedEntry.id == null) write(connectedEntry)
-                        contentValues.put("${key.sql}_id", connectedEntry.id.toString())
+                        if (connectedEntry.idValue == null) write(connectedEntry)
+                        contentValues.put("${key.sql}_id", connectedEntry.idValue.toString())
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})")
@@ -90,13 +90,13 @@ object SqlWriter: SqlUtils {
             val sqlKey = key.sql
             joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {
-                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.id}", null)
+                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.idValue}", null)
                     val innerContentValues = ContentValues()
-                    innerContentValues.put("${identifier.second}_id", table.id)
+                    innerContentValues.put("${identifier.second}_id", table.idValue)
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.id == null) write(joinTableEntry)
-                        innerContentValues.put("${joinTable}_id", joinTableEntry.id)
+                        if (joinTableEntry.idValue == null) write(joinTableEntry)
+                        innerContentValues.put("${joinTable}_id", joinTableEntry.idValue)
                         save("${identifier.second}_$sqlKey", innerContentValues)
                     }
                 } catch (e: Exception) {
@@ -108,9 +108,9 @@ object SqlWriter: SqlUtils {
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.id == null) write(joinTableEntry)
-                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
-                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.id}", null)
+                        if (joinTableEntry.idValue == null) write(joinTableEntry)
+                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.idValue)
+                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.idValue}", null)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})")
@@ -120,8 +120,9 @@ object SqlWriter: SqlUtils {
         return table.toString()
     }
 
-    fun SQLiteDatabase.save(table: String, contentValues: ContentValues): Long {
+    private fun SQLiteDatabase.save(table: String, contentValues: ContentValues): Long {
         Log.e("DATABASE", "Insert in table: ${contentValues.valueSet()}")
         return insertOrThrow(table, "_id", contentValues)
     }
+    
 }

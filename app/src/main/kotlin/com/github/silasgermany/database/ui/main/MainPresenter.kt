@@ -21,7 +21,7 @@ class MainPresenter(val view: MainView) {
             entry.entries1 = listOf(Table2())
             write(entry, databaseFile)
         } catch (e: Exception) {
-            Log.e("DATABASE", "${e.message}")
+            Log.e("DATABASE", "${e.message}; ${e.stackTrace.joinToString()}")
         }
     }
 }
