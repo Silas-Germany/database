@@ -21,7 +21,7 @@ interface ProcessAllTables: SqlUtils {
             table.enclosedElements.mapNotNull { column ->
                 if (!column.simpleName.startsWith("get")) return@mapNotNull null
                 if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
-                val columnName = column.sql.removeSuffix("\$delegate")
+                val columnName = column.sql.removePrefix("get_")
                 val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                 if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
                 else if (column.type != SqlTypes.SqlTables) null
@@ -47,7 +47,7 @@ interface ProcessAllTables: SqlUtils {
                             return@mapNotNull null
                         }
                         else {
-                            val columnName = column.sql.removePrefix("\$delegate")
+                            val columnName = column.sql.removePrefix("get_")
                             var columnExtra = ""
                             // check whether nullable
                             if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"

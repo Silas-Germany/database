@@ -35,6 +35,7 @@ interface SqlUtils {
                 "byte[]" -> SqlTypes.LocalDate
                 "long" -> SqlTypes.Long
                 "java.lang.Long" -> SqlTypes.Long
+                "java.lang.Float" -> SqlTypes.Float
                 else -> {
                     try {
                         if (typeName.startsWith("java.util.List")) return SqlTypes.SqlTables

@@ -13,9 +13,11 @@ import kotlin.reflect.KClass
 object SqlWriter: SqlUtils {
 
     private val sqlSchema =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema").getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
+        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
+            .getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
     private val sqlTables =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
+        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables")
+            .getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
 
     private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name
         .run { substring(lastIndexOf('.') + 1).split('$') }.let { it[0] to it[1].sql }
@@ -25,9 +27,8 @@ object SqlWriter: SqlUtils {
     private fun connectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.connectedColumns[first]?.get(second) }
     private fun reverseConnectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.reverseConnectedColumns[first]?.get(second) }
 
-    fun write(table: SqlTable, path: String): String {
-        val databaseFile = File(path)//File.createTempFile("database", ".db")
-        Log.e("DATABASE", "${databaseFile.path}")
+    fun write(table: SqlTable, databaseFile: File): String {
+        Log.e("DATABASE", "Create database at ${databaseFile.path}")
         SQLiteDatabase.openOrCreateDatabase(databaseFile, null).run {
             beginTransactionNonExclusive()
             try {
@@ -49,7 +50,6 @@ object SqlWriter: SqlUtils {
         val joinColumns = joinColumns(identifier)
         val connectedColumn = connectedColumn(identifier)
         val reverseConnectedColumn = reverseConnectedColumn(identifier)
-        var additionalInserts = mapOf<String, ContentValues>()
         table.map.forEach { (key, value) ->
             val sqlKey = key.sql
             normalColumns?.get(sqlKey)?.also {
@@ -69,7 +69,7 @@ object SqlWriter: SqlUtils {
                     }
                 }.let { } // this is checking, that the when is exhaustive
             }
-            if (value is SqlTable) {
+            connectedColumn?.get(sqlKey)?.let {
                 try {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
@@ -82,8 +82,7 @@ object SqlWriter: SqlUtils {
             }
         }
         try {
-            Log.e("DATABASE", "Insert in ${identifier.second}: ${contentValues.valueSet()}")
-            table.map["_id"] = insertOrThrow(identifier.second, null, contentValues)
+            table.map["_id"] = save(identifier.second, contentValues)
         } catch (e: Exception) {
             throw IllegalArgumentException("Couldn't save reverse connected table entries: $table (${e.message})")
         }
@@ -97,9 +96,8 @@ object SqlWriter: SqlUtils {
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
                         if (joinTableEntry.id == null) write(joinTableEntry)
-                        innerContentValues.put("${joinTable}_id", (joinTableEntry as SqlTable).id)
-                        Log.e("DATABASE", "Insert in ${identifier.second}_$sqlKey: ${innerContentValues.valueSet()}")
-                        insertOrThrow("${identifier.second}_$sqlKey", null, innerContentValues)
+                        innerContentValues.put("${joinTable}_id", joinTableEntry.id)
+                        save("${identifier.second}_$sqlKey", innerContentValues)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})")
@@ -110,15 +108,9 @@ object SqlWriter: SqlUtils {
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.id == null) {
-                            joinTableEntry.map[joinTableData.second ?: identifier.second] = table
-                            Log.e("DATABASE", "Save $table")
-                            write(joinTableEntry)
-                        } else {
-                            innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
-                            Log.e("DATABASE", "Insert in ${joinTableData.first}: ${innerContentValues.valueSet()}")
-                            update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.id}", null)
-                        }
+                        if (joinTableEntry.id == null) write(joinTableEntry)
+                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
+                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.id}", null)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})")
@@ -126,5 +118,10 @@ object SqlWriter: SqlUtils {
             }
         }
         return table.toString()
+    }
+
+    fun SQLiteDatabase.save(table: String, contentValues: ContentValues): Long {
+        Log.e("DATABASE", "Insert in table: ${contentValues.valueSet()}")
+        return insertOrThrow(table, "_id", contentValues)
     }
 }

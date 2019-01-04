@@ -1,3 +1,7 @@
 package com.github.silasgermany.database.ui.main
 
-interface MainView
+import java.io.File
+
+interface MainView {
+    val databaseFolder: File
+}
