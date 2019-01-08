@@ -1,7 +1,6 @@
 package com.github.silasgermany.complexorm
 
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
 import com.github.silasgermany.complexormapi.SqlTable
 import com.github.silasgermany.complexormapi.SqlTypes
@@ -11,7 +10,7 @@ import kotlin.reflect.KProperty1
 
 class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
-    constructor(databaseFile: File) : this(SqlDatabase(SQLiteDatabase.openOrCreateDatabase(databaseFile, null)))
+    constructor(databaseFile: File) : this(SqlDatabase(databaseFile))
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Long, SqlTable>>()
@@ -61,7 +60,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
                             whereArgument.joinToString { it?.run { "'$this'" } ?: "'NULL'" }
                         !whereArgument.any { it != null } -> "NULL"
                         whereArgument.any { it is SqlTable } ->
-                            whereArgument.joinToString { (it as? SqlTable)?.idValue?.toString() ?: "-1" }
+                            whereArgument.joinToString { (it as? SqlTable)?.id?.toString() ?: "-1" }
                         else -> throw IllegalArgumentException("Collection it not of type String, Int or null")
                     }
                 }
@@ -84,7 +83,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
     inline fun <reified T : SqlTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
     fun <T : SqlTable> SqlReader.alreadyLoaded(table: KClass<T>, entries: Collection<T>): SqlReader {
         existingEntries[table.tableName.toLowerCase()] = entries
-            .associateTo(mutableMapOf()) { it.idValue!! to it }
+            .associateTo(mutableMapOf()) { it.id!! to it }
         return this@SqlReader
     }
 
@@ -141,7 +140,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
             query(
                 missingEntryTable,
-                where = "WHERE $missingEntryTable._id IN (${missingEntries.joinToString { "${it.idValue}" }})",
+                where = "WHERE $missingEntryTable._id IN (${missingEntries.joinToString { "${it.id}" }})",
                 missingEntries = missingEntries
             )
             notAlreadyLoaded.remove(missingEntryTable)
@@ -149,7 +148,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
         while (nextRequests.isNotEmpty()) {
             val connectedTable = nextRequests.keys.first()
 
-            val ids = nextRequests[connectedTable]!!.map { it.idValue!! }.toSet()
+            val ids = nextRequests[connectedTable]!!.map { it.id!! }.toSet()
             reverseConnectedColumns?.get(connectedTable)?.forEach {
                 val connectedTableName = it.value.first
                 val connectedColumn = "${it.value.second ?: connectedTable}_id"
@@ -160,7 +159,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
                 val transformedValues = joinValues.groupBy { it.first }
                 nextRequests[connectedTable]!!.forEach { entry ->
-                    val id = entry.idValue!!
+                    val id = entry.id!!
                     entry.map[it.key.reverseUnderScore] = transformedValues[id]?.map { value ->
                         value.second.map[(it.value.second ?: connectedTable).reverseUnderScore] = entry
                         value.second
@@ -182,7 +181,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
                 val joinValues = query(it.value, "join_table.$connectedColumn", where)
 
                 nextRequests[connectedTable]!!.forEach { entry ->
-                    val id = entry.idValue!!
+                    val id = entry.id!!
                     entry.map[it.key.reverseUnderScore] = joinValues
                         .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                 }
@@ -191,13 +190,13 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
             reverseJoinColumns?.get(connectedTable)?.forEach {
                 val connectedColumn = "${connectedTable}_id"
                 val where =
-                    "LEFT JOIN ${it.value.first}_${it.value.second} AS join_table ON join_table.${it.value.first}_id = ${it.value.first}.idValue " +
+                    "LEFT JOIN ${it.value.first}_${it.value.second} AS join_table ON join_table.${it.value.first}_id = ${it.value.first}.id " +
                             "WHERE join_table.${connectedTable}_id IN (${ids.joinToString()})"
 
                 val joinValues = query(it.value.first, "join_table.$connectedColumn", where)
 
                 nextRequests[connectedTable]!!.forEach { entry ->
-                    val id = entry.idValue!!
+                    val id = entry.id!!
                     entry.map[it.key.reverseUnderScore] = joinValues
                         .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                 }
@@ -232,7 +231,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
             readIndex = 0
             val (connectedId, databaseEntry) = it.readColumns(tableName, missingEntries, connectedColumn)
             if (databaseEntry != null) {
-                alreadyLoaded.init(tableName)[databaseEntry.idValue!!] = databaseEntry
+                alreadyLoaded.init(tableName)[databaseEntry.id!!] = databaseEntry
                 result.add(connectedId to databaseEntry)
             }
         }
@@ -299,11 +298,8 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
             if (reverseConnectedColumns?.get(joinTableNames.last)?.any { it.value.first == tableName } == true &&
                 alreadyLoadedStart[joinTableNames.last] == null) return@forEach
             val (_, databaseEntry) = readColumns(joinTableNames.last, null)
-
-
             if (databaseEntry != null) {
-
-                alreadyLoaded.init(joinTableNames.last)[databaseEntry.idValue!!] = databaseEntry
+                alreadyLoaded.init(joinTableNames.last)[databaseEntry.id!!] = databaseEntry
                 val identifier = joinTableNames.key.reverseUnderScore
                 if (databaseMap[identifier] == null) databaseMap[identifier] = databaseEntry
                 else return null to databaseMap[identifier] as SqlTable
@@ -313,11 +309,10 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
         if (missingEntries == null) alreadyLoaded[tableName]?.get(id)?.let { return connectedId to it }
 
-
         //if (i < columnCount) databaseMap["join_id"] = getValue(i)
         if (id == null) return connectedId to null
         val databaseEntry = if (missingEntries == null) constructors?.get(tableName)!!.invoke(databaseMap)
-        else missingEntries.find { it.idValue == id }!!.apply { map.putAll(databaseMap) }
+        else missingEntries.find { it.id == id }!!.apply { map.putAll(databaseMap) }
         reverseConnectedColumns?.get(tableName)?.forEach { _ ->
             nextRequests.init(tableName).add(databaseEntry)
         }

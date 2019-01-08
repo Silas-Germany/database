@@ -1,7 +1,6 @@
 package com.github.silasgermany.complexorm
 
 import android.content.ContentValues
-import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
 import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
@@ -14,7 +13,7 @@ import kotlin.reflect.KClass
 
 class SqlWriter(private val database: SqlDatabase): SqlUtils() {
 
-    constructor(databaseFile: File) : this(SqlDatabase(SQLiteDatabase.openOrCreateDatabase(databaseFile, null)))
+    constructor(databaseFile: File) : this(SqlDatabase(databaseFile))
 
     private val sqlSchema =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
@@ -42,7 +41,6 @@ class SqlWriter(private val database: SqlDatabase): SqlUtils() {
     private fun SqlDatabase.write2(table: SqlTable): String {
         Log.e("DATABASE", "Save $table")
         val contentValues = ContentValues()
-        table.transferId()
         val identifier = getIdentifier(table::class)
         val normalColumns = getNormalColumns(identifier)
         val joinColumns = joinColumns(identifier)
@@ -71,8 +69,8 @@ class SqlWriter(private val database: SqlDatabase): SqlUtils() {
                 try {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
-                        if (connectedEntry.idValue == null) write2(connectedEntry)
-                        contentValues.put("${key.sql}_id", connectedEntry.idValue.toString())
+                        if (connectedEntry.id == null) write2(connectedEntry)
+                        contentValues.put("${key.sql}_id", connectedEntry.id.toString())
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})")
@@ -88,13 +86,13 @@ class SqlWriter(private val database: SqlDatabase): SqlUtils() {
             val sqlKey = key.sql
             joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {
-                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.idValue}")
+                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.id}")
                     val innerContentValues = ContentValues()
-                    innerContentValues.put("${identifier.second}_id", table.idValue)
+                    innerContentValues.put("${identifier.second}_id", table.id)
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.idValue == null) write2(joinTableEntry)
-                        innerContentValues.put("${joinTable}_id", joinTableEntry.idValue)
+                        if (joinTableEntry.id == null) write2(joinTableEntry)
+                        innerContentValues.put("${joinTable}_id", joinTableEntry.id)
                         save("${identifier.second}_$sqlKey", innerContentValues)
                     }
                 } catch (e: Exception) {
@@ -106,9 +104,9 @@ class SqlWriter(private val database: SqlDatabase): SqlUtils() {
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.idValue == null) write2(joinTableEntry)
-                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.idValue)
-                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.idValue}")
+                        if (joinTableEntry.id == null) write2(joinTableEntry)
+                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
+                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.id}")
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})")
@@ -120,7 +118,7 @@ class SqlWriter(private val database: SqlDatabase): SqlUtils() {
 
     private fun SqlDatabase.save(table: String, contentValues: ContentValues): Long {
         Log.e("DATABASE", "Insert in table $table: ${contentValues.valueSet()}")
-        return insertOrThrow(table, "_id", contentValues)
+        return insertOrThrow(table, contentValues)
     }
     
 }

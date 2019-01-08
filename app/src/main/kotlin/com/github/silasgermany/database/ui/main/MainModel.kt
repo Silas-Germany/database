@@ -39,7 +39,7 @@ interface MainModel {
 
     class Table4(initMap: MutableMap<String, Any?> = default) : AllTables.Table4(initMap) {
         override var entry1: Table1 by initMap
-        override var entries1: List<AllTables.Table2> by initMap
+        override var entries1: List<Table2> by initMap
         override var table1: Table1? by initMap
     }
 }
