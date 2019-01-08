@@ -2,7 +2,7 @@ package com.github.silasgermany.complexorm
 
 import android.database.sqlite.SQLiteDatabase
 
-class QueryBuilder(private val database: SQLiteDatabase?): SqlUtils {
+class QueryBuilder(private val database: SQLiteDatabase?): SqlUtils() {
 /*
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Int, SqlTable>>()

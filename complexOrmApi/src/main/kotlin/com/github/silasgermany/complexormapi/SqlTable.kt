@@ -8,16 +8,16 @@ abstract class SqlTable(val map: MutableMap<String, Any?>) {
         map.remove("id")?.let { map["_id"] = it }
     }
 
-    val idValue get() = (map.getOrElse("id") { null } ?: map.getOrElse("id") { null }) as Long?
+    val idValue get() = (map.getOrElse("id") { null } ?: map.getOrElse("_id") { null }) as Long?
 
     override fun toString(): String {
         return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
-                is SqlTable -> value.id ?: "?"
+                is SqlTable -> value.idValue ?: "?"
                 is List<*> -> value.joinToString(
                     prefix = "[",
                     postfix = "]"
-                ) { (it as? SqlTable)?.id?.toString() ?: "?" }
+                ) { (it as? SqlTable)?.idValue?.toString() ?: "?" }
                 is String -> "\"$value\""
                 null -> "nil"
                 else -> "$value"

@@ -10,7 +10,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 @SqlAllTables
-object SqlWriter: SqlUtils {
+object SqlWriter: SqlUtils() {
 
     private val sqlSchema =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
@@ -37,6 +37,7 @@ object SqlWriter: SqlUtils {
                 return write(table).also { setTransactionSuccessful() }
             } finally {
                 endTransaction()
+                close()
             }
         }
     }

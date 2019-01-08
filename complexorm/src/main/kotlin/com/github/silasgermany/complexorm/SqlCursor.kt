@@ -9,14 +9,15 @@ class SqlCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = true): Cu
 
     private var window = CursorWindow(null)
     private var cursorPosition = 0
-    private val count = window.numRows
+    private val count: Int
     private var closed = false
     private var columns: Array<String>? = if (withColumnsInfo) cursor.columnNames else null
     val valid: Boolean
 
     init {
         cursor.fillWindow(0, window)
-        valid = window.numRows == cursor.count
+        count = window.numRows
+        valid = count == cursor.count
         if (valid) cursor.close()
     }
 

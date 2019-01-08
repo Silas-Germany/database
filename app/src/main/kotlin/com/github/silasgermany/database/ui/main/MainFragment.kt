@@ -18,6 +18,7 @@ class MainFragment: Activity(), MainView {
         verticalLayout {
             gravity = Gravity.CENTER
             textView("working") {
+                gravity = Gravity.CENTER
                 textSize = 16f
             }
         }

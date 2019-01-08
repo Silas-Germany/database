@@ -7,6 +7,9 @@ import java.util.*
 
 interface MainModel {
 
+    class Table(initMap: MutableMap<String, Any?> = default) : AllTables.Table1(initMap) {
+        override var value1: String by initMap
+    }
     class Table1(initMap: MutableMap<String, Any?> = default) : AllTables.Table1(initMap) {
         @SqlDefault("admin")
         override var value1: String by initMap
