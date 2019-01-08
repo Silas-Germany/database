@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import org.jetbrains.annotations.NotNull
 import javax.lang.model.type.TypeMirror
 
-interface ProcessAllTables: SqlUtils {
+interface ProcessAllTables: ComplexOrmUtils {
 
     fun createNames(): PropertySpec {
         return PropertySpec.builder("tableNames", listType)
@@ -17,14 +17,15 @@ interface ProcessAllTables: SqlUtils {
     }
 
     fun createDropTables(): PropertySpec {
+        //throw IllegalAccessException("${rootAnnotations["progress_marker"]?.map { it?.getAnnotation(ComplexOrmIgnore::class.java).toString() + "+$it" }}x")
         val tableNames = rootTables.flatMap { table ->
             table.enclosedElements.mapNotNull { column ->
                 if (!column.simpleName.startsWith("get")) return@mapNotNull null
                 if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
                 val columnName = column.sql.removePrefix("get_")
-                val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
-                if (annotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                else if (column.type != SqlTypes.SqlTables) null
+                val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
+                if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
+                else if (column.type != ComplexOrmTypes.ComplexOrmTables) null
                 else "${table.sql}_$columnName"
             }
         } + rootTables.map { it.sql }
@@ -52,37 +53,37 @@ interface ProcessAllTables: SqlUtils {
                             // check whether nullable
                             if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
                             // check annotations
-                            val annotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
-                            if (annotations?.getAnnotation(SqlIgnore::class.java) != null) return@mapNotNull null
+                            val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
+                            if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) return@mapNotNull null
                             val columnType = column.type
-                            annotations?.getAnnotation(SqlDefault::class.java)?.value?.let {
+                            annotations?.getAnnotation(ComplexOrmDefault::class.java)?.value?.let {
                                 columnExtra += defaultValue(columnType, it)
                             }
-                            annotations?.getAnnotation(SqlProperty::class.java)?.extra?.let { columnExtra += " $it" }
-                            annotations?.getAnnotation(SqlUnique::class.java)?.let { columnExtra += " UNIQUE" }
+                            annotations?.getAnnotation(ComplexOrmProperty::class.java)?.extra?.let { columnExtra += " $it" }
+                            annotations?.getAnnotation(ComplexOrmUnique::class.java)?.let { columnExtra += " UNIQUE" }
                             // get type
                             val sqlType = when (columnType) {
-                                SqlTypes.String -> {
+                                ComplexOrmTypes.String -> {
                                     "TEXT"
                                 }
-                                SqlTypes.Boolean,
-                                SqlTypes.Date,
-                                SqlTypes.LocalDate -> {
+                                ComplexOrmTypes.Boolean,
+                                ComplexOrmTypes.Date,
+                                ComplexOrmTypes.LocalDate -> {
                                     "NUMERIC"
                                 }
-                                SqlTypes.Long,
-                                SqlTypes.Int -> {
+                                ComplexOrmTypes.Long,
+                                ComplexOrmTypes.Int -> {
                                     "INTEGER"
                                 }
-                                SqlTypes.Float -> {
+                                ComplexOrmTypes.Float -> {
                                     "REAL"
                                 }
-                                SqlTypes.ByteArray -> "BLOB"
-                                SqlTypes.SqlTables -> {
+                                ComplexOrmTypes.ByteArray -> "BLOB"
+                                ComplexOrmTypes.ComplexOrmTables -> {
                                     relatedTables.add(relatedTable(table.sql, columnName, column.asType()))
                                     return@mapNotNull null
                                 }
-                                SqlTypes.SqlTable -> {
+                                ComplexOrmTypes.ComplexOrmTable -> {
                                     foreignKeys.add(foreignTableReference(columnName, column.asType()))
                                     return@mapNotNull "${columnName}_id$columnExtra"
                                 }
@@ -98,31 +99,31 @@ interface ProcessAllTables: SqlUtils {
             .build()
     }
 
-    private fun defaultValue(type: SqlTypes, defaultValue: String?): String {
+    private fun defaultValue(type: ComplexOrmTypes, defaultValue: String?): String {
         defaultValue ?: return ""
         return " DEFAULT " + when(type) {
-            SqlTypes.String -> "'$defaultValue'"
-            SqlTypes.Boolean -> when (defaultValue) {
+            ComplexOrmTypes.String -> "'$defaultValue'"
+            ComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
                 else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values (not $defaultValue)")
             }
-            SqlTypes.Date,
-            SqlTypes.LocalDate,
-            SqlTypes.SqlTables,
-            SqlTypes.SqlTable -> {
+            ComplexOrmTypes.Date,
+            ComplexOrmTypes.LocalDate,
+            ComplexOrmTypes.ComplexOrmTables,
+            ComplexOrmTypes.ComplexOrmTable -> {
                 throw IllegalArgumentException("Default value not allowed for ${type.name}: $defaultValue")
             }
-            SqlTypes.ByteArray -> "$defaultValue"
-            SqlTypes.Float -> {
+            ComplexOrmTypes.ByteArray -> "$defaultValue"
+            ComplexOrmTypes.Float -> {
                 try {
                     defaultValue.toFloat().toString()
                 } catch (e: Exception) {
                     throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values (not $defaultValue)")
                 }
             }
-            SqlTypes.Long,
-            SqlTypes.Int -> {
+            ComplexOrmTypes.Long,
+            ComplexOrmTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {

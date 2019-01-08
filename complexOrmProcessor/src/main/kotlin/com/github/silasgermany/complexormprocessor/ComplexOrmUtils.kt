@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.SqlTable
-import com.github.silasgermany.complexormapi.SqlTypes
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
@@ -10,7 +10,7 @@ import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.util.Types
 
-interface SqlUtils {
+interface ComplexOrmUtils {
 
     val messager: Messager
     val typeUtils: Types
@@ -21,27 +21,27 @@ interface SqlUtils {
 
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)
 
-    val Element.type: SqlTypes
+    val Element.type: ComplexOrmTypes
         get() {
             val typeName = asType().toString().removePrefix("()")
             return when (typeName) {
-                "java.lang.String" -> SqlTypes.String
-                "java.lang.Integer" -> SqlTypes.Int
-                "int" -> SqlTypes.Int
-                "boolean" -> SqlTypes.Boolean
-                "java.lang.Boolean" -> SqlTypes.Boolean
-                "java.util.Date" -> SqlTypes.Date
-                "org.threeten.bp.LocalDate" -> SqlTypes.LocalDate
-                "byte[]" -> SqlTypes.LocalDate
-                "long" -> SqlTypes.Long
-                "java.lang.Long" -> SqlTypes.Long
-                "java.lang.Float" -> SqlTypes.Float
+                "java.lang.String" -> ComplexOrmTypes.String
+                "java.lang.Integer" -> ComplexOrmTypes.Int
+                "int" -> ComplexOrmTypes.Int
+                "boolean" -> ComplexOrmTypes.Boolean
+                "java.lang.Boolean" -> ComplexOrmTypes.Boolean
+                "java.util.Date" -> ComplexOrmTypes.Date
+                "org.threeten.bp.LocalDate" -> ComplexOrmTypes.LocalDate
+                "byte[]" -> ComplexOrmTypes.LocalDate
+                "long" -> ComplexOrmTypes.Long
+                "java.lang.Long" -> ComplexOrmTypes.Long
+                "java.lang.Float" -> ComplexOrmTypes.Float
                 else -> {
                     try {
-                        if (typeName.startsWith("java.util.List")) return SqlTypes.SqlTables
-                        if (rootTables.any { it.toString() == typeName }) return SqlTypes.SqlTable
+                        if (typeName.startsWith("java.util.List")) return ComplexOrmTypes.ComplexOrmTables
+                        if (rootTables.any { it.toString() == typeName }) return ComplexOrmTypes.ComplexOrmTable
                         if (internTables.any { file -> file.value.any { it.toString() == typeName } }) {
-                            return SqlTypes.SqlTable
+                            return ComplexOrmTypes.ComplexOrmTable
                         }
                     } catch (e: Exception) {
                         throw IllegalArgumentException("Problem (${e.message}) with $typeName;")
@@ -66,7 +66,7 @@ interface SqlUtils {
     val pairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType)
     val nullablePairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
     val mapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
-    val mapType2 get() = Map::class.asClassName().parameterizedBy(stringType, SqlTypes::class.asTypeName())
+    val mapType2 get() = Map::class.asClassName().parameterizedBy(stringType, ComplexOrmTypes::class.asTypeName())
     val nullableMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
 
     val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
@@ -90,7 +90,7 @@ interface SqlUtils {
 
     val nullableAnyType get() = Any::class.asTypeName().copy(true)
     val databaseMapType get() = MutableMap::class.asClassName().parameterizedBy(stringType, nullableAnyType)
-    val constructorType get() = LambdaTypeName.get(null, databaseMapType, returnType = SqlTable::class.asTypeName())
+    val constructorType get() = LambdaTypeName.get(null, databaseMapType, returnType = ComplexOrmTable::class.asTypeName())
     val constructorsType get() = Map::class.asClassName().parameterizedBy(stringType, constructorType)
     val interfaceConstructorsType get() = Map::class.asClassName().parameterizedBy(stringType, constructorsType)
 }

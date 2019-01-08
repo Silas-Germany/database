@@ -1,24 +1,24 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
-import com.github.silasgermany.complexormapi.SqlTable
+import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.jvmErasure
 
-abstract class SqlUtils {
+abstract class ComplexOrmUtils {
 
     private val sqlSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
-        .getDeclaredField("INSTANCE").get(null) as GeneratedSqlSchemaInterface
+        .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
 
-    inline val <reified T : SqlTable> KProperty1<T, *>.fullName get() = "${T::class.tableName}.$columnName"
+    inline val <reified T : ComplexOrmTable> KProperty1<T, *>.fullName get() = "${T::class.tableName}.$columnName"
 
-    val KProperty1<out SqlTable, *>.columnName get() =
+    val KProperty1<out ComplexOrmTable, *>.columnName get() =
         if (sqlSchema.tableNames.contains(returnType.jvmErasure.simpleName!!.sql)) "${name}_id"
         else name
 
-    val KClass<out SqlTable>.tableName get() = simpleName!!.sql.takeIf { sqlSchema.tableNames.contains(it) }
+    val KClass<out ComplexOrmTable>.tableName get() = simpleName!!.sql.takeIf { sqlSchema.tableNames.contains(it) }
         ?: superclasses.find { sqlSchema.tableNames.contains(it.simpleName?.sql) }?.simpleName?.sql!!
 
 

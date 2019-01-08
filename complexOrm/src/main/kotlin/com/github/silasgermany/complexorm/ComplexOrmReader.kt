@@ -1,32 +1,32 @@
 package com.github.silasgermany.complexorm
 
 import android.database.Cursor
-import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
-import com.github.silasgermany.complexormapi.SqlTable
-import com.github.silasgermany.complexormapi.SqlTypes
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class SqlReader(private val database: SqlDatabase): SqlUtils() {
+class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
 
-    constructor(databaseFile: File) : this(SqlDatabase(databaseFile))
+    constructor(databaseFile: File) : this(ComplexOrmDatabase(databaseFile))
 
     private val restrictions = mutableMapOf<String, String>()
-    private val existingEntries = mutableMapOf<String, MutableMap<Long, SqlTable>>()
+    private val existingEntries = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
 
-    inline fun <reified T : SqlTable> specialWhere(
+    inline fun <reified T : ComplexOrmTable> specialWhere(
         column: KProperty1<T, Any?>, selection: String,
         vararg selectionArguments: Any?
-    ): SqlReader = where(T::class, column, selection, *selectionArguments)
+    ): ComplexOrmReader = where(T::class, column, selection, *selectionArguments)
 
-    inline fun <reified T : SqlTable> where(column: KProperty1<T, Any?>, equals: Any?): SqlReader =
+    inline fun <reified T : ComplexOrmTable> where(column: KProperty1<T, Any?>, equals: Any?): ComplexOrmReader =
         where(T::class, column, null, equals)
 
-    fun <T : SqlTable> SqlReader.where(
+    fun <T : ComplexOrmTable> ComplexOrmReader.where(
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
-    ): SqlReader {
+    ): ComplexOrmReader {
         val tableName = table.tableName.toLowerCase()
         val columnName = "$tableName.${column.columnName.toLowerCase()}"
         var where = (selection?.let { "($it)" } ?: "?? = ?")
@@ -59,8 +59,8 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
                         whereArgument.any { it is String } ->
                             whereArgument.joinToString { it?.run { "'$this'" } ?: "'NULL'" }
                         !whereArgument.any { it != null } -> "NULL"
-                        whereArgument.any { it is SqlTable } ->
-                            whereArgument.joinToString { (it as? SqlTable)?.id?.toString() ?: "-1" }
+                        whereArgument.any { it is ComplexOrmTable } ->
+                            whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.toString() ?: "-1" }
                         else -> throw IllegalArgumentException("Collection it not of type String, Int or null")
                     }
                 }
@@ -77,35 +77,35 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
         }
         restrictions[tableName] = if (restrictions[tableName] == null) where
         else "${restrictions[tableName]} AND $where"
-        return this@SqlReader
+        return this@ComplexOrmReader
     }
 
-    inline fun <reified T : SqlTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
-    fun <T : SqlTable> SqlReader.alreadyLoaded(table: KClass<T>, entries: Collection<T>): SqlReader {
+    inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
+    fun <T : ComplexOrmTable> ComplexOrmReader.alreadyLoaded(table: KClass<T>, entries: Collection<T>): ComplexOrmReader {
         existingEntries[table.tableName.toLowerCase()] = entries
             .associateTo(mutableMapOf()) { it.id!! to it }
-        return this@SqlReader
+        return this@ComplexOrmReader
     }
 
-    fun <T : SqlTable> get(table: KClass<T>): List<T> {
+    fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
         return database.read(table, existingEntries)
     }
 
-    inline fun <reified T : SqlTable> get(): List<T> = get(T::class)
+    inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
 
-    fun <T : SqlTable> SqlReader.get(table: KClass<T>, id: Int?): T? {
+    fun <T : ComplexOrmTable> ComplexOrmReader.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName.toLowerCase()
-        this@SqlReader.restrictions[tableName] = if (restrictions[tableName] == null) "$tableName._id = $id"
+        this@ComplexOrmReader.restrictions[tableName] = if (restrictions[tableName] == null) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
         return database.read(table, existingEntries)
             .getOrNull(0)
     }
 
-    inline fun <reified T : SqlTable> get(id: Int?): T? = get(T::class, id)
+    inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
 
     private val sqlTables =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as GeneratedSqlTablesInterface
+        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
 
     private val constructors get() = sqlTables.constructors[interfaceName]
     private val normalColumns get() = sqlTables.normalColumns[interfaceName]
@@ -114,16 +114,16 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
     private val joinColumns get() = sqlTables.joinColumns[interfaceName]
     //private val reverseJoinColumns  get() = sqlTables.joinColumns[interfaceName]//sqlTables.reverseJoinColumns[interfaceName]!!
 
-    private val nextRequests = mutableMapOf<String, MutableList<SqlTable>>()
-    private val notAlreadyLoaded = mutableMapOf<String, MutableList<SqlTable>>()
-    private var alreadyLoaded = mutableMapOf<String, MutableMap<Long, SqlTable>>()
-    private var alreadyLoadedStart = mutableMapOf<String, Map<Long, SqlTable>>()
+    private val nextRequests = mutableMapOf<String, MutableList<ComplexOrmTable>>()
+    private val notAlreadyLoaded = mutableMapOf<String, MutableList<ComplexOrmTable>>()
+    private var alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
+    private var alreadyLoadedStart = mutableMapOf<String, Map<Long, ComplexOrmTable>>()
 
     private lateinit var interfaceName: String
 
-    private fun <T : SqlTable> SqlDatabase.read(
+    private fun <T : ComplexOrmTable> ComplexOrmDatabase.read(
         table: KClass<T>,
-        existingEntries: MutableMap<String, MutableMap<Long, SqlTable>> = mutableMapOf()
+        existingEntries: MutableMap<String, MutableMap<Long, ComplexOrmTable>> = mutableMapOf()
     ): List<T> {
         alreadyLoaded = existingEntries
         alreadyLoadedStart = existingEntries.toList().associateTo(mutableMapOf()) { it.first to it.second.toMap() }
@@ -212,10 +212,10 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
             }
     }
 
-    private fun SqlDatabase.query(
+    private fun ComplexOrmDatabase.query(
         tableName: String, connectedColumn: String? = null,
-        where: String? = null, missingEntries: List<SqlTable>? = null
-    ): List<Pair<Long?, SqlTable>> {
+        where: String? = null, missingEntries: List<ComplexOrmTable>? = null
+    ): List<Pair<Long?, ComplexOrmTable>> {
         val columns = mutableListOf("$tableName._id")
         columns.addColumns(tableName, missingEntries != null)
         connectedColumn?.let { columns.add(it) }
@@ -226,7 +226,7 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
         restrictions[tableName]?.let { joins += "AND $it" }
         val query = "SELECT ${columns.joinToString()} FROM $tableName ${joins.joinToString(" ")};"
 
-        val result = mutableListOf<Pair<Long?, SqlTable>>()
+        val result = mutableListOf<Pair<Long?, ComplexOrmTable>>()
         queryForEach(query) {
             readIndex = 0
             val (connectedId, databaseEntry) = it.readColumns(tableName, missingEntries, connectedColumn)
@@ -245,15 +245,15 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
         }
     }
 
-    private fun Cursor.getValue(index: Int, type: SqlTypes): Any? =
+    private fun Cursor.getValue(index: Int, type: ComplexOrmTypes): Any? =
         if (isNull(index)) null
         else when (type) {
-            SqlTypes.Boolean -> getLong(index) != 0L
-            SqlTypes.Int -> getInt(index)
-            SqlTypes.Long -> getLong(index)
+            ComplexOrmTypes.Boolean -> getLong(index) != 0L
+            ComplexOrmTypes.Int -> getInt(index)
+            ComplexOrmTypes.Long -> getLong(index)
             //"float" -> getFloat(index)
-            SqlTypes.String -> getString(index)
-            SqlTypes.ByteArray -> getBlob(index)
+            ComplexOrmTypes.String -> getString(index)
+            ComplexOrmTypes.ByteArray -> getBlob(index)
             //"org.threeten.bp.LocalDate" -> parse(getString(index), DateTimeFormatter.ISO_DATE)
             else -> throw IllegalArgumentException("Couldn't find type $type (${getType(index)})")
         }
@@ -275,16 +275,16 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
     private var readIndex = 0
     private fun Cursor.readColumns(
-        tableName: String,
-        missingEntries: List<SqlTable>?,
-        connectedColumn: String? = null
-    ): Pair<Long?, SqlTable?> {
-        val id = getValue(readIndex++, SqlTypes.Long) as Long?
+            tableName: String,
+            missingEntries: List<ComplexOrmTable>?,
+            connectedColumn: String? = null
+    ): Pair<Long?, ComplexOrmTable?> {
+        val id = getValue(readIndex++, ComplexOrmTypes.Long) as Long?
 
         val databaseMap = databaseMapInit(id)
         val alreadyLoadedTable = alreadyLoadedStart[tableName]
         if (alreadyLoadedTable != null && missingEntries == null) {
-            val connectedId = connectedColumn?.let { getValue(readIndex++, SqlTypes.Long) as Long }
+            val connectedId = connectedColumn?.let { getValue(readIndex++, ComplexOrmTypes.Long) as Long }
             alreadyLoaded[tableName]?.get(id)?.let { return connectedId to it }
             return connectedId to (alreadyLoadedTable[id] ?: constructors?.get(tableName)!!.invoke(databaseMap)
                 .also { notAlreadyLoaded.init(tableName).add(it) })
@@ -302,10 +302,10 @@ class SqlReader(private val database: SqlDatabase): SqlUtils() {
                 alreadyLoaded.init(joinTableNames.last)[databaseEntry.id!!] = databaseEntry
                 val identifier = joinTableNames.key.reverseUnderScore
                 if (databaseMap[identifier] == null) databaseMap[identifier] = databaseEntry
-                else return null to databaseMap[identifier] as SqlTable
+                else return null to databaseMap[identifier] as ComplexOrmTable
             } else databaseMap[joinTableNames.key.reverseUnderScore] = null
         }
-        val connectedId = connectedColumn?.let { getValue(readIndex++, SqlTypes.Long) as Long }
+        val connectedId = connectedColumn?.let { getValue(readIndex++, ComplexOrmTypes.Long) as Long }
 
         if (missingEntries == null) alreadyLoaded[tableName]?.get(id)?.let { return connectedId to it }
 

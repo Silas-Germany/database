@@ -1,9 +1,9 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
-import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
-import com.github.silasgermany.complexormapi.SqlAllTables
-import com.github.silasgermany.complexormapi.SqlTable
+import com.github.silasgermany.complexormapi.ComplexOrmAllTables
+import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
@@ -18,7 +18,7 @@ import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 
-class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables {
+class Main: AbstractProcessor(), ComplexOrmUtils, ProcessAllTables, ProcessNormalTables {
 
     override lateinit var messager: Messager
     override lateinit var typeUtils: Types
@@ -33,7 +33,7 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
         return mutableSetOf(
-            SqlAllTables::class.java.canonicalName
+            ComplexOrmAllTables::class.java.canonicalName
         )
     }
 
@@ -50,13 +50,14 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
 
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
         try {
-            val sqlTableName = SqlTable::class.java.canonicalName
+            val sqlTableName = ComplexOrmTable::class.java.canonicalName
             roundEnv.rootElements.forEach { rootElement ->
                 rootElement.enclosedElements.forEach enclosedElement@{ enclosedElement ->
                     try {
-                        if (enclosedElement.asType().kind == TypeKind.EXECUTABLE ) return@enclosedElement
+                        if (enclosedElement.asType().toString().startsWith("kotlin.jvm.functions.Function0") ||
+                                enclosedElement.asType().kind == TypeKind.EXECUTABLE ) return@enclosedElement
                         typeUtils.directSupertypes(enclosedElement.asType()).forEach { superType ->
-                            if (rootElement.getAnnotation(SqlAllTables::class.java) != null &&
+                            if (rootElement.getAnnotation(ComplexOrmAllTables::class.java) != null &&
                                 sqlTableName == superType.toString()) rootTables.add(enclosedElement)
                             typeUtils.directSupertypes(superType).forEach {
                                 if (sqlTableName == it.toString()) internTables.add(rootElement, enclosedElement)
@@ -83,22 +84,22 @@ class Main: AbstractProcessor(), SqlUtils, ProcessAllTables, ProcessNormalTables
                 }
             }
             //messager.printMessage(Diagnostic.Kind.NOTE, "Result: $rootTables;$internTables;$rootAnnotations")
-            var fileName = "GeneratedSqlSchema"
+            var fileName = "ComplexOrmSchema"
             var file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
-                        .addSuperinterface(GeneratedSqlSchemaInterface::class)
+                        .addSuperinterface(ComplexOrmSchemaInterface::class)
                         .addProperty(createNames())
                         .addProperty(createDropTables())
                         .addProperty(createCreateTables())
                         .build()
                 ).build()
             file.writeTo(File(kaptKotlinGeneratedDir))
-            fileName = "GeneratedSqlTables"
+            fileName = "ComplexOrmTables"
             file = FileSpec.builder(targetPackage, fileName)
                 .addType(
                     TypeSpec.objectBuilder(fileName)
-                        .addSuperinterface(GeneratedSqlTablesInterface::class)
+                        .addSuperinterface(ComplexOrmTablesInterface::class)
                         .addProperty(createConstructors())
                         .addProperty(createNormalColumnsInfo())
                         .addProperty(createJoinColumnsInfo())

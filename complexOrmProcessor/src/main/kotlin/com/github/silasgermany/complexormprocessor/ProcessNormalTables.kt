@@ -1,13 +1,13 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.SqlIgnore
-import com.github.silasgermany.complexormapi.SqlReverseConnectedColumn
-import com.github.silasgermany.complexormapi.SqlTypes.SqlTable
-import com.github.silasgermany.complexormapi.SqlTypes.SqlTables
+import com.github.silasgermany.complexormapi.ComplexOrmIgnore
+import com.github.silasgermany.complexormapi.ComplexOrmReverseConnectedColumn
+import com.github.silasgermany.complexormapi.ComplexOrmTypes.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTypes.ComplexOrmTables
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
-interface ProcessNormalTables: SqlUtils {
+interface ProcessNormalTables: ComplexOrmUtils {
 
     fun createConstructors(): PropertySpec {
         val constructors = internTables.toList().joinToString(",") { (file, tables) ->
@@ -31,22 +31,20 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
-                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                    else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
-                    else if (column.type == SqlTable ||
-                        column.type == SqlTables) null
-                    else "\n\t\t\"$columnName\" to SqlTypes.${column.type}"
+                    else if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
+                    else if (annotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) != null) null
+                    else if (column.type == ComplexOrmTable ||
+                        column.type == ComplexOrmTables) null
+                    else "\n\t\t\"$columnName\" to ComplexOrmTypes.${column.type}"
                 }
                     .takeUnless { it.isEmpty() }
                     ?.run { "\n\t\"${table.sql}\" to mapOf(" + joinToString(",", postfix = ")") }
             }
                 .takeUnless { it.isEmpty() }
                 ?.run { "\n\"${file.simpleName}\" to mapOf(" + joinToString(",", postfix = ")") }
-        }
-            .takeUnless { it.isEmpty() }
-            ?.joinToString(",")
+        }.joinToString(",")
         return PropertySpec.builder("normalColumns", interfaceColumnsType2)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
@@ -63,11 +61,11 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
-                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                    else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
-                    else if (column.type != SqlTables) null
+                    else if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
+                    else if (annotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) != null) null
+                    else if (column.type != ComplexOrmTables) null
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
@@ -99,9 +97,9 @@ interface ProcessNormalTables: SqlUtils {
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".startsWith(columnName) }
                     if (!rootTables.any { table -> table.enclosedElements.any { it.sql == column.sql } }) null
-                    else if (annotations?.getAnnotation(SqlIgnore::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                    else if (column.type != SqlTable) null
+                    else if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
+                    else if (column.type != ComplexOrmTable) null
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
@@ -131,17 +129,17 @@ interface ProcessNormalTables: SqlUtils {
                     val columnName = column.sql.removePrefix("get_")
                     val rootAnnotations = rootAnnotations[table.sql]?.find { "$it".startsWith(columnName) }
                     val annotations = internAnnotations[table]?.find { "$it".sql.startsWith(columnName) }
-                    if (annotations?.getAnnotation(SqlIgnore::class.java) != null ||
-                        rootAnnotations?.getAnnotation(SqlIgnore::class.java) != null) null
-                    else if (annotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null &&
-                        rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) == null) null
-                    else if (column.type != SqlTables) throw IllegalArgumentException("Reverse connected tables have to be of type List<*>")
+                    if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null ||
+                        rootAnnotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
+                    else if (annotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) == null &&
+                        rootAnnotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java) == null) null
+                    else if (column.type != ComplexOrmTables) throw IllegalArgumentException("Reverse connected tables have to be of type List<*>")
                     else {
                         val foreignTableName = column.asType().toString()
                             .run { substring(lastIndexOf('.') + 1) }
                             .removeSuffix(">").sql
-                        val reverseColumnAnnotation = annotations?.getAnnotation(SqlReverseConnectedColumn::class.java)
-                            ?: rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java)
+                        val reverseColumnAnnotation = annotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java)
+                            ?: rootAnnotations?.getAnnotation(ComplexOrmReverseConnectedColumn::class.java)
                         val reverseColumn = reverseColumnAnnotation!!.connectedColumn
                             .takeUnless { it.isEmpty() }?.let { "\"$it\"" } ?: "null"
                         "\n\t\t\"$columnName\" to (\"$foreignTableName\" to $reverseColumn)"

@@ -5,7 +5,7 @@ import android.database.*
 import android.net.Uri
 import android.os.Bundle
 
-class SqlCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = true): Cursor {
+class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = true): Cursor {
 
     private var window = CursorWindow(null)
     private var cursorPosition = 0

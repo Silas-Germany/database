@@ -1,6 +1,6 @@
 package com.github.silasgermany.complexormapi
 
-enum class SqlTypes {
+enum class ComplexOrmTypes {
     String,
     Int,
     Boolean,
@@ -9,6 +9,6 @@ enum class SqlTypes {
     Date,
     LocalDate,
     ByteArray,
-    SqlTable,
-    SqlTables
+    ComplexOrmTable,
+    ComplexOrmTables
 }

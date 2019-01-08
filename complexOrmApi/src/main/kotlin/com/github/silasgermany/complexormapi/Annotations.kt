@@ -2,31 +2,31 @@ package com.github.silasgermany.complexormapi
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlAllTables
+annotation class ComplexOrmAllTables
 
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlReverseJoinColumn(val connectedColumn: String)
+annotation class ComplexOrmReverseJoinColumn(val connectedColumn: String)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlReverseConnectedColumn(val connectedColumn: String = "")
-
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlDefault(val value: String)
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlProperty(val extra: String)
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class SqlUnique
+annotation class ComplexOrmReverseConnectedColumn(val connectedColumn: String = "")
 
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class SqlIgnore
+annotation class ComplexOrmDefault(val value: String)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmProperty(val extra: String)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmUnique
+
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmIgnore

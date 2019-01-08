@@ -8,14 +8,14 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import java.io.File
 
-class SqlDatabase(private val sqlDatabase: SQLiteDatabase) {
+class ComplexOrmDatabase(private val sqlDatabase: SQLiteDatabase) {
 
     constructor(databaseFile: File) : this(SQLiteDatabase.openOrCreateDatabase(databaseFile, null))
 
-    val reader by lazy { SqlReader(this) }
-    val writer by lazy { SqlWriter(this) }
+    val reader by lazy { ComplexOrmReader(this) }
+    val writer by lazy { ComplexOrmWriter(this) }
 
-    fun <T> use(f: SqlDatabase.() -> T): T {
+    fun <T> use(f: ComplexOrmDatabase.() -> T): T {
         sqlDatabase.beginTransaction()
         try {
             return f(this).also { sqlDatabase.setTransactionSuccessful() }
@@ -29,7 +29,7 @@ class SqlDatabase(private val sqlDatabase: SQLiteDatabase) {
     @SuppressLint("Recycle")
     fun queryForEach(sql: String, f: (Cursor) -> Unit) {
         return sqlDatabase.rawQuery(sql, null).run {
-            (this as? CrossProcessCursor)?.let { SqlCursor(it) }?.takeIf { it.valid } ?: this
+            (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }?.takeIf { it.valid } ?: this
         }.run {
             Log.e("DATABASE", sql)
             moveToFirst()
@@ -40,7 +40,7 @@ class SqlDatabase(private val sqlDatabase: SQLiteDatabase) {
 
     @SuppressLint("Recycle")
     fun <T> queryMap(sql: String, f: (Cursor) -> T): List<T> = sqlDatabase.rawQuery(sql, null).run {
-        (this as? CrossProcessCursor)?.let { SqlCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
+        (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
     }.run {
         moveToFirst()
         (0 until count).map { _-> f(this).also { moveToNext() } }.also { close() }
@@ -48,7 +48,7 @@ class SqlDatabase(private val sqlDatabase: SQLiteDatabase) {
 
     @SuppressLint("Recycle")
     fun query(sql: String): Cursor = sqlDatabase.rawQuery(sql, null).run {
-        (this as? CrossProcessCursor)?.let { SqlCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
+        (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
     }
 
     fun rawSql(sql: String) = sqlDatabase.execSQL(sql)
