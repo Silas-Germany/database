@@ -2,7 +2,7 @@ package com.github.silasgermany.database.ui.main
 
 import android.util.Log
 import com.github.silasgermany.complexorm.SqlReader
-import com.github.silasgermany.complexorm.SqlWriter.write
+import com.github.silasgermany.complexorm.SqlWriter
 import com.github.silasgermany.database.ui.main.MainModel.*
 import java.io.File
 
@@ -16,11 +16,11 @@ class MainPresenter(val view: MainView) {
             entry.value1 = "test"
             entry.value3 = 1
             entry.value5 = null
-            entry.reverseEntries1 = listOf(Table4().apply { id = 1 })
-            entry.reverseEntries2 = listOf(Table4())
+            entry.reverseEntries1 = listOf(Table4())
+            entry.reverseEntries2 = listOf(Table4().apply { id = 1 })
             entry.entry1 = Table2()
             entry.entries1 = listOf(Table2())
-            write(entry, databaseFile)
+            SqlWriter(databaseFile).write(entry)
             val readEntry = SqlReader(databaseFile)
                 .get<Table>()
             Log.e("DATABASE", "$readEntry")

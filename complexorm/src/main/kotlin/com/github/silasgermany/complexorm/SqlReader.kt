@@ -2,7 +2,6 @@ package com.github.silasgermany.complexorm
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.util.Log
 import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
 import com.github.silasgermany.complexormapi.SqlTable
 import com.github.silasgermany.complexormapi.SqlTypes
@@ -10,9 +9,9 @@ import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class SqlReader(databaseFile: File): SqlUtils() {
+class SqlReader(private val database: SqlDatabase): SqlUtils() {
 
-    private val database: SqlDatabase = SqlDatabase(SQLiteDatabase.openOrCreateDatabase(databaseFile, null))
+    constructor(databaseFile: File) : this(SqlDatabase(SQLiteDatabase.openOrCreateDatabase(databaseFile, null)))
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Long, SqlTable>>()
@@ -223,7 +222,7 @@ class SqlReader(databaseFile: File): SqlUtils() {
         connectedColumn?.let { columns.add(it) }
         val joins = mutableListOf<String>()
         joins.addJoins(tableName, missingEntries != null)
-        where?.let { joins.add(it) } ?: joins.add("WHERE 1!=0")
+        where?.let { joins.add(it) } ?: joins.add("WHERE 1")
 //        if (joins.isEmpty()) joins.add("WHERE 1!=0")
         restrictions[tableName]?.let { joins += "AND $it" }
         val query = "SELECT ${columns.joinToString()} FROM $tableName ${joins.joinToString(" ")};"
@@ -237,7 +236,6 @@ class SqlReader(databaseFile: File): SqlUtils() {
                 result.add(connectedId to databaseEntry)
             }
         }
-        Log.e("DATABASE", "$result")
         alreadyLoadedStart[tableName] = alreadyLoaded.init(tableName)
         return result
     }
@@ -263,7 +261,7 @@ class SqlReader(databaseFile: File): SqlUtils() {
 
     private fun MutableList<String>.addColumns(tableName: String, isMissing: Boolean, columnName: String? = null) {
         if (alreadyLoadedStart[tableName] != null && !isMissing) return
-        normalColumns?.get(tableName)?.filterKeys { it != "_id" }?.forEach { add("${columnName ?: tableName}.${it.key}") }
+        normalColumns?.get(tableName)?.forEach { add("${columnName ?: tableName}.${it.key}") }
         connectedColumns?.get(tableName)?.forEach { joinTable ->
             if (reverseConnectedColumns?.get(joinTable.last)?.any { it.value.first == tableName } == true &&
                 alreadyLoadedStart[joinTable.last] == null) return@forEach
@@ -282,8 +280,7 @@ class SqlReader(databaseFile: File): SqlUtils() {
         missingEntries: List<SqlTable>?,
         connectedColumn: String? = null
     ): Pair<Long?, SqlTable?> {
-        Log.e("DATABASE", "${normalColumns?.get(tableName)}$readIndex")
-        val id = if (normalColumns?.get(tableName)?.get("_id") != null) getValue(readIndex++, SqlTypes.Long) as Long? else null
+        val id = getValue(readIndex++, SqlTypes.Long) as Long?
 
         val databaseMap = databaseMapInit(id)
         val alreadyLoadedTable = alreadyLoadedStart[tableName]
@@ -294,7 +291,7 @@ class SqlReader(databaseFile: File): SqlUtils() {
                 .also { notAlreadyLoaded.init(tableName).add(it) })
         }
 
-        normalColumns?.get(tableName)?.filterKeys { it != "_id" }?.forEach {
+        normalColumns?.get(tableName)?.forEach {
             val value = getValue(readIndex++, it.value)
             databaseMap[it.key.reverseUnderScore] = value
         }

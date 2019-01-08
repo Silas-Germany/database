@@ -3,14 +3,18 @@ package com.github.silasgermany.complexorm
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormapi.GeneratedSqlSchemaInterface
+import com.github.silasgermany.complexormapi.GeneratedSqlTablesInterface
+import com.github.silasgermany.complexormapi.SqlTable
+import com.github.silasgermany.complexormapi.SqlTypes
 import org.threeten.bp.LocalDate
 import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 
-@SqlAllTables
-object SqlWriter: SqlUtils() {
+class SqlWriter(private val database: SqlDatabase): SqlUtils() {
+
+    constructor(databaseFile: File) : this(SqlDatabase(SQLiteDatabase.openOrCreateDatabase(databaseFile, null)))
 
     private val sqlSchema =
         Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
@@ -22,27 +26,20 @@ object SqlWriter: SqlUtils() {
     private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name
         .run { substring(lastIndexOf('.') + 1).split('$') }.let { it[0] to it[1].sql }
 
-    private fun getNormalColumns(identifier: Pair<String, String>) = identifier.run { sqlTables.normalColumns[first]?.get(second) }
+    private fun getNormalColumns(identifier: Pair<String, String>) = mapOf("_id" to SqlTypes.Long).plus(identifier.run { sqlTables.normalColumns[first]?.get(second) } ?: emptyMap())
     private fun joinColumns(identifier: Pair<String, String>) = identifier.run { sqlTables.joinColumns[first]?.get(second) }
     private fun connectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.connectedColumns[first]?.get(second) }
     private fun reverseConnectedColumn(identifier: Pair<String, String>) = identifier.run { sqlTables.reverseConnectedColumns[first]?.get(second) }
 
-    fun write(table: SqlTable, databaseFile: File): String {
-        Log.e("DATABASE", "Create database at ${databaseFile.path}")
-        SQLiteDatabase.openOrCreateDatabase(databaseFile, null).run {
-            beginTransactionNonExclusive()
-            try {
-                sqlSchema.dropTableCommands.forEach { execSQL(it) }
-                sqlSchema.createTableCommands.forEach { execSQL(it) }
-                return write(table).also { setTransactionSuccessful() }
-            } finally {
-                endTransaction()
-                close()
-            }
+    fun write(table: SqlTable): String {
+        return database.use {
+                sqlSchema.dropTableCommands.forEach { rawSql(it) }
+                sqlSchema.createTableCommands.forEach { rawSql(it) }
+            write2(table)
         }
     }
 
-    private fun SQLiteDatabase.write(table: SqlTable): String {
+    private fun SqlDatabase.write2(table: SqlTable): String {
         Log.e("DATABASE", "Save $table")
         val contentValues = ContentValues()
         table.transferId()
@@ -53,7 +50,7 @@ object SqlWriter: SqlUtils() {
         val reverseConnectedColumn = reverseConnectedColumn(identifier)
         table.map.forEach { (key, value) ->
             val sqlKey = key.sql
-            normalColumns?.get(sqlKey)?.also {
+            normalColumns.get(sqlKey)?.also {
                 if (value == null) contentValues.putNull(key)
                 else when (it) {
                     SqlTypes.String -> contentValues.put(key, value as String)
@@ -74,7 +71,7 @@ object SqlWriter: SqlUtils() {
                 try {
                     val connectedEntry = (value as SqlTable?)
                     if (connectedEntry != null) {
-                        if (connectedEntry.idValue == null) write(connectedEntry)
+                        if (connectedEntry.idValue == null) write2(connectedEntry)
                         contentValues.put("${key.sql}_id", connectedEntry.idValue.toString())
                     }
                 } catch (e: Exception) {
@@ -91,12 +88,12 @@ object SqlWriter: SqlUtils() {
             val sqlKey = key.sql
             joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {
-                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.idValue}", null)
+                    delete("${identifier.second}_$sqlKey", "${identifier.second}_id = ${table.idValue}")
                     val innerContentValues = ContentValues()
                     innerContentValues.put("${identifier.second}_id", table.idValue)
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.idValue == null) write(joinTableEntry)
+                        if (joinTableEntry.idValue == null) write2(joinTableEntry)
                         innerContentValues.put("${joinTable}_id", joinTableEntry.idValue)
                         save("${identifier.second}_$sqlKey", innerContentValues)
                     }
@@ -109,9 +106,9 @@ object SqlWriter: SqlUtils() {
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as SqlTable
-                        if (joinTableEntry.idValue == null) write(joinTableEntry)
+                        if (joinTableEntry.idValue == null) write2(joinTableEntry)
                         innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.idValue)
-                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.idValue}", null)
+                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.idValue}")
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})")
@@ -121,8 +118,8 @@ object SqlWriter: SqlUtils() {
         return table.toString()
     }
 
-    private fun SQLiteDatabase.save(table: String, contentValues: ContentValues): Long {
-        Log.e("DATABASE", "Insert in table: ${contentValues.valueSet()}")
+    private fun SqlDatabase.save(table: String, contentValues: ContentValues): Long {
+        Log.e("DATABASE", "Insert in table $table: ${contentValues.valueSet()}")
         return insertOrThrow(table, "_id", contentValues)
     }
     

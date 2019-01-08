@@ -22,9 +22,9 @@ interface ProcessNormalTables: SqlUtils {
     }
 
     fun createNormalColumnsInfo(): PropertySpec {
-        val normalColumnInfo = internTables.toList().joinToString(",") { (file, tables) ->
-            "\n\"${file.simpleName}\" to mapOf(" + tables.joinToString(",", postfix = ")"){ table ->
-                "\n\t\"${table.sql}\" to mapOf(\n\t\t\"_id\" to SqlTypes.Long" + table.enclosedElements.mapNotNull columns@ { column ->
+        val normalColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
+            tables.mapNotNull{ table ->
+                table.enclosedElements.mapNotNull columns@ { column ->
                     if (!column.simpleName.startsWith("get")) return@columns null
                     if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@columns null
                     val columnName = column.sql.removePrefix("get_")
@@ -37,20 +37,26 @@ interface ProcessNormalTables: SqlUtils {
                         rootAnnotations?.getAnnotation(SqlReverseConnectedColumn::class.java) != null) null
                     else if (column.type == SqlTable ||
                         column.type == SqlTables) null
-                    else ",\n\t\t\"$columnName\" to SqlTypes.${column.type}"
-                }.joinToString("", postfix = ")")
+                    else "\n\t\t\"$columnName\" to SqlTypes.${column.type}"
+                }
+                    .takeUnless { it.isEmpty() }
+                    ?.run { "\n\t\"${table.sql}\" to mapOf(" + joinToString(",", postfix = ")") }
             }
+                .takeUnless { it.isEmpty() }
+                ?.run { "\n\"${file.simpleName}\" to mapOf(" + joinToString(",", postfix = ")") }
         }
+            .takeUnless { it.isEmpty() }
+            ?.joinToString(",")
         return PropertySpec.builder("normalColumns", interfaceColumnsType2)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
             .build()
     }
-
+    
     fun createJoinColumnsInfo(): PropertySpec {
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
-            val fileInfo = tables.mapNotNull { table ->
-                val tableInfo = table.enclosedElements.mapNotNull columns@ { column ->
+            tables.mapNotNull { table ->
+                table.enclosedElements.mapNotNull columns@ { column ->
                     if (!column.simpleName.startsWith("get")) return@columns null
                     if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@columns null
                     val columnName = column.sql.removePrefix("get_")
@@ -69,11 +75,11 @@ interface ProcessNormalTables: SqlUtils {
                         "\n\t\t\"$columnName\" to \"$foreignTableName\""
                     }
                 }
-                if (tableInfo.isEmpty()) null
-                else "\n\t\"${table.sql}\" to mapOf(" + tableInfo.joinToString(",", postfix = ")")
+                    .takeUnless { it.isEmpty() }
+                    ?.run { "\n\t\"${table.sql}\" to mapOf(" + joinToString(",", postfix = ")") }
             }
-            if (fileInfo.isEmpty()) null
-            else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
+                .takeUnless { it.isEmpty() }
+                ?.run { "\n\"${file.simpleName}\" to mapOf(" + joinToString(",", postfix = ")") }
         }.joinToString(",")
         return PropertySpec.builder("joinColumns", interfaceColumnsType)
             .addModifiers(KModifier.OVERRIDE)
@@ -84,8 +90,8 @@ interface ProcessNormalTables: SqlUtils {
     fun createConnectedColumnsInfo(): PropertySpec {
         var all = ""
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
-            val fileInfo = tables.mapNotNull { table ->
-                val tableInfo = table.enclosedElements.mapNotNull columns@ { column ->
+            tables.mapNotNull { table ->
+                table.enclosedElements.mapNotNull columns@ { column ->
                     all += "$column"
                     if (!column.simpleName.startsWith("get")) return@columns null
                     if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@columns null
@@ -104,11 +110,11 @@ interface ProcessNormalTables: SqlUtils {
                         "\n\t\t\"$columnName\" to $foreignTableName"
                     }
                 }
-                if (tableInfo.isEmpty()) null
-                else "\n\t\"${table.sql}\" to mapOf(" + tableInfo.joinToString(",", postfix = ")")
+                    .takeUnless { it.isEmpty() }
+                    ?.run { "\n\t\"${table.sql}\" to mapOf(" + joinToString(",", postfix = ")") }
             }
-            if (fileInfo.isEmpty()) null
-            else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
+                .takeUnless { it.isEmpty() }
+                ?.run { "\n\"${file.simpleName}\" to mapOf(" + joinToString(",", postfix = ")") }
         }.joinToString(",")
         return PropertySpec.builder("connectedColumns", interfaceNullableColumnsType)
             .addModifiers(KModifier.OVERRIDE)
@@ -118,8 +124,8 @@ interface ProcessNormalTables: SqlUtils {
 
     fun createReverseConnectedColumnsInfo(): PropertySpec {
         val joinColumnInfo = internTables.toList().mapNotNull { (file, tables) ->
-            val fileInfo = tables.mapNotNull { table ->
-                val tableInfo = table.enclosedElements.mapNotNull columns@ { column ->
+            tables.mapNotNull { table ->
+                table.enclosedElements.mapNotNull columns@ { column ->
                     if (!column.simpleName.startsWith("get")) return@columns null
                     if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function:")) return@columns null
                     val columnName = column.sql.removePrefix("get_")
@@ -141,11 +147,11 @@ interface ProcessNormalTables: SqlUtils {
                         "\n\t\t\"$columnName\" to (\"$foreignTableName\" to $reverseColumn)"
                     }
                 }
-                if (tableInfo.isEmpty()) null
-                else "\n\t\"${table.sql}\" to mapOf(" + tableInfo.joinToString(",", postfix = ")")
+                    .takeUnless { it.isEmpty() }
+                    ?.run { "\n\t\"${table.sql}\" to mapOf(" + joinToString(",", postfix = ")") }
             }
-            if (fileInfo.isEmpty()) null
-            else "\n\"${file.simpleName}\" to mapOf(" + fileInfo.joinToString(",", postfix = ")")
+                .takeUnless { it.isEmpty() }
+                ?.run { "\n\"${file.simpleName}\" to mapOf(" + joinToString(",", postfix = ")") }
         }.joinToString(",")
         return PropertySpec.builder("reverseConnectedColumns", interfaceNullableComplexColumnsType)
             .addModifiers(KModifier.OVERRIDE)
