@@ -2,15 +2,13 @@ package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.jvmErasure
 
 abstract class ComplexOrmUtils {
-
-    private val sqlSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
 
     inline val <reified T : ComplexOrmTable> KProperty1<T, *>.fullName get() = "${T::class.tableName}.$columnName"
 
@@ -29,4 +27,14 @@ abstract class ComplexOrmUtils {
 
     val CharSequence.reverseUnderScore: String
         get() = replace("_[a-zA-Z]".toRegex()) { match -> match.value[1].toUpperCase().toString() }
+
+    companion object {
+        val sqlSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
+                .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
+
+        val sqlTables =
+                Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
+
+        val allTables = ComplexOrmUtils.sqlSchema.tables
+    }
 }

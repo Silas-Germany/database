@@ -2,9 +2,7 @@ package com.github.silasgermany.complexorm
 
 import android.content.ContentValues
 import android.util.Log
-import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
 import java.io.File
@@ -14,13 +12,6 @@ import kotlin.reflect.KClass
 class ComplexOrmWriter(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
 
     constructor(databaseFile: File) : this(ComplexOrmDatabase(databaseFile))
-
-    private val sqlSchema =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlSchema")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
-    private val sqlTables =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
 
     private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name
         .run { substring(lastIndexOf('.') + 1).split('$') }.let { it[0] to it[1].sql }

@@ -2,7 +2,6 @@ package com.github.silasgermany.complexorm
 
 import android.database.Cursor
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import java.io.File
 import kotlin.reflect.KClass
@@ -103,9 +102,6 @@ class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtil
     }
 
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
-
-    private val sqlTables =
-        Class.forName("com.github.silasgermany.complexorm.GeneratedSqlTables").getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
 
     private val constructors get() = sqlTables.constructors[interfaceName]
     private val normalColumns get() = sqlTables.normalColumns[interfaceName]

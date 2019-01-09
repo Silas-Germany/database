@@ -4,11 +4,14 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.jvm.jvmWildcard
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.util.Types
+import kotlin.reflect.KClass
 
 interface ComplexOrmUtils {
 
@@ -70,6 +73,9 @@ interface ComplexOrmUtils {
     val nullableMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
 
     val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
+    val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()//TypeVariableName("ComplexOrmTable", KModifier.OUT)
+    val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
+    val tableListType get() = List::class.asClassName().parameterizedBy(tableClassType)
 
     val mapPairType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
     val mapNullablePairType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairType)
