@@ -5,10 +5,6 @@ apply plugin: "kotlin-android-extensions"
 apply plugin: "kotlin-kapt" // kotlin annotation processor
 
 android {
-    signingConfigs {
-        config {
-        }
-    }
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.github.silasgermany.database"
@@ -23,6 +19,10 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            matchingFallbacks = ['sqlcipher']
+        }
+        debug {
+            matchingFallbacks = ['sqlcipher']
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
@@ -36,6 +36,6 @@ dependencies {
     implementation 'org.jetbrains.anko:anko:0.10.8'
     // ORM modules
     implementation project(':complexOrmApi')
-    implementation project(':complexorm')
+    implementation project(path: ':complexOrm')
     kapt project(":complexOrmProcessor")
 }

@@ -69,7 +69,7 @@ interface ProcessAllTables: ComplexOrmUtils {
                             annotations?.getAnnotation(ComplexOrmProperty::class.java)?.extra?.let { columnExtra += " $it" }
                             annotations?.getAnnotation(ComplexOrmUnique::class.java)?.let { columnExtra += " UNIQUE" }
                             // get type
-                            val sqlType = when (columnType) {
+                            val complexOrmType = when (columnType) {
                                 ComplexOrmTypes.String -> {
                                     "TEXT"
                                 }
@@ -95,7 +95,7 @@ interface ProcessAllTables: ComplexOrmUtils {
                                     return@mapNotNull "${columnName}_id$columnExtra"
                                 }
                             }
-                            "'$columnName' $sqlType$columnExtra"
+                            "'$columnName' $complexOrmType$columnExtra"
                         }
                     } + foreignKeys
             "\n\"\"\"CREATE TABLE IF NOT EXISTS '${table.sql}'(${columns.joinToString()});\"\"\""

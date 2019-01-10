@@ -10,12 +10,29 @@ android {
         versionName "1.0"
     }
     buildTypes {
-        release {
+        normal {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        sqlcipher {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
+}
+
+configurations {
+    normal
+    sqlcipher
+}
+
+import com.android.builder.core.BuilderConstants
+android.variantFilter { variant ->
+    def build = variant.buildType.name
+    if (build == BuilderConstants.DEBUG || build == BuilderConstants.RELEASE) {
+        variant.setIgnore(true)
+    }
 }
 
 dependencies {
@@ -25,6 +42,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // local-time
     implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
+    // sql-cipher
+    sqlcipherImplementation "net.zetetic:android-database-sqlcipher:4.0.1@aar"
     // ORM annotations
     implementation project(':complexOrmApi')
 }

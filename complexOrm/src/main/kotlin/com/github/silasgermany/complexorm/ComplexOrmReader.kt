@@ -103,12 +103,12 @@ class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtil
 
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
 
-    private val constructors get() = sqlTables.constructors[interfaceName]
-    private val normalColumns get() = sqlTables.normalColumns[interfaceName]
-    private val connectedColumns get() = sqlTables.connectedColumns[interfaceName]
-    private val reverseConnectedColumns get() = sqlTables.reverseConnectedColumns[interfaceName]
-    private val joinColumns get() = sqlTables.joinColumns[interfaceName]
-    //private val reverseJoinColumns  get() = sqlTables.joinColumns[interfaceName]//sqlTables.reverseJoinColumns[interfaceName]!!
+    private val constructors get() = complexOrmTables.constructors[interfaceName]
+    private val normalColumns get() = complexOrmTables.normalColumns[interfaceName]
+    private val connectedColumns get() = complexOrmTables.connectedColumns[interfaceName]
+    private val reverseConnectedColumns get() = complexOrmTables.reverseConnectedColumns[interfaceName]
+    private val joinColumns get() = complexOrmTables.joinColumns[interfaceName]
+    //private val reverseJoinColumns  get() = ComplexOrmTables.joinColumns[interfaceName]//ComplexOrmTables.reverseJoinColumns[interfaceName]!!
 
     private val nextRequests = mutableMapOf<String, MutableList<ComplexOrmTable>>()
     private val notAlreadyLoaded = mutableMapOf<String, MutableList<ComplexOrmTable>>()

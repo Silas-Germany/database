@@ -8,30 +8,44 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import java.io.File
 
-class ComplexOrmDatabase(private val sqlDatabase: SQLiteDatabase) {
+class ComplexOrmDatabase {
+
+    private val normalDatabase: SQLiteDatabase?
+    private val ComplexOrmCipherDatabase: net.sqlcipher.database.SQLiteDatabase?
+
+    constructor(ComplexOrmDatabase: SQLiteDatabase) {
+        normalDatabase = ComplexOrmDatabase
+        ComplexOrmCipherDatabase = null
+    }
+
+    constructor(ComplexOrmDatabase: net.sqlcipher.database.SQLiteDatabase) {
+        normalDatabase = null
+        ComplexOrmCipherDatabase = ComplexOrmDatabase
+    }
 
     constructor(databaseFile: File) : this(SQLiteDatabase.openOrCreateDatabase(databaseFile, null))
+    constructor(databaseFile: File, password: String) : this(net.sqlcipher.database.SQLiteDatabase.openOrCreateDatabase(databaseFile, password, null))
 
     val reader by lazy { ComplexOrmReader(this) }
     val writer by lazy { ComplexOrmWriter(this) }
 
     fun <T> use(f: ComplexOrmDatabase.() -> T): T {
-        sqlDatabase.beginTransaction()
+        normalDatabase?.beginTransaction() ?: ComplexOrmCipherDatabase!!.beginTransaction()
         try {
-            return f(this).also { sqlDatabase.setTransactionSuccessful() }
+            return f(this).also { normalDatabase?.setTransactionSuccessful() ?: ComplexOrmCipherDatabase!!.setTransactionSuccessful() }
         } finally {
-            sqlDatabase.endTransaction()
+            normalDatabase?.endTransaction() ?: ComplexOrmCipherDatabase!!.endTransaction()
         }
     }
 
     val requestsWithColumnInfo = false
 
     @SuppressLint("Recycle")
-    fun queryForEach(sql: String, f: (Cursor) -> Unit) {
-        return sqlDatabase.rawQuery(sql, null).run {
+    fun queryForEach(ComplexOrm: String, f: (Cursor) -> Unit) {
+        return (normalDatabase?.rawQuery(ComplexOrm, null) ?: ComplexOrmCipherDatabase!!.rawQuery(ComplexOrm, null)).run {
             (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }?.takeIf { it.valid } ?: this
         }.run {
-            Log.e("DATABASE", sql)
+            Log.e("DATABASE", ComplexOrm)
             moveToFirst()
             (0 until count).forEach { _-> f(this); moveToNext() }
             close()
@@ -39,7 +53,7 @@ class ComplexOrmDatabase(private val sqlDatabase: SQLiteDatabase) {
     }
 
     @SuppressLint("Recycle")
-    fun <T> queryMap(sql: String, f: (Cursor) -> T): List<T> = sqlDatabase.rawQuery(sql, null).run {
+    fun <T> queryMap(ComplexOrm: String, f: (Cursor) -> T): List<T> = (normalDatabase?.rawQuery(ComplexOrm, null) ?: ComplexOrmCipherDatabase!!.rawQuery(ComplexOrm, null)).run {
         (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
     }.run {
         moveToFirst()
@@ -47,15 +61,18 @@ class ComplexOrmDatabase(private val sqlDatabase: SQLiteDatabase) {
     }
 
     @SuppressLint("Recycle")
-    fun query(sql: String): Cursor = sqlDatabase.rawQuery(sql, null).run {
+    fun query(ComplexOrm: String): Cursor = (normalDatabase?.rawQuery(ComplexOrm, null) ?: ComplexOrmCipherDatabase!!.rawQuery(ComplexOrm, null)).run {
         (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
     }
 
-    fun rawSql(sql: String) = sqlDatabase.execSQL(sql)
+    fun rawComplexOrm(ComplexOrm: String) = normalDatabase?.execSQL(ComplexOrm) ?: ComplexOrmCipherDatabase!!.execSQL(ComplexOrm)
 
-    fun insertOrThrow(table: String, values: ContentValues) = sqlDatabase.insertOrThrow(table, "_id", values)
+    fun insertOrThrow(table: String, values: ContentValues) =
+            normalDatabase?.insertOrThrow(table, "_id", values) ?: ComplexOrmCipherDatabase!!.insertOrThrow(table, "_id", values)
 
-    fun update(table: String, values: ContentValues, whereClause: String) = sqlDatabase.update(table, values, whereClause, null)
+    fun update(table: String, values: ContentValues, whereClause: String) =
+            normalDatabase?.update(table, values, whereClause, null) ?: ComplexOrmCipherDatabase?.update(table, values, whereClause, null)
 
-    fun delete(table: String, whereClause: String) = sqlDatabase.delete(table, whereClause, null)
+    fun delete(table: String, whereClause: String) =
+            normalDatabase?.delete(table, whereClause, null) ?: ComplexOrmCipherDatabase!!.delete(table, whereClause, null)
 }

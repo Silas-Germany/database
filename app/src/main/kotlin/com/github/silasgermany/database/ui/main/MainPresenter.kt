@@ -1,7 +1,7 @@
 package com.github.silasgermany.database.ui.main
 
 import android.util.Log
-import com.github.silasgermany.complexorm.SqlDatabase
+import com.github.silasgermany.complexorm.ComplexOrmDatabase
 import com.github.silasgermany.database.ui.main.MainModel.*
 import java.io.File
 
@@ -11,7 +11,7 @@ class MainPresenter(val view: MainView) {
 
     init {
         try {
-            val database = SqlDatabase(databaseFile)
+            val database = ComplexOrmDatabase(databaseFile)
             val entry = Table1()
             entry.value1 = "test"
             entry.value3 = 1

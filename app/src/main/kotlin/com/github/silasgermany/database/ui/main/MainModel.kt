@@ -1,7 +1,7 @@
 package com.github.silasgermany.database.ui.main
 
-import com.github.silasgermany.complexormapi.SqlDefault
-import com.github.silasgermany.complexormapi.SqlReverseConnectedColumn
+import com.github.silasgermany.complexormapi.ComplexOrmDefault
+import com.github.silasgermany.complexormapi.ComplexOrmReverseConnectedColumn
 import com.github.silasgermany.database.sql.AllTables
 import java.util.*
 
@@ -11,7 +11,7 @@ interface MainModel {
         override var value1: String by initMap
     }
     class Table1(initMap: MutableMap<String, Any?> = default) : AllTables.Table1(initMap) {
-        @SqlDefault("admin")
+        @ComplexOrmDefault("admin")
         override var value1: String by initMap
         override var value2: String? by initMap
         override var value3: Int by initMap
@@ -22,9 +22,9 @@ interface MainModel {
         override var value8: Date by initMap
         override var entry1: Table2? by initMap
         override var entries1: List<Table2> by initMap
-        @SqlReverseConnectedColumn
+        @ComplexOrmReverseConnectedColumn
         var reverseEntries1: List<Table4> by initMap
-        @SqlReverseConnectedColumn("entry1")
+        @ComplexOrmReverseConnectedColumn("entry1")
         var reverseEntries2: List<Table4> by initMap
     }
 

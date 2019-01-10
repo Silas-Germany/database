@@ -20,6 +20,19 @@ import javax.tools.Diagnostic
 
 class Main: AbstractProcessor(), ComplexOrmUtils, ProcessAllTables, ProcessNormalTables {
 
+    /* todo: Should work like this:
+    Everything in the all-tables interface (marked with @ComplexOrmAllTables) is a database table, if it inherits somehow from ComplexOrmTable
+    Everything inheriting from this is also a database table with the same name
+    Everything else is not a database table, but a structure, that a database table can inherit from
+    Columns of inherited tables will just be saved, if they have the column themselves through the override keyword
+    All columns have to be marked with "by initMap" (otherwise they can't be saved or read)
+    Every database table needs the constructor: "(initMap: MutableMap<String, Any?>)" (and can have "= default")
+    No column is allowed to be read, that is not first written to or read by the database (see readable columns)
+    todo: Needs column annotation: Read and save always; read always; save always (runtime default value)
+    todo: Check again @ComplexOrmIgnore tag and "fun get..." properties: Should be completely ignored!!
+    todo: Tables from the all-tables interface should also be normal tables (able to read and write them)
+     */
+
     override lateinit var messager: Messager
     override lateinit var typeUtils: Types
     private lateinit var kaptKotlinGeneratedDir: String
