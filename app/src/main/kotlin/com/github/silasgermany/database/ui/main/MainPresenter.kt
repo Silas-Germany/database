@@ -16,8 +16,8 @@ class MainPresenter(val view: MainView) {
             entry.value1 = "test"
             entry.value3 = 1
             entry.value5 = null
-            entry.reverseEntries1 = listOf(Table4().apply { entry1 = entry })
-            entry.reverseEntries2 = listOf(Table4().apply { entries1 = listOf(Table2()) })
+            entry.reverseEntries1 = listOf(Table4x().apply { entry1 = entry })
+            entry.reverseEntries2 = listOf(Table4x().apply { entries1 = listOf(Table2()) })
             entry.entry1 = Table2()
             entry.entries1 = listOf(Table2())
             database.writer.write(entry)

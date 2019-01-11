@@ -23,9 +23,9 @@ interface MainModel {
         override var entry1: Table2? by initMap
         override var entries1: List<Table2> by initMap
         @ComplexOrmReverseConnectedColumn
-        var reverseEntries1: List<Table4> by initMap
+        var reverseEntries1: List<Table4x> by initMap
         @ComplexOrmReverseConnectedColumn("entry1")
-        var reverseEntries2: List<Table4> by initMap
+        var reverseEntries2: List<Table4x> by initMap
     }
 
     class Table2(initMap: MutableMap<String, Any?> = default) : AllTables.Table2(initMap) {
@@ -34,10 +34,10 @@ interface MainModel {
     }
 
     class Table3(initMap: MutableMap<String, Any?> = default) : AllTables.Table3(initMap) {
-        override var entries1: List<Table4> by initMap
+        override var entries1: List<Table4x> by initMap
     }
 
-    class Table4(initMap: MutableMap<String, Any?> = default) : AllTables.Table4(initMap) {
+    class Table4x(initMap: MutableMap<String, Any?> = default) : AllTables.Table4(initMap) {
         override var entry1: Table1 by initMap
         override var entries1: List<Table2> by initMap
         override var table1: Table1? by initMap

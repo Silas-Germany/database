@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTypes.ComplexOrmTables
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 
-interface ProcessNormalTables: ComplexOrmUtils {
+interface ProcessNormalTables: ComplexOrmBase {
 
     fun createConstructors(): PropertySpec {
         val constructors = internTables.toList().joinToString(",") { (file, tables) ->

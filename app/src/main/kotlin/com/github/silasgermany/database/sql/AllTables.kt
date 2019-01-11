@@ -43,9 +43,5 @@ interface AllTables {
         open val value: String by initMap
         open val noValue: String = ""
         open val getValue: () -> String by initMap
-        fun getValue(): Int {
-            ownId = 1
-            return ownId
-        }
     }
 }

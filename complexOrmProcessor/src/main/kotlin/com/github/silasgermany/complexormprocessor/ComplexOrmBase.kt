@@ -13,7 +13,7 @@ import javax.lang.model.element.Element
 import javax.lang.model.util.Types
 import kotlin.reflect.KClass
 
-interface ComplexOrmUtils {
+interface ComplexOrmBase {
 
     val messager: Messager
     val typeUtils: Types
@@ -62,7 +62,6 @@ interface ComplexOrmUtils {
 
     val CharSequence.reverseUnderScore: String
         get() = replace("_[a-zA-Z]".toRegex()) { match -> match.value[1].toUpperCase().toString() }
-
 
     val stringType get() = String::class.asTypeName()
 

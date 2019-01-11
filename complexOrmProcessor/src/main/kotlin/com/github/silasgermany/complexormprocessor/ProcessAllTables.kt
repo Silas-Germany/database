@@ -7,7 +7,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import org.jetbrains.annotations.NotNull
 import javax.lang.model.type.TypeMirror
 
-interface ProcessAllTables: ComplexOrmUtils {
+interface ProcessAllTables: ComplexOrmBase {
 
     fun createNames(): PropertySpec {
         return PropertySpec.builder("tableNames", listType)
