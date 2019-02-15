@@ -2,6 +2,7 @@ package com.github.silasgermany.complexormapi
 
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
+    @ComplexOrmReadAlways
     val id: Long? by map
 
     override fun toString(): String {
@@ -25,5 +26,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 throw IllegalAccessException("Key does not exist: $it in $this")
             }
         }
+        fun init(id: Long) = default.also { it["id"] = id }
+        inline fun <reified T: ComplexOrmTable>create(id: Long) = T::class.java.getConstructor(Map::class.java).newInstance(init(id)) as T
     }
 }

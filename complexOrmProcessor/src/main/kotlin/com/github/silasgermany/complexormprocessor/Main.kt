@@ -176,7 +176,6 @@ class Main: AbstractProcessor(), ComplexOrmBase, ProcessAllTables, ProcessNormal
                     TypeSpec.objectBuilder(fileName)
                         .addSuperinterface(ComplexOrmSchemaInterface::class)
                         .addProperty(createNames())
-                        .addProperty(createTables())
                         .addProperty(createDropTables())
                         .addProperty(createCreateTables())
                         .build()

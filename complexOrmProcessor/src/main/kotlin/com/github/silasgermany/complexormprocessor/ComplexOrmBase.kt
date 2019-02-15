@@ -29,16 +29,14 @@ interface ComplexOrmBase {
             val typeName = asType().toString().removePrefix("()")
             return when (typeName) {
                 "java.lang.String" -> ComplexOrmTypes.String
-                "java.lang.Integer" -> ComplexOrmTypes.Int
-                "int" -> ComplexOrmTypes.Int
-                "boolean" -> ComplexOrmTypes.Boolean
-                "java.lang.Boolean" -> ComplexOrmTypes.Boolean
+                "java.lang.Integer", "int" -> ComplexOrmTypes.Int
+                "java.lang.Boolean", "boolean" -> ComplexOrmTypes.Boolean
                 "java.util.Date" -> ComplexOrmTypes.Date
                 "org.threeten.bp.LocalDate" -> ComplexOrmTypes.LocalDate
                 "byte[]" -> ComplexOrmTypes.LocalDate
                 "long" -> ComplexOrmTypes.Long
                 "java.lang.Long" -> ComplexOrmTypes.Long
-                "java.lang.Float" -> ComplexOrmTypes.Float
+                "java.lang.Float", "float" -> ComplexOrmTypes.Float
                 else -> {
                     try {
                         if (typeName.startsWith("java.util.List")) return ComplexOrmTypes.ComplexOrmTables
@@ -74,7 +72,7 @@ interface ComplexOrmBase {
     val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
     val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()//TypeVariableName("ComplexOrmTable", KModifier.OUT)
     val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
-    val tableListType get() = List::class.asClassName().parameterizedBy(tableClassType)
+    val tableMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())
 
     val mapPairType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
     val mapNullablePairType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairType)

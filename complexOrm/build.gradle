@@ -43,7 +43,7 @@ dependencies {
     // local-time
     implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
     // sql-cipher
-    sqlcipherImplementation "net.zetetic:android-database-sqlcipher:4.0.1@aar"
+    implementation "net.zetetic:android-database-sqlcipher:4.0.1@aar"
     // ORM annotations
     implementation project(':complexOrmApi')
 }

@@ -29,12 +29,4 @@ annotation class ComplexOrmUnique
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class ComplexOrmIgnore
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
 annotation class ComplexOrmReadAlways
-
-@Target(AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.SOURCE)
-annotation class ComplexOrmWriteAlways

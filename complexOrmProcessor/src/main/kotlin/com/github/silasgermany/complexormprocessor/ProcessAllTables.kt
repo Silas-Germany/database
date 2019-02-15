@@ -1,6 +1,9 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormapi.ComplexOrmDefault
+import com.github.silasgermany.complexormapi.ComplexOrmProperty
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
+import com.github.silasgermany.complexormapi.ComplexOrmUnique
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
@@ -10,16 +13,9 @@ import javax.lang.model.type.TypeMirror
 interface ProcessAllTables: ComplexOrmBase {
 
     fun createNames(): PropertySpec {
-        return PropertySpec.builder("tableNames", listType)
+        return PropertySpec.builder("tables", tableMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("listOf(${rootTables.joinToString(",") { "\n\"${it.sql}\"" }})")
-            .build()
-    }
-
-    fun createTables(): PropertySpec {
-        return PropertySpec.builder("tables", tableListType)
-            .addModifiers(KModifier.OVERRIDE)
-            .initializer("listOf(${rootTables.joinToString(",") { "\n${it}::class" }})")
+            .initializer("mapOf(${rootTables.joinToString(",") { "\n$it::class to \"${it.sql}\"" }})")
             .build()
     }
 
@@ -31,8 +27,7 @@ interface ProcessAllTables: ComplexOrmBase {
                 if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
                 val columnName = column.sql.removePrefix("get_")
                 val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
-                if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) null
-                else if (column.type != ComplexOrmTypes.ComplexOrmTables) null
+                if (column.type != ComplexOrmTypes.ComplexOrmTables) null
                 else "${table.sql}_$columnName"
             }
         } + rootTables.map { it.sql }
@@ -61,7 +56,6 @@ interface ProcessAllTables: ComplexOrmBase {
                             if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
                             // check annotations
                             val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
-                            if (annotations?.getAnnotation(ComplexOrmIgnore::class.java) != null) return@mapNotNull null
                             val columnType = column.type
                             annotations?.getAnnotation(ComplexOrmDefault::class.java)?.value?.let {
                                 columnExtra += defaultValue(columnType, it)

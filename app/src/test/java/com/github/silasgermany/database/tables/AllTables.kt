@@ -1,24 +1,68 @@
 package com.github.silasgermany.database.tables
 
-import com.github.silasgermany.complexormapi.ComplexOrmAllTables
-import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.*
+import java.util.*
 
 
 @Suppress("UNUSED")
 @ComplexOrmAllTables
 interface AllTables {
 
-    open class FirstTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        open val stringValue: String by initMap
+    open class NormalTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
+        constructor(id: Long): this(init(id))
+
+        @ComplexOrmReadAlways
+        @ComplexOrmDefault("${true}")
+        open val booleanValue: Boolean by initMap
+
+        @ComplexOrmDefault("${1}")
         open val intValue: Int by initMap
+        @ComplexOrmDefault("defaultValue")
+        open val stringValue: String by initMap
+        @ComplexOrmDefault("${1L}")
         open val longValue: Long by initMap
+        @ComplexOrmDefault("${1F}")
+        open val floatValue: Float by initMap
+        //@ComplexOrmDefault("31/12/2018")
+        open val dateValue: Date by initMap
+        open val byteArrayValue: ByteArray? by initMap
+
+        open val otherTableValue: EmptyTable? by initMap
+        open val otherTableValues: List<EmptyTable> by initMap
+
+        @ComplexOrmReverseConnectedColumn("normalTableValue")
+        open val connectedTableValues: List<ReferenceTable> by initMap
+        @ComplexOrmReverseConnectedColumn("normal_table_value")
+        open val otherWritingConnectedTableValues: List<ReferenceTable> by initMap
+        @ComplexOrmReverseConnectedColumn
+        open val columnEqualsTableNameConnectedTableValues: List<ReferenceTable> by initMap
+        @ComplexOrmReverseJoinColumn("normalTableValues")
+        open val joinTableValues: List<ReferenceTable> by initMap
+        @ComplexOrmReverseJoinColumn("normal_table_values")
+        open val otherWritingJoinTableValues: List<ReferenceTable> by initMap
+
+        // No map delegations
+        /*
+        open val getIntValue: () -> Int = {1}
+        open val getStringValue: String = ""
+        open val otherClassValue: NotATable? = null
+        open val otherTableValue: EmptyTable? = null
+        // */
     }
 
-    open class SecondTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap)
+    open class NotATable(initMap: MutableMap<String, Any?>) {
+        open val intValue: Int by initMap
+    }
 
-    open class NotATable
+    open class EmptyTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
 
     open class IndirectTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
 
-    open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): MiddleTable(initMap)
+    open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap)
+
+    open class ReferenceTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap) {
+        open val normalTable: NormalTable? by initMap
+        open val normalTableValue: NormalTable? by initMap
+        open val normalTableValues: List<NormalTable> by initMap
+    }
 }
