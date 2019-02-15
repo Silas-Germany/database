@@ -2,9 +2,6 @@ package com.github.silasgermany.database.ui.main
 
 import android.app.Activity
 import android.os.Bundle
-import android.view.Gravity
-import org.jetbrains.anko.textView
-import org.jetbrains.anko.verticalLayout
 import java.io.File
 
 class MainFragment: Activity(), MainView {
@@ -15,12 +12,5 @@ class MainFragment: Activity(), MainView {
         super.onCreate(savedInstanceState)
         MainPresenter(this)
 
-        verticalLayout {
-            gravity = Gravity.CENTER
-            textView("working") {
-                gravity = Gravity.CENTER
-                textSize = 16f
-            }
-        }
     }
 }

@@ -41,7 +41,7 @@ class Main: AbstractProcessor(), ComplexOrmBase, ProcessAllTables, ProcessNormal
     override fun init(p0: ProcessingEnvironment) {
         messager = p0.messager
         typeUtils = p0.typeUtils!!
-        kaptKotlinGeneratedDir = p0.options["kapt.kotlin.generated"]!!
+        kaptKotlinGeneratedDir = p0.options["kapt.kotlin.generated"] ?: ""
         super.init(p0)
     }
 

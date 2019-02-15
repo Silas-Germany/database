@@ -5,11 +5,11 @@ apply plugin: "kotlin-android-extensions"
 apply plugin: "kotlin-kapt" // kotlin annotation processor
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.github.silasgermany.database"
         minSdkVersion 15
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -25,17 +25,23 @@ android {
             matchingFallbacks = ['sqlcipher']
         }
     }
-    sourceSets { main.java.srcDir("src/main/kotlin") }
+    sourceSets {
+        main.java.srcDir("src/main/kotlin")
+        test.java.srcDirs += "build/generated/source/kaptKotlin/debugUnitTest"
+    }
 }
 
 dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$sdk_version"
-    // anko
-    implementation 'org.jetbrains.anko:anko:0.10.8'
     // ORM modules
     implementation project(':complexOrmApi')
     implementation project(path: ':complexOrm')
-    kapt project(":complexOrmProcessor")
+    //kapt project(":complexOrmProcessor")
+    // testing
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    kaptTest project(":complexOrmProcessor")
 }
