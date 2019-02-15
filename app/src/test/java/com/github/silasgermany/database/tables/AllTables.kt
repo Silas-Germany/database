@@ -15,8 +15,9 @@ interface AllTables {
         @ComplexOrmDefault("${true}")
         open val booleanValue: Boolean by initMap
 
+        @ComplexOrmProperty(:>:"';""${1}")
         @ComplexOrmDefault("${1}")
-        open val intValue: Int by initMap
+        open val intValue: Int? by initMap
         @ComplexOrmDefault("defaultValue")
         open val stringValue: String by initMap
         @ComplexOrmDefault("${1L}")
@@ -42,12 +43,12 @@ interface AllTables {
         open val otherWritingJoinTableValues: List<ReferenceTable> by initMap
 
         // No map delegations
-        /*
         open val getIntValue: () -> Int = {1}
         open val getStringValue: String = ""
-        open val otherClassValue: NotATable? = null
-        open val otherTableValue: EmptyTable? = null
-        // */
+        open val getLongValue: Long = 1L
+        open val notValidOtherClassValue: NotATable? = null
+        open val notValidOtherTableValue: EmptyTable? = null
+        fun getUnitValue() = Unit
     }
 
     open class NotATable(initMap: MutableMap<String, Any?>) {

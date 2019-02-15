@@ -8,15 +8,11 @@ import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.jvm.jvmWildcard
-import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
-import javax.lang.model.util.Types
 import kotlin.reflect.KClass
 
 interface ComplexOrmBase {
 
-    val messager: Messager
-    val typeUtils: Types
     val rootTables: MutableList<Element>
     val rootAnnotations: MutableMap<String?, MutableList<Element>>
     val internAnnotations: MutableMap<Element, MutableList<Element>>
