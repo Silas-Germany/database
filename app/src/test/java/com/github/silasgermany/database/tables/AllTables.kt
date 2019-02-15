@@ -15,9 +15,9 @@ interface AllTables {
         @ComplexOrmDefault("${true}")
         open val booleanValue: Boolean by initMap
 
-        @ComplexOrmProperty(:>:"';""${1}")
         @ComplexOrmDefault("${1}")
         open val intValue: Int? by initMap
+        @ComplexOrmProperty("CHECK(LENGTH(iso) = 3)")
         @ComplexOrmDefault("defaultValue")
         open val stringValue: String by initMap
         @ComplexOrmDefault("${1L}")
