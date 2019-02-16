@@ -60,7 +60,9 @@ interface AllTables {
 
     open class IndirectTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
 
-    open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap)
+    open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap) {
+        open val directValue: Int? by initMap
+    }
 
     open class ReferenceTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
         open val normalTable: NormalTable? by initMap

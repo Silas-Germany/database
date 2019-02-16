@@ -32,7 +32,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         rootElements.forEach(::extractTablesFromElement)
         allTableInfo.putAll(allTables.associate(::extractInfoFromTable))
         allTableInfo.forEach { (tableName, value) ->
-            val (superTableName, columns) = getSuperTableColumns(value)
+            val (superTableName, columns) = getSuperTableColumns(value, value.isRoot)
             value.columns.addAll(columns)
             value.tableName = (superTableName ?: tableName)
         }
@@ -44,15 +44,14 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         return allTableInfo
     }
 
-    private fun getSuperTableColumns(tableInfo: TableInfo): Pair<String?, List<Column>> {
+    private fun getSuperTableColumns(tableInfo: TableInfo, isRootsSuperClass: Boolean): Pair<String?, List<Column>> {
         var (tableName, columns) = tableInfo.superTable?.let {
-            getSuperTableColumns(allTableInfo.getValue(it))
+            getSuperTableColumns(allTableInfo.getValue(it), isRootsSuperClass)
         } ?: Pair(null, emptyList())
         if (tableInfo.superTable in allTables.filter { it.second }.map { "${it.first}" }) {
             tableName = tableInfo.superTable
         }
-        val combinedColumns = tableInfo.columns.filter { it.getAnnotationValue(ComplexOrmReadAlways::class) != null }
-        //if (combinedColumns.isNotEmpty()) throw IllegalArgumentException("$combinedColumns")
+        val combinedColumns = tableInfo.columns.filter { isRootsSuperClass || it.getAnnotationValue(ComplexOrmReadAlways::class) != null }
         return tableName to columns + combinedColumns
     }
 

@@ -17,4 +17,8 @@ interface AppliedTablesInterface {
     class NormalTableWithoutWritableIntValue(initMap: MutableMap<String, Any?> = default): NormalTableWithWritableIntValue(initMap) {
         override var stringValue: String by initMap
     }
+
+    open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): AllTables.DoubleIndirectTable(initMap) {
+        override val directValue: Int? by initMap
+    }
 }

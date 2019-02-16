@@ -26,13 +26,13 @@ class ProcessorTest {
 
     @Test
     fun checkCreateTable() = assertFalse(
-        complexOrmSchema.createTableCommands.any { it.isEmpty() },
+        complexOrmSchema.createTableCommands.any { it.value.isEmpty() },
         "Check, that every create table command exist"
     )
 
     @Test
     fun checkDropTable() = assertFalse(
-        complexOrmSchema.dropTableCommands.any { it.isEmpty() },
+        complexOrmSchema.dropTableCommands.any { it.value.isEmpty() },
         "Check, that every drop table command exist"
     )
 
@@ -62,7 +62,7 @@ class ProcessorTest {
 
     @Test
     fun checkNormalColumnsOfDeclaredTables() {
-        assertTrue(complexOrmTables.constructors.isNotEmpty(), "Constructors should exist")
+        assertTrue(complexOrmTables.tableConstructors.isNotEmpty(), "Constructors should exist")
         val allTablesNormalColumnsTables = complexOrmTables.normalColumns
         assertNotNull(allTablesNormalColumnsTables, "Interface should exist (has table with normal columns)")
         assertNotNull(allTablesNormalColumnsTables.get(AllTables.NormalTable::class.java.canonicalName!!), "Table should exist (has normal columns)")
@@ -73,7 +73,7 @@ class ProcessorTest {
             "Table should have indirect column"
         )
         assertEquals(
-            setOf("middle_inheriting_value", "inheriting_value"),
+            setOf("middle_inheriting_value", "inheriting_value", "direct_value"),
             allTablesNormalColumnsTables[AllTables.DoubleIndirectTable::class.java.canonicalName!!]?.keys,
             "Table should have both indirect columns"
         )

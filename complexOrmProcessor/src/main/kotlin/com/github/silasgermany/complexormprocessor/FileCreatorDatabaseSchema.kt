@@ -21,10 +21,11 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
     }
 
     fun createDropTables(): PropertySpec {
-        return PropertySpec.builder("dropTableCommands", listType)
+        return PropertySpec.builder("dropTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("listOf(${rootTablesList.joinToString(",") {
-                "\n\"DROP TABLE IF EXISTS '${it.second.tableName}';\"" }})"
+            .initializer("mapOf(${rootTablesList.joinToString(",") {
+                val tableName = it.second.tableName
+                "\n\"$tableName\" to \"DROP TABLE IF EXISTS '$tableName';\"" }})"
             )
             .build()
     }
@@ -70,11 +71,11 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
                     } + foreignKeys
-            "\n\"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName}'(${columns.joinToString()});\"\"\""
+            "\n\"${tableInfo.tableName}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName}'(${columns.joinToString()});\"\"\""
         } + relatedTables
-        return PropertySpec.builder("createTableCommands", listType)
+        return PropertySpec.builder("createTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer(CodeBlock.of("listOf(${createTableCommands.joinToString(",")})"))
+            .initializer(CodeBlock.of("mapOf(${createTableCommands.joinToString(",")})"))
             .build()
     }
 
@@ -114,7 +115,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
 
     private fun createRelatedTableCommand(tableName: String, column: Column): String {
         val referenceTableName = rootTables.getValue(column.type.referenceTable!!).tableName
-        return "\n\"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
+        return "\n\"$tableName\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
                 "'${tableName}_id' INTEGER NOT NULL, " +
                 "'${referenceTableName}_id' INTEGER NOT NULL, " +
                 "PRIMARY KEY ('${tableName}_id', '${referenceTableName}_id'), " +
@@ -122,7 +123,9 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                 "FOREIGN KEY ('${referenceTableName}_id') REFERENCES '$referenceTableName'(id));\"\"\""
     }
 
-    private val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
+    private val stringType get() = String::class.asTypeName()
+    private val stringMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
+
     private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
     private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
     private val tableClassMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())

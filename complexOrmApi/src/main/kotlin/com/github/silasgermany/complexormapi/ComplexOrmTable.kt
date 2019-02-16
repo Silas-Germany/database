@@ -2,7 +2,6 @@ package com.github.silasgermany.complexormapi
 
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
-    @ComplexOrmReadAlways
     val id: Long? by map
 
     override fun toString(): String {

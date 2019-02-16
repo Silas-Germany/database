@@ -10,13 +10,30 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>) {
 
-    val tableInfoList = tablesInfo.toList()
+    private val tableInfoList = tablesInfo.toList()
+
+    fun createBasicTableInfo(): PropertySpec {
+        val constructors = tableInfoList.joinToString(",") { (className, tableInfo) ->
+            val rootTable = if (tableInfo.isRoot) className else getRootTableName(tableInfo)
+            "\n\"$className\" to (\"${tableInfo.tableName}\" to \"$rootTable\")"
+        }
+        return PropertySpec.builder("basicTableInfo", pairMapType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("mapOf($constructors)")
+            .build()
+    }
+
+    private fun getRootTableName(tableInfo: TableInfo): String {
+        val nextTableInfo = tablesInfo.getValue(tableInfo.superTable!!)
+        return if (nextTableInfo.isRoot) tableInfo.superTable
+        else getRootTableName(nextTableInfo)
+    }
 
     fun createConstructors(): PropertySpec {
         val constructors = tableInfoList.joinToString(",") { (className, _) ->
             "\n\"$className\" to { it: Map<String, Any?> -> $className(it as MutableMap<String, Any?>)}"
         }
-        return PropertySpec.builder("constructors", constructorsType)
+        return PropertySpec.builder("tableConstructors", constructorsType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($constructors)")
             .build()
@@ -24,8 +41,12 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map { it.columnName }
             val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
+                if (column.columnName !in rootTableColumnNames)
+                    throw java.lang.IllegalArgumentException("Column ${column.name} of table $className not in root table: ${getRootTableName(tableInfo)} " +
+                            "(Don't delegate it with a map, if it's not a column)")
                 when (column.type.type) {
                     ComplexOrmTypes.ComplexOrmTable, ComplexOrmTypes.ComplexOrmTables -> null
                     else -> {
@@ -40,6 +61,12 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
             .build()
+    }
+
+    private fun getRootTableInfo(tableInfo: TableInfo): TableInfo {
+        val nextTableInfo = tablesInfo.getValue(tableInfo.superTable!!)
+        return if (nextTableInfo.isRoot) nextTableInfo
+        else getRootTableInfo(nextTableInfo)
     }
 
     fun createConnectedColumnsInfo(): PropertySpec {
@@ -131,13 +158,13 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     private val stringType get() = String::class.asTypeName()
     private val typesMapType get() = Map::class.asClassName().parameterizedBy(stringType, ComplexOrmTypes::class.asTypeName())
-    private val nullablePairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType.copy(true))
-    private val nullablePairMapType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairType)
     private val stringMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
+    private val pairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType)
+    private val pairMapType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
 
     private val normalColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, typesMapType)
     private val normalForeignColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, stringMapType)
-    private val reverseForeignColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, nullablePairMapType)
+    private val reverseForeignColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, pairMapType)
 
     private val nullableAnyType get() = Any::class.asTypeName().copy(true)
     private val nullableAnyMapType get() = MutableMap::class.asClassName().parameterizedBy(stringType, nullableAnyType)
