@@ -56,13 +56,13 @@ interface AllTables {
         open val intValue: Int by initMap
     }
 
-    open class EmptyTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
+    open class EmptyTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap)
 
     open class IndirectTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
 
     open class DoubleIndirectTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap)
 
-    open class ReferenceTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap) {
+    open class ReferenceTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
         open val normalTable: NormalTable? by initMap
         open val normalTableValue: NormalTable by initMap
         open val normalTableValues: List<NormalTable> by initMap

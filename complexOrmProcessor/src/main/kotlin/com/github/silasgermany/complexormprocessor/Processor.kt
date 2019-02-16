@@ -8,13 +8,13 @@ import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 
-class Processor(private val processingEnvironment: ProcessingEnvironment) {
+class Processor(processingEnvironment: ProcessingEnvironment) {
 
 
     private val targetPackage = "com.github.silasgermany.complexorm"
     private val kaptKotlinGeneratedDir = processingEnvironment.options["kapt.kotlin.generated"]!!
 
-    private val tableExtractor = TableInfoExtractor(processingEnvironment.typeUtils)
+    private val tableExtractor = TableInfoExtractor(processingEnvironment.messager, processingEnvironment.typeUtils)
 
     fun process(roundEnv: RoundEnvironment) {
         val tableInfo = tableExtractor.extract(roundEnv.rootElements)
@@ -39,8 +39,9 @@ class Processor(private val processingEnvironment: ProcessingEnvironment) {
                     .addSuperinterface(ComplexOrmTablesInterface::class)
                     .addProperty(tableInfoFileCreator.createConstructors())
                     .addProperty(tableInfoFileCreator.createNormalColumnsInfo())
-                    .addProperty(tableInfoFileCreator.createJoinColumnsInfo())
                     .addProperty(tableInfoFileCreator.createConnectedColumnsInfo())
+                    .addProperty(tableInfoFileCreator.createJoinColumnsInfo())
+                    .addProperty(tableInfoFileCreator.createReverseJoinColumnsInfo())
                     .addProperty(tableInfoFileCreator.createReverseConnectedColumnsInfo())
                     .build()
             ).build()

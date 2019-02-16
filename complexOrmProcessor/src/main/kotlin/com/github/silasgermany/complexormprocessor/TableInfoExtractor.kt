@@ -9,17 +9,19 @@ import com.github.silasgermany.complexormprocessor.models.ColumnType
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
+import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Types
 
-class TableInfoExtractor(private val typeUtils: Types) {
+class TableInfoExtractor(private val messager: Messager, private val typeUtils: Types) {
 
     private val allTables = mutableListOf<Pair<Element, Boolean>>()
     private val sqlTableName = ComplexOrmTable::class.java.canonicalName
     private val allTableInfo = mutableMapOf<String, TableInfo>()
+        .run { withDefault { throw java.lang.IllegalArgumentException("Couldn't find table $it (available tables: $keys)") } }
 
 
     private val allRootTableTypes: List<String> by lazy { allTables.filter { it.second }.map { "${it.first.asType()}" } }
@@ -30,11 +32,11 @@ class TableInfoExtractor(private val typeUtils: Types) {
         rootElements.forEach(::extractTablesFromElement)
         allTableInfo.putAll(allTables.associate(::extractInfoFromTable))
         allTableInfo.forEach { (tableName, value) ->
-            getSuperTableColumns(value).apply {
-                value.columns.addAll(second)
-                value.tableName = (first ?: tableName)
-            }
+            val (superTableName, columns) = getSuperTableColumns(value)
+            value.columns.addAll(columns)
+            value.tableName = (superTableName ?: tableName)
         }
+        //messager.printMessage(Diagnostic.Kind.ERROR, "$allTableInfo")
         allTableInfo.minusAssign(allTables.filter { !isTable(it.first.asType()) }.map { "${it.first}" })
         allTableInfo.values.forEach { tableInfo ->
             tableInfo.superTable
@@ -49,8 +51,9 @@ class TableInfoExtractor(private val typeUtils: Types) {
         if (tableInfo.superTable in allTables.filter { it.second }.map { "${it.first}" }) {
             tableName = tableInfo.superTable
         }
-        val combinedColumns = columns.filter { it.getAnnotationValue(ComplexOrmReadAlways::class) != null }
-        return tableName to combinedColumns
+        val combinedColumns = tableInfo.columns.filter { it.getAnnotationValue(ComplexOrmReadAlways::class) != null }
+        //if (combinedColumns.isNotEmpty()) throw IllegalArgumentException("$combinedColumns")
+        return tableName to columns + combinedColumns
     }
 
     private fun extractTablesFromElement(element: Element) {
@@ -102,8 +105,7 @@ class TableInfoExtractor(private val typeUtils: Types) {
                 }
             }
         }
-        val superTable = if (isRootTable) null
-        else typeUtils.directSupertypes(element.asType()).find { "$it" in allTableElements }?.toString()
+        val superTable = typeUtils.directSupertypes(element.asType()).find { "$it" in allTableElements }?.toString()
         val tableInfo = TableInfo(isColumn.mapTo(mutableListOf()) {
             Column(
                 it,

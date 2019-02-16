@@ -20,7 +20,7 @@ class ProcessorTest {
     }
 
     private val complexOrmTables by lazy {
-        Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmTables")
+        Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
             .getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
     }
 
@@ -65,20 +65,16 @@ class ProcessorTest {
         assertTrue(complexOrmTables.constructors.isNotEmpty(), "Constructors should exist")
         val allTablesNormalColumnsTables = complexOrmTables.normalColumns
         assertNotNull(allTablesNormalColumnsTables, "Interface should exist (has table with normal columns)")
-        assertNotNull(allTablesNormalColumnsTables.get("normal_table"), "Table should exist (has normal columns)")
-        assertNull(allTablesNormalColumnsTables.get("empty_table"), "Table should not exist (no normal columns)")
-        assertNull(allTablesNormalColumnsTables.get("no_table"), "Table should not exist (is not a table)")
-        assertNotNull(
-            allTablesNormalColumnsTables.get("indirect_table"),
-            "Table should exist (has indirectly normal columns)"
-        )
+        assertNotNull(allTablesNormalColumnsTables.get(AllTables.NormalTable::class.java.canonicalName!!), "Table should exist (has normal columns)")
+        assertNull(allTablesNormalColumnsTables.get(AllTables.EmptyTable::class.java.canonicalName!!), "Table should not exist (no normal columns)")
+        assertNull(allTablesNormalColumnsTables.get(AllTables.NotATable::class.java.canonicalName!!), "Table should not exist (is not a table)")
         assertEquals(
-            setOf("inheriting_value"), allTablesNormalColumnsTables["double_indirect_table"]?.keys,
+            setOf("inheriting_value"), allTablesNormalColumnsTables[AllTables.IndirectTable::class.java.canonicalName!!]?.keys,
             "Table should have indirect column"
         )
         assertEquals(
             setOf("middle_inheriting_value", "inheriting_value"),
-            allTablesNormalColumnsTables["double_indirect_table"]?.keys,
+            allTablesNormalColumnsTables[AllTables.DoubleIndirectTable::class.java.canonicalName!!]?.keys,
             "Table should have both indirect columns"
         )
     }
