@@ -28,7 +28,6 @@ class TableInfoExtractor(private val typeUtils: Types) {
         rootElements.forEach(::extractTablesFromElement)
         allTableInfo.putAll(allTables.associate(::extractInfoFromTable))
         allTableInfo.forEach { (tableName, value) ->
-            value.columns.add(Column("id", ColumnType(ComplexOrmTypes.Long, true, null), emptyList()))
             getSuperTableColumns(value).apply {
                 value.columns.addAll(second)
                 value.tableName = (first ?: tableName)
@@ -48,7 +47,7 @@ class TableInfoExtractor(private val typeUtils: Types) {
         if (tableInfo.superTable in allTables.filter { it.second }.map { "${it.first}" }) {
             tableName = tableInfo.superTable
         }
-        val combinedColumns = tableInfo.columns + columns.filter { it.annotations.hasAnnotation(ComplexOrmReadAlways::class) }
+        val combinedColumns = columns.filter { it.annotations.hasAnnotation(ComplexOrmReadAlways::class) }
         return tableName to combinedColumns
     }
 
@@ -105,7 +104,7 @@ class TableInfoExtractor(private val typeUtils: Types) {
         }
         val superTable = if (isRootTable) null
         else typeUtils.directSupertypes(element.asType()).find { "$it" in allTableElements }?.toString()
-        val tableInfo = TableInfo(isColumn.mapTo(mutableListOf()) { Column(it, types.getValue(it), annotations.getValue(it)) }, superTable)
+        val tableInfo = TableInfo(isColumn.mapTo(mutableListOf()) { Column(it, types.getValue(it), annotations.getValue(it)) }, isRootTable, superTable)
         return Pair("$element", tableInfo)
     }
 

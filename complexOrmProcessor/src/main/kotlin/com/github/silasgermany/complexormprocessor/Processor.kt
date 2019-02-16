@@ -1,8 +1,11 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
+import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
-import javax.tools.Diagnostic
 
 class Processor(private val processingEnvironment: ProcessingEnvironment) {
 
@@ -15,7 +18,6 @@ class Processor(private val processingEnvironment: ProcessingEnvironment) {
 
     fun process(roundEnv: RoundEnvironment) {
         val tableInfo = tableExtractor.extract(roundEnv.rootElements)
-        /*
         val schemaFileCreator = DatabaseSchemaFileCreator(tableInfo)
         var fileName = "ComplexOrmDatabaseSchema"
         var file = FileSpec.builder(targetPackage, fileName)
@@ -28,6 +30,7 @@ class Processor(private val processingEnvironment: ProcessingEnvironment) {
                     .build()
             ).build()
         file.writeTo(File(kaptKotlinGeneratedDir))
+        /*
 
         val tableInfoFileCreator = TableInfoFileCreator(tableInfo)
         fileName = "ComplexOrmTableInfo"
@@ -44,6 +47,6 @@ class Processor(private val processingEnvironment: ProcessingEnvironment) {
             ).build()
         file.writeTo(File(kaptKotlinGeneratedDir))
         // */
-        messager.printMessage(Diagnostic.Kind.ERROR, "$tableInfo")
+        //messager.printMessage(Diagnostic.Kind.ERROR, "$tableInfo")
     }
 }

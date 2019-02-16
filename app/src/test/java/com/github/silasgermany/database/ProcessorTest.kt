@@ -14,12 +14,15 @@ import kotlin.test.*
 @RunWith(JUnit4::class)
 class ProcessorTest {
 
-    private val complexOrmSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmSchema")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
+    private val complexOrmSchema by lazy {
+        Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
+    }
 
-    private val complexOrmTables =
+    private val complexOrmTables by lazy {
         Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmTables")
             .getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
+    }
 
     @Test
     fun checkCreateTable() = assertFalse(
@@ -41,8 +44,8 @@ class ProcessorTest {
 
     @Test
     fun checkTableClasses() = assertEquals<Collection<KClass<*>>>(
-        AllTables::class.nestedClasses.filter { it.isSubclassOf(ComplexOrmTable::class) },
-        complexOrmSchema.tables.keys,
+        AllTables::class.nestedClasses.filter { it.isSubclassOf(ComplexOrmTable::class) }.toSet(),
+        complexOrmSchema.tables.keys.toSet(),
         "This variable should list exactly all table classes"
     )
 

@@ -1,89 +1,80 @@
 package com.github.silasgermany.complexormprocessor
 
+import com.github.silasgermany.complexormapi.*
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.jvm.jvmWildcard
+import kotlin.reflect.KClass
+
 class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableInfo>) {
 
-    /*
+    private val rootTables = tableInfo.filter { it.value.isRoot }
+    private val rootTablesList = rootTables.toList()
+
     fun createNames(): PropertySpec {
         return PropertySpec.builder("tables", tableMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf(${rootTables.joinToString(",") { "\n$it::class to \"${it.sql}\"" }})")
+            .initializer("mapOf(${rootTablesList.joinToString(",") { "\n${it.first}::class to \"${it.second.tableName}\"" }})")
             .build()
     }
 
     fun createDropTables(): PropertySpec {
-        //throw IllegalAccessException("${rootAnnotations["progress_marker"]?.map { it?.getAnnotation(ComplexOrmIgnore::class.java).toString() + "+$it" }}x")
-        val tableNames = rootTables.flatMap { table ->
-            table.enclosedElements.mapNotNull { column ->
-                if (!column.simpleName.startsWith("get")) return@mapNotNull null
-                if (column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) return@mapNotNull null
-                val columnName = column.sql.removePrefix("get_")
-                val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
-                if (column.type != ComplexOrmTypes.ComplexOrmTables) null
-                else "${table.sql}_$columnName"
-            }
-        } + rootTables.map { it.sql }
         return PropertySpec.builder("dropTableCommands", listType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("listOf(${tableNames.joinToString(",") {
-                "\n\"DROP TABLE IF EXISTS '$it';\"" }})"
+            .initializer("listOf(${rootTablesList.joinToString(",") {
+                "\n\"DROP TABLE IF EXISTS '${it.second.tableName}';\"" }})"
             )
             .build()
     }
 
     fun createCreateTables(): PropertySpec {
         val relatedTables = mutableListOf<String>()
-        val createTableCommands = rootTables.map { table ->
+        val createTableCommands = rootTablesList.map { (_, tableInfo) ->
             val foreignKeys = mutableListOf<String>()
-            val columns = arrayOf("'_id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
-                    table.enclosedElements.mapNotNull { column ->
-                        if (!column.simpleName.startsWith("get")
-                            || column.asType().toString().startsWith("()kotlin.jvm.functions.Function")) {
-                            return@mapNotNull null
+            val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
+                    tableInfo.columns.mapNotNull { column ->
+                        var columnExtra = ""
+                        // check whether nullable
+                        if (!column.type.nullable) columnExtra += " NOT NULL"
+                        // check annotations
+                        column.annotations.find {
+                            "$it".removePrefix("@").startsWith(ComplexOrmDefault::class.java.canonicalName)
+                        }?.elementValues?.values?.first()?.value?.let {
+                            columnExtra += defaultValue(column.type.type, "$it")
                         }
-                        else {
-                            val columnName = column.sql.removePrefix("get_")
-                            var columnExtra = ""
-                            // check whether nullable
-                            if (column.getAnnotation(NotNull::class.java) != null) columnExtra += " NOT NULL"
-                            // check annotations
-                            val annotations = rootAnnotations[table.sql]?.find { "$it".sql.startsWith(columnName) }
-                            val columnType = column.type
-                            annotations?.getAnnotation(ComplexOrmDefault::class.java)?.value?.let {
-                                columnExtra += defaultValue(columnType, it)
-                            }
-                            annotations?.getAnnotation(ComplexOrmProperty::class.java)?.extra?.let { columnExtra += " $it" }
-                            annotations?.getAnnotation(ComplexOrmUnique::class.java)?.let { columnExtra += " UNIQUE" }
-                            // get type
-                            val complexOrmType = when (columnType) {
-                                ComplexOrmTypes.String -> {
-                                    "TEXT"
-                                }
-                                ComplexOrmTypes.Boolean,
-                                ComplexOrmTypes.Date,
-                                ComplexOrmTypes.LocalDate -> {
-                                    "NUMERIC"
-                                }
-                                ComplexOrmTypes.Long,
-                                ComplexOrmTypes.Int -> {
-                                    "INTEGER"
-                                }
-                                ComplexOrmTypes.Float -> {
-                                    "REAL"
-                                }
-                                ComplexOrmTypes.ByteArray -> "BLOB"
-                                ComplexOrmTypes.ComplexOrmTables -> {
-                                    relatedTables.add(relatedTable(table.sql, columnName, column.asType()))
-                                    return@mapNotNull null
-                                }
-                                ComplexOrmTypes.ComplexOrmTable -> {
-                                    foreignKeys.add(foreignTableReference(columnName, column.asType()))
-                                    return@mapNotNull "${columnName}_id$columnExtra"
-                                }
-                            }
-                            "'$columnName' $complexOrmType$columnExtra"
+                        column.annotations.find {
+                            "$it".removePrefix("@").startsWith(ComplexOrmProperty::class.java.canonicalName)
+                        }?.elementValues?.values?.first()?.value?.let {
+                            columnExtra += " $it".replace(column.name, column.columnName)
                         }
+                        column.annotations.find {
+                            "$it".removePrefix("@").startsWith(ComplexOrmUnique::class.java.canonicalName)
+                        }?.let {
+                            columnExtra += " UNIQUE"
+                        }
+                        // get type
+                        val complexOrmType = when (column.type.type) {
+                            ComplexOrmTypes.String -> "TEXT"
+                            ComplexOrmTypes.Boolean,
+                            ComplexOrmTypes.Date,
+                            ComplexOrmTypes.LocalDate -> "NUMERIC"
+                            ComplexOrmTypes.Long,
+                            ComplexOrmTypes.Int -> "INTEGER"
+                            ComplexOrmTypes.Float -> "REAL"
+                            ComplexOrmTypes.ByteArray -> "BLOB"
+                            ComplexOrmTypes.ComplexOrmTables -> {
+                                relatedTables.add(createRelatedTableCommand(tableInfo.tableName!!, column))
+                                return@mapNotNull null
+                            }
+                            ComplexOrmTypes.ComplexOrmTable -> {
+                                val referenceTableName = rootTables.getValue(column.type.referenceTable!!).tableName
+                                foreignKeys.add("FOREIGN KEY ('${column.columnName}_id') REFERENCES '$referenceTableName'(id)")
+                                return@mapNotNull "'${column.columnName}_id' INTEGER$columnExtra"
+                            }
+                        }
+                        "'${column.columnName}' $complexOrmType$columnExtra"
                     } + foreignKeys
-            "\n\"\"\"CREATE TABLE IF NOT EXISTS '${table.sql}'(${columns.joinToString()});\"\"\""
+            "\n\"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName}'(${columns.joinToString()});\"\"\""
         } + relatedTables
         return PropertySpec.builder("createTableCommands", listType)
             .addModifiers(KModifier.OVERRIDE)
@@ -98,20 +89,20 @@ class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableI
             ComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
-                else -> throw java.lang.IllegalArgumentException("Use 'false.toString()' or 'true.toString()' for boolean default values (not $defaultValue)")
+                else -> throw java.lang.IllegalArgumentException("Use '\${true}' or '\${false}' for default values of ${type.name} (not $defaultValue)")
             }
             ComplexOrmTypes.Date,
             ComplexOrmTypes.LocalDate,
+            ComplexOrmTypes.ByteArray,
             ComplexOrmTypes.ComplexOrmTables,
             ComplexOrmTypes.ComplexOrmTable -> {
-                throw IllegalArgumentException("Default value not allowed for ${type.name}: $defaultValue")
+                throw IllegalArgumentException("Default value not allowed for ${type.name} (has $defaultValue)")
             }
-            ComplexOrmTypes.ByteArray -> "$defaultValue"
             ComplexOrmTypes.Float -> {
                 try {
                     defaultValue.toFloat().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values (not $defaultValue)")
+                    throw java.lang.IllegalArgumentException("Use something like '\${1.0}' for default values of ${type.name} (not $defaultValue)")
                 }
             }
             ComplexOrmTypes.Long,
@@ -119,27 +110,24 @@ class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableI
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '1.toString()' for default values (not $defaultValue)")
+                    throw java.lang.IllegalArgumentException("Use something like '\${1}' for default values of ${type.name} (not $defaultValue)")
                 }
             }
         }
     }
 
-    private fun foreignTableReference(columnName: String, columnType: TypeMirror): String {
-        val foreignTable = columnType.toString()
-            .run { substring(lastIndexOf('.') + 1) }.sql
-        return "FOREIGN KEY ('${columnName}_id') REFERENCES '$foreignTable'(_id)"
+    private fun createRelatedTableCommand(tableName: String, column: Column): String {
+        val referenceTableName = rootTables.getValue(column.type.referenceTable!!).tableName
+        return "\n\"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
+                "'${tableName}_id' INTEGER NOT NULL, " +
+                "'${referenceTableName}_id' INTEGER NOT NULL, " +
+                "PRIMARY KEY ('${tableName}_id', '${referenceTableName}_id'), " +
+                "FOREIGN KEY ('${tableName}_id') REFERENCES '$tableName'(id), " +
+                "FOREIGN KEY ('${referenceTableName}_id') REFERENCES '$referenceTableName'(id));\"\"\""
     }
 
-    private fun relatedTable(rootName: String, columnName: String, columnType: TypeMirror): String {
-        val foreignTable = columnType.toString()
-            .run { substring(lastIndexOf('.') + 1) }.removeSuffix(">").sql
-        return "\"\"\"CREATE TABLE IF NOT EXISTS '${rootName}_$columnName'(" +
-                "'${rootName}_id' INTEGER NOT NULL, " +
-                "'${foreignTable}_id' INTEGER NOT NULL, " +
-                "PRIMARY KEY ('${rootName}_id', '${foreignTable}_id'), " +
-                "FOREIGN KEY ('${rootName}_id') REFERENCES '$rootName'(_id), " +
-                "FOREIGN KEY ('${foreignTable}_id') REFERENCES '$foreignTable'(_id));\"\"\""
-    }
-    // */
+    private val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
+    private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
+    private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
+    private val tableMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())
 }

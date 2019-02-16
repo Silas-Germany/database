@@ -17,7 +17,8 @@ interface AllTables {
 
         @ComplexOrmDefault("${1}")
         open val intValue: Int? by initMap
-        @ComplexOrmProperty("CHECK(LENGTH(iso) = 3)")
+        @ComplexOrmUnique
+        @ComplexOrmProperty("CHECK(LENGTH(stringValue) = 3)")
         @ComplexOrmDefault("defaultValue")
         open val stringValue: String by initMap
         @ComplexOrmDefault("${1L}")
@@ -63,7 +64,7 @@ interface AllTables {
 
     open class ReferenceTable(initMap: MutableMap<String, Any?> = default): BaseMiddleTable(initMap) {
         open val normalTable: NormalTable? by initMap
-        open val normalTableValue: NormalTable? by initMap
+        open val normalTableValue: NormalTable by initMap
         open val normalTableValues: List<NormalTable> by initMap
     }
 }
