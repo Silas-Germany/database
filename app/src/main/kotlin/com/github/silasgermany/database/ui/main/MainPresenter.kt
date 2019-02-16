@@ -20,10 +20,9 @@ class MainPresenter(val view: MainView) {
             entry.reverseEntries2 = listOf(Table4x().apply { entries1 = listOf(Table2()) })
             entry.entry1 = Table2()
             entry.entries1 = listOf(Table2())
-            database.writer.write(entry)
-            val readEntry = database.reader
-                .get<Table>()
-            Log.e("DATABASE", "$readEntry")
+            //database.writer.write(entry)
+            //val readEntry = database.reader.get<Table>()
+            //Log.e("DATABASE", "$readEntry")
         } catch (e: Exception) {
             Log.e("DATABASE", "${e.message}; ${e.stackTrace.joinToString()}")
         }

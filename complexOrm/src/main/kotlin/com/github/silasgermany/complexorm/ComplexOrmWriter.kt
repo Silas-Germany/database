@@ -1,16 +1,8 @@
 package com.github.silasgermany.complexorm
 
-import android.content.ContentValues
-import android.util.Log
-import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import org.threeten.bp.LocalDate
-import java.io.File
-import java.util.*
-import kotlin.reflect.KClass
-
 class ComplexOrmWriter(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
 
+    /*
     constructor(databaseFile: File) : this(ComplexOrmDatabase(databaseFile))
 
     private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name
@@ -112,5 +104,6 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabase): ComplexOrmUtil
         Log.e("DATABASE", "Insert in table $table: ${contentValues.valueSet()}")
         return insertOrThrow(table, contentValues)
     }
-    
+    // */
+
 }

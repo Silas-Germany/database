@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexormprocessor
+package com.github.silasgermany.complexormprocessor.models
 
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 

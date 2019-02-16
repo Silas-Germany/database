@@ -1,18 +1,20 @@
 package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormprocessor.models.Column
+import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmWildcard
 import kotlin.reflect.KClass
 
-class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableInfo>) {
+class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableInfo>) {
 
     private val rootTables = tableInfo.filter { it.value.isRoot }
     private val rootTablesList = rootTables.toList()
 
     fun createNames(): PropertySpec {
-        return PropertySpec.builder("tables", tableMapType)
+        return PropertySpec.builder("tables", tableClassMapType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf(${rootTablesList.joinToString(",") { "\n${it.first}::class to \"${it.second.tableName}\"" }})")
             .build()
@@ -37,19 +39,13 @@ class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableI
                         // check whether nullable
                         if (!column.type.nullable) columnExtra += " NOT NULL"
                         // check annotations
-                        column.annotations.find {
-                            "$it".removePrefix("@").startsWith(ComplexOrmDefault::class.java.canonicalName)
-                        }?.elementValues?.values?.first()?.value?.let {
+                        column.getAnnotationValue(ComplexOrmDefault::class)?.let {
                             columnExtra += defaultValue(column.type.type, "$it")
                         }
-                        column.annotations.find {
-                            "$it".removePrefix("@").startsWith(ComplexOrmProperty::class.java.canonicalName)
-                        }?.elementValues?.values?.first()?.value?.let {
+                        column.getAnnotationValue(ComplexOrmProperty::class)?.let {
                             columnExtra += " $it".replace(column.name, column.columnName)
                         }
-                        column.annotations.find {
-                            "$it".removePrefix("@").startsWith(ComplexOrmUnique::class.java.canonicalName)
-                        }?.let {
+                        column.getAnnotationValue(ComplexOrmUnique::class)?.let {
                             columnExtra += " UNIQUE"
                         }
                         // get type
@@ -129,5 +125,5 @@ class DatabaseSchemaFileCreator(private val tableInfo: MutableMap<String, TableI
     private val listType get() = List::class.asClassName().parameterizedBy(String::class.asTypeName())
     private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
     private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
-    private val tableMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())
+    private val tableClassMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())
 }

@@ -4,6 +4,9 @@ import com.github.silasgermany.complexormapi.ComplexOrmAllTables
 import com.github.silasgermany.complexormapi.ComplexOrmReadAlways
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
+import com.github.silasgermany.complexormprocessor.models.Column
+import com.github.silasgermany.complexormprocessor.models.ColumnType
+import com.github.silasgermany.complexormprocessor.models.TableInfo
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import javax.lang.model.element.AnnotationMirror
@@ -11,7 +14,6 @@ import javax.lang.model.element.Element
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Types
-import kotlin.reflect.KClass
 
 class TableInfoExtractor(private val typeUtils: Types) {
 
@@ -47,12 +49,9 @@ class TableInfoExtractor(private val typeUtils: Types) {
         if (tableInfo.superTable in allTables.filter { it.second }.map { "${it.first}" }) {
             tableName = tableInfo.superTable
         }
-        val combinedColumns = columns.filter { it.annotations.hasAnnotation(ComplexOrmReadAlways::class) }
+        val combinedColumns = columns.filter { it.getAnnotationValue(ComplexOrmReadAlways::class) != null }
         return tableName to combinedColumns
     }
-
-    private fun List<AnnotationMirror>.hasAnnotation(annotation: KClass<out Annotation>)
-            = any { "$it".removePrefix("@") == annotation.java.canonicalName }
 
     private fun extractTablesFromElement(element: Element) {
         element.enclosedElements.forEach(::extractTablesFromElement)
@@ -98,13 +97,20 @@ class TableInfoExtractor(private val typeUtils: Types) {
                         ComplexOrmTypes.ComplexOrmTables -> "${value.asType()}".removeSurrounding("()java.util.List<", ">")
                         else -> null
                     }
-                    types[valueName] = ColumnType(it, isNullable(value), table)
+                    types[valueName] =
+                        ColumnType(it, isNullable(value), table)
                 }
             }
         }
         val superTable = if (isRootTable) null
         else typeUtils.directSupertypes(element.asType()).find { "$it" in allTableElements }?.toString()
-        val tableInfo = TableInfo(isColumn.mapTo(mutableListOf()) { Column(it, types.getValue(it), annotations.getValue(it)) }, isRootTable, superTable)
+        val tableInfo = TableInfo(isColumn.mapTo(mutableListOf()) {
+            Column(
+                it,
+                types.getValue(it),
+                annotations.getValue(it)
+            )
+        }, isRootTable, superTable)
         return Pair("$element", tableInfo)
     }
 
@@ -136,7 +142,7 @@ class TableInfoExtractor(private val typeUtils: Types) {
             "java.lang.String" -> ComplexOrmTypes.String
             "java.util.Date" -> ComplexOrmTypes.Date
             "org.threeten.bp.LocalDate" -> ComplexOrmTypes.LocalDate
-            "byte[]" -> ComplexOrmTypes.LocalDate
+            "byte[]" -> ComplexOrmTypes.ByteArray
             else -> {
                 return when {
                     typeName.startsWith("java.util.List") -> ComplexOrmTypes.ComplexOrmTables

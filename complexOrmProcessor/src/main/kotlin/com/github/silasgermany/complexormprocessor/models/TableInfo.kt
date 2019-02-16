@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexormprocessor
+package com.github.silasgermany.complexormprocessor.models
 
 data class TableInfo(
     val columns: MutableList<Column>,
@@ -7,7 +7,7 @@ data class TableInfo(
 ) {
     var tableName: String? = null
     set(value) {
-        field = value?.split(".")?.last()?.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2")?.toLowerCase()
+        field = value?.split("")?.last()?.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2")?.toLowerCase()
     }
 
     override fun toString() = "${TableInfo::class.java.simpleName}(columns=$columns, superTable=$superTable, tableName=$tableName)"

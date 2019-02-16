@@ -1,14 +1,8 @@
 package com.github.silasgermany.complexorm
 
-import android.database.Cursor
-import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import java.io.File
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
-
 class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
 
+    /*
     constructor(databaseFile: File) : this(ComplexOrmDatabase(databaseFile))
 
     private val restrictions = mutableMapOf<String, String>()
@@ -348,4 +342,5 @@ class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtil
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T) = getOrPut(key) { mutableMapOf() }
     private fun <T, K> MutableMap<T, MutableList<K>>.init(key: T) = getOrPut(key) { mutableListOf() }
     //private val Pair<String, String?>.last get() = second?: first
+    // */
 }
