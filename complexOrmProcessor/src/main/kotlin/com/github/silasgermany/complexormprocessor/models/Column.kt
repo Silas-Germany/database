@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 
 data class Column(
     val name: String,
-    val type: ColumnType,
+    val columnType: ColumnType,
     val annotations: List<AnnotationMirror>
 ) {
     val columnName = name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()

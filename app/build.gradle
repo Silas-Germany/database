@@ -35,13 +35,14 @@ dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$sdk_version"
+
     // ORM modules
     implementation project(':complexOrmApi')
     implementation project(path: ':complexOrm')
     //kapt project(":complexOrmProcessor")
+
     // testing
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-    testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     kaptTest project(":complexOrmProcessor")
 }

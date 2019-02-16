@@ -38,10 +38,10 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                     tableInfo.columns.mapNotNull { column ->
                         var columnExtra = ""
                         // check whether nullable
-                        if (!column.type.nullable) columnExtra += " NOT NULL"
+                        if (!column.columnType.nullable) columnExtra += " NOT NULL"
                         // check annotations
                         column.getAnnotationValue(ComplexOrmDefault::class)?.let {
-                            columnExtra += defaultValue(column.type.type, "$it")
+                            columnExtra += defaultValue(column.columnType.type, "$it")
                         }
                         column.getAnnotationValue(ComplexOrmProperty::class)?.let {
                             columnExtra += " $it".replace(column.name, column.columnName)
@@ -50,7 +50,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                             columnExtra += " UNIQUE"
                         }
                         // get type
-                        val complexOrmType = when (column.type.type) {
+                        val complexOrmType = when (column.columnType.type) {
                             ComplexOrmTypes.String -> "TEXT"
                             ComplexOrmTypes.Boolean,
                             ComplexOrmTypes.Date,
@@ -64,7 +64,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                                 return@mapNotNull null
                             }
                             ComplexOrmTypes.ComplexOrmTable -> {
-                                val referenceTableName = rootTables.getValue(column.type.referenceTable!!).tableName
+                                val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName
                                 foreignKeys.add("FOREIGN KEY ('${column.columnName}_id') REFERENCES '$referenceTableName'(id)")
                                 return@mapNotNull "'${column.columnName}_id' INTEGER$columnExtra"
                             }
@@ -114,7 +114,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
     }
 
     private fun createRelatedTableCommand(tableName: String, column: Column): String {
-        val referenceTableName = rootTables.getValue(column.type.referenceTable!!).tableName
+        val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName
         return "\n\"$tableName\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
                 "'${tableName}_id' INTEGER NOT NULL, " +
                 "'${referenceTableName}_id' INTEGER NOT NULL, " +

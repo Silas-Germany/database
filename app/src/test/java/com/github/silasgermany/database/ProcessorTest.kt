@@ -7,8 +7,6 @@ import com.github.silasgermany.database.tables.AllTables
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 import kotlin.test.*
 
 @RunWith(JUnit4::class)
@@ -43,9 +41,9 @@ class ProcessorTest {
     )
 
     @Test
-    fun checkTableClasses() = assertEquals<Collection<KClass<*>>>(
-        AllTables::class.nestedClasses.filter { it.isSubclassOf(ComplexOrmTable::class) }.toSet(),
-        complexOrmSchema.tables.keys.toSet(),
+    fun checkTableClasses() = assertEquals<Collection<Class<*>>>(
+        AllTables::class.java.classes.filter { ComplexOrmTable::class.java.isAssignableFrom(it) }.toSet(),
+        complexOrmSchema.tables.keys.mapTo(mutableSetOf()) { it.java },
         "This variable should list exactly all table classes"
     )
 
@@ -84,10 +82,12 @@ class ProcessorTest {
 Everything in the all-tables interface (marked with @ComplexOrmAllTables) is a database table, if it inherits somehow from ComplexOrmTable
 Everything inheriting from this is also a database table with the same name
 Everything else inheriting from ComplexOrmTable is not a database table, but a structure, that a database table can inherit from
-Columns of inherited tables will just be read, if they have the column themselves through the override keyword or are marked by @ReadAlways
-All columns have to be marked with "by initMap" (otherwise they can't be saved or read)
-Nothing else is allowed to be delegated by a map (is criteria to distinguish between other values)
+All columns of those tables are treated as columns from the inheriting table in the all-tables interface
+Columns of inherited tables will just be read, if they have the column themselves (marked with the override keyword) or are marked by @ReadAlways
+All columns have to be delegated with "by initMap" (otherwise they are not database columns)
+Nothing else is allowed to be delegated by a map (this is the criteria to distinguish between other values)
 Every database table needs the primary constructor: "(initMap: MutableMap<String, Any?>)" (and can have "= default" in case a new entry needs to be created
-or "constructor(id: Long): this(init(id))" if it should reference to another table with just the ID of the entry given)
+It can also have a secondary constructor with "constructor(id: Long): this(init(id))".
+Through this a reference to another table can be given, where just the ID is known (sometimes necessary for saving)
 No column is allowed to be read, that is not first written to or read by the database (see readable columns) - careful: error on runtime!!!
  */

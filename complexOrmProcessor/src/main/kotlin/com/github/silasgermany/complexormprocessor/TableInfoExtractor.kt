@@ -36,7 +36,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             value.columns.addAll(columns)
             value.tableName = (superTableName ?: tableName)
         }
-        //messager.printMessage(Diagnostic.Kind.ERROR, "$allTableInfo")
+        messager//.printMessage(Diagnostic.Kind.ERROR, "$allTableInfo")
         allTableInfo.minusAssign(allTables.filter { !isTable(it.first.asType()) }.map { "${it.first}" })
         allTableInfo.values.forEach { tableInfo ->
             tableInfo.superTable
