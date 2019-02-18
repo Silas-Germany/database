@@ -1,8 +1,8 @@
 package com.github.silasgermany.database
 
-import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.database.tables.AllTables
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,12 +14,12 @@ class ProcessorTest {
 
     private val complexOrmSchema by lazy {
         Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
     }
 
     private val complexOrmTables by lazy {
         Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
     }
 
     @Test

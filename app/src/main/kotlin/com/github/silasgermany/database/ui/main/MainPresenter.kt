@@ -1,7 +1,7 @@
 package com.github.silasgermany.database.ui.main
 
 import android.util.Log
-import com.github.silasgermany.complexorm.ComplexOrmDatabase
+import com.github.silasgermany.complexorm.oldVersion.ComplexOrmDatabase
 import com.github.silasgermany.database.ui.main.MainModel.*
 import java.io.File
 

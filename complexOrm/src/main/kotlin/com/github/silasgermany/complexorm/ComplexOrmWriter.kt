@@ -1,38 +1,32 @@
 package com.github.silasgermany.complexorm
 
-class ComplexOrmWriter(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
+import org.threeten.bp.LocalDate
+import java.util.*
 
-    /*
-    constructor(databaseFile: File) : this(ComplexOrmDatabase(databaseFile))
+class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
 
-    private fun getIdentifier(tableClass: KClass<*>) = tableClass.java.name
-        .run { substring(lastIndexOf('.') + 1).split('$') }.let { it[0] to it[1].sql }
+    val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
+        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
-    private fun getNormalColumns(identifier: Pair<String, String>) = mapOf("_id" to ComplexOrmTypes.Long)
-        .plus(identifier.run { complexOrmTables.normalColumns[first]?.get(second) } ?: emptyMap())
-    private fun joinColumns(identifier: Pair<String, String>) = identifier.run { complexOrmTables.joinColumns[first]?.get(second) }
-    private fun connectedColumn(identifier: Pair<String, String>) = identifier.run { complexOrmTables.connectedColumns[first]?.get(second) }
-    private fun reverseConnectedColumn(identifier: Pair<String, String>) = identifier.run { complexOrmTables.reverseConnectedColumns[first]?.get(second) }
+    private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
-    fun write(table: ComplexOrmTable): Long? {
-        return database.use {
-                complexOrmSchema.dropTableCommands.forEach { rawComplexOrm(it) }
-                complexOrmSchema.createTableCommands.forEach { rawComplexOrm(it) }
-            write2(table)
-        }
-    }
-
-    private fun ComplexOrmDatabase.write2(table: ComplexOrmTable): Long? {
-        Log.e("DATABASE", "Save $table")
+    fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
         val contentValues = ContentValues()
-        val identifier = getIdentifier(table::class)
-        val normalColumns = getNormalColumns(identifier)
-        val joinColumns = joinColumns(identifier)
-        val connectedColumn = connectedColumn(identifier)
-        val reverseConnectedColumn = reverseConnectedColumn(identifier)
+        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).first
+        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).second
+        val normalColumns = complexOrmTableInfo.normalColumns[rootTableClass]
+        val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
+        val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
+        val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
+        val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
         table.map.forEach { (key, value) ->
-            val ComplexOrmKey = key.sql
-            normalColumns.get(ComplexOrmKey)?.also {
+            val complexOrmKey = key.toSql()
+            normalColumns?.get(complexOrmKey)?.also {
                 if (value == null) contentValues.putNull(key)
                 else when (it) {
                     ComplexOrmTypes.String -> contentValues.put(key, value as String)
@@ -47,63 +41,106 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabase): ComplexOrmUtil
                     ComplexOrmTypes.ComplexOrmTables -> {
                         throw IllegalArgumentException("Normal table shouldn't have ComplexOrmTable inside")
                     }
-                }.let { } // this is checking, that the when is exhaustive
+                }.let {} // this is checking, that the when is exhaustive
             }
-            connectedColumn?.get(ComplexOrmKey)?.let {
+            connectedColumn?.get(complexOrmKey)?.let {
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
-                    if (connectedEntry != null) {
-                        if (connectedEntry.id == null) write2(connectedEntry)
-                        contentValues.put("${key.sql}_id", connectedEntry.id.toString())
-                    }
+                    if (connectedEntry?.id != null) {
+                        if (!writeDeep) return@let
+                        write(connectedEntry)
+                        contentValues.put("${key.toSql()}_id", connectedEntry.id.toString())
+                    } else contentValues.putNull("${key.toSql()}_id")
                 } catch (e: Exception) {
-                    throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})")
+                    throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
             }
         }
         try {
-            table.map["_id"] = save(identifier.second, contentValues)
+            table.map["id"] = save(tableName, contentValues)
         } catch (e: Exception) {
-            throw IllegalArgumentException("Couldn't save reverse connected table entries: $table (${e.message})")
+            throw IllegalArgumentException("Couldn't save table entries: $table (${e.message})", e)
         }
         table.map.forEach { (key, value) ->
-            val ComplexOrmKey = key.sql
-            joinColumns?.get(ComplexOrmKey)?.let { joinTable ->
+            val sqlKey = key.toSql()
+            joinColumns?.get(sqlKey)?.let { joinTable ->
                 try {
-                    delete("${identifier.second}_$ComplexOrmKey", "${identifier.second}_id = ${table.id}")
+                    val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(joinTable).first
+                    delete("${tableName}_$sqlKey", "${tableName}_id", table.id)
                     val innerContentValues = ContentValues()
-                    innerContentValues.put("${identifier.second}_id", table.id)
+                    innerContentValues.put("${tableName}_id", table.id)
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
-                        if (joinTableEntry.id == null) write2(joinTableEntry)
-                        innerContentValues.put("${joinTable}_id", joinTableEntry.id)
-                        save("${identifier.second}_$ComplexOrmKey", innerContentValues)
+                        if (joinTableEntry.id == null) {
+                            if (!writeDeep) return@let
+                            write(joinTableEntry)
+                        }
+                        innerContentValues.put("${joinTableName}_id", joinTableEntry.id)
+                        save("${tableName}_$sqlKey", innerContentValues)
                     }
                 } catch (e: Exception) {
-                    throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})")
+                    throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
-            reverseConnectedColumn?.get(ComplexOrmKey)?.let { joinTableData ->
+            reverseJoinColumns?.get(sqlKey)?.let { reverseJoinTableData ->
                 try {
+                    val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableData.first).first
+                    val columnName = reverseJoinTableData.second
+                    delete("${joinTableName}_$columnName", "${tableName}_id", table.id)
+                    val innerContentValues = ContentValues()
+                    innerContentValues.put("${tableName}_id", table.id)
+                    (value as List<*>).forEach { joinTableEntry ->
+                        joinTableEntry as ComplexOrmTable
+                        if (joinTableEntry.id == null) {
+                            if (!writeDeep) return@let
+                            write(joinTableEntry)
+                        }
+                        innerContentValues.put("${joinTableName}_id", joinTableEntry.id)
+                        save("${joinTableName}_$columnName", innerContentValues)
+                    }
+                } catch (e: Exception) {
+                    throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
+                }
+            }
+            reverseConnectedColumn?.get(sqlKey)?.let { reverseConnectedTableData ->
+                try {
+                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableData.first).first
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
-                        if (joinTableEntry.id == null) write2(joinTableEntry)
-                        innerContentValues.put("${joinTableData.second ?: identifier.second}_id", table.id)
-                        update(joinTableData.first, innerContentValues, "_id = ${joinTableEntry.id}")
+                        if (joinTableEntry.id == null) {
+                            if (!writeDeep) return@let
+                            write(joinTableEntry)
+                        }
+                        innerContentValues.put("${reverseConnectedTableData.second}_id", table.id)
+                        update(connectedTableName, innerContentValues, joinTableEntry.id)
                     }
                 } catch (e: Exception) {
-                    throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})")
+                    throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
                 }
             }
         }
         return table.id
     }
 
-    private fun ComplexOrmDatabase.save(table: String, contentValues: ContentValues): Long {
-        Log.e("DATABASE", "Insert in table $table: ${contentValues.valueSet()}")
-        return insertOrThrow(table, contentValues)
+    private fun delete(table: String, column: String, value: Long?) {
+        value ?: return
+        database.delete(table, "$column = $value", null)
     }
-    // */
 
+    private fun save(table: String, contentValues: ContentValues): Long {
+        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_ABORT)
+        if (changedId == -1L) {
+            changedId = contentValues.getAsLong("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
+            val changed = database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
+        }
+        return changedId
+    }
+
+    private fun update(table: String, contentValues: ContentValues, id: Long?) {
+        id ?: return
+        val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+        if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
+    }
 }

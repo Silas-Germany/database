@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.oldVersion
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -54,7 +54,12 @@ class ComplexOrmDatabase {
 
     @SuppressLint("Recycle")
     fun <T> queryMap(ComplexOrm: String, f: (Cursor) -> T): List<T> = (normalDatabase?.rawQuery(ComplexOrm, null) ?: ComplexOrmCipherDatabase!!.rawQuery(ComplexOrm, null)).run {
-        (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
+        (this as? CrossProcessCursor)?.let {
+            ComplexOrmCursor(
+                it,
+                requestsWithColumnInfo
+            )
+        }?.takeIf { it.valid } ?: this
     }.run {
         moveToFirst()
         (0 until count).map { _-> f(this).also { moveToNext() } }.also { close() }
@@ -62,7 +67,12 @@ class ComplexOrmDatabase {
 
     @SuppressLint("Recycle")
     fun query(ComplexOrm: String): Cursor = (normalDatabase?.rawQuery(ComplexOrm, null) ?: ComplexOrmCipherDatabase!!.rawQuery(ComplexOrm, null)).run {
-        (this as? CrossProcessCursor)?.let { ComplexOrmCursor(it, requestsWithColumnInfo) }?.takeIf { it.valid } ?: this
+        (this as? CrossProcessCursor)?.let {
+            ComplexOrmCursor(
+                it,
+                requestsWithColumnInfo
+            )
+        }?.takeIf { it.valid } ?: this
     }
 
     fun rawComplexOrm(ComplexOrm: String) = normalDatabase?.execSQL(ComplexOrm) ?: ComplexOrmCipherDatabase!!.execSQL(ComplexOrm)

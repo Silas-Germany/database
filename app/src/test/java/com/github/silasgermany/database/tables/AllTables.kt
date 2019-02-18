@@ -33,15 +33,15 @@ interface AllTables {
         open val otherTableValues: List<EmptyTable> by initMap
 
         @ComplexOrmReverseConnectedColumn("normalTableValue")
-        open val connectedTableValues: List<ReferenceTable> by initMap
+        open var connectedTableValues: List<ReferenceTable> by initMap
         @ComplexOrmReverseConnectedColumn("normal_table_value")
-        open val otherWritingConnectedTableValues: List<ReferenceTable> by initMap
+        open var otherWritingConnectedTableValues: List<ReferenceTable> by initMap
         @ComplexOrmReverseConnectedColumn
-        open val columnEqualsTableNameConnectedTableValues: List<ReferenceTable> by initMap
+        open var columnEqualsTableNameConnectedTableValues: List<ReferenceTable> by initMap
         @ComplexOrmReverseJoinColumn("normalTableValues")
-        open val joinTableValues: List<ReferenceTable> by initMap
+        open var joinTableValues: List<ReferenceTable> by initMap
         @ComplexOrmReverseJoinColumn("normal_table_values")
-        open val otherWritingJoinTableValues: List<ReferenceTable> by initMap
+        open var otherWritingJoinTableValues: List<ReferenceTable> by initMap
 
         // No map delegations
         open val getIntValue: () -> Int = {1}
@@ -65,8 +65,10 @@ interface AllTables {
     }
 
     open class ReferenceTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        open val normalTable: NormalTable? by initMap
-        open val normalTableValue: NormalTable by initMap
-        open val normalTableValues: List<NormalTable> by initMap
+        constructor(id: Long): this(init(id))
+
+        open var normalTable: NormalTable? by initMap
+        open var normalTableValue: NormalTable by initMap
+        open var normalTableValues: List<NormalTable> by initMap
     }
 }

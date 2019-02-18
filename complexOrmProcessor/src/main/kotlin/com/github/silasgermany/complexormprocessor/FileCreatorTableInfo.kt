@@ -119,7 +119,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                             .find { reverseJoinColumn in arrayOf(it.columnName, it.name) }?.columnName
                             ?: throw IllegalArgumentException("Couldn't find column $reverseJoinColumn in table ${column.columnType.referenceTable}")
                         "\n\t\t\"${column.columnName}\" to" +
-                                "\n\t\t\t(\"${column.columnType.referenceTable}\" to \"$reverseColumn\")"
+                                "\n\t\t\t(\"${column.columnType.referenceTable}\" to\n\t\t\t \"$reverseColumn\")"
                     }
                     else -> null
                 }

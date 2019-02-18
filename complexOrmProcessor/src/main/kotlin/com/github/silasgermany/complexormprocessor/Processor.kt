@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
-import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
@@ -23,7 +23,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         var file = FileSpec.builder(targetPackage, fileName)
             .addType(
                 TypeSpec.objectBuilder(fileName)
-                    .addSuperinterface(ComplexOrmSchemaInterface::class)
+                    .addSuperinterface(ComplexOrmDatabaseSchemaInterface::class)
                     .addProperty(schemaFileCreator.createNames())
                     .addProperty(schemaFileCreator.createDropTables())
                     .addProperty(schemaFileCreator.createCreateTables())
@@ -36,7 +36,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         file = FileSpec.builder(targetPackage, fileName)
             .addType(
                 TypeSpec.objectBuilder(fileName)
-                    .addSuperinterface(ComplexOrmTablesInterface::class)
+                    .addSuperinterface(ComplexOrmTableInfoInterface::class)
                     .addProperty(tableInfoFileCreator.createNormalColumnsInfo())
                     .addProperty(tableInfoFileCreator.createConnectedColumnsInfo())
                     .addProperty(tableInfoFileCreator.createJoinColumnsInfo())

@@ -1,8 +1,8 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.oldVersion
 
-import com.github.silasgermany.complexormapi.ComplexOrmSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTablesInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.superclasses
@@ -30,12 +30,12 @@ abstract class ComplexOrmUtils {
 
     companion object {
         val complexOrmSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmSchema")
-                .getDeclaredField("INSTANCE").get(null) as ComplexOrmSchemaInterface
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
 
         val complexOrmTables =
                 Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmTables")
-                    .getDeclaredField("INSTANCE").get(null) as ComplexOrmTablesInterface
+                    .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
-        val allTables = ComplexOrmUtils.complexOrmSchema.tables
+        val allTables = complexOrmSchema.tables
     }
 }

@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.oldVersion
 
 class ComplexOrmReader(private val database: ComplexOrmDatabase): ComplexOrmUtils() {
 
