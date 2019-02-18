@@ -1,8 +1,7 @@
 package com.github.silasgermany.database
 
-import android.content.ContentValues
-import com.github.silasgermany.complexorm.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.ComplexOrmWriter
+import com.github.silasgermany.database.models.TestDatabase
 import com.github.silasgermany.database.tables.AllTables
 import com.github.silasgermany.database.tables.AppliedTablesInterface
 import org.junit.Test
@@ -13,37 +12,7 @@ import java.util.*
 @RunWith(JUnit4::class)
 class WriterTest {
 
-    val databaseWriter by lazy { ComplexOrmWriter(object : ComplexOrmDatabaseInterface{
-        override fun insertWithOnConflict(
-            table: String,
-            nullColumnHack: String,
-            initialValues: ContentValues,
-            conflictAlgorithm: Int
-        ): Long {
-            System.out.println("Insert $initialValues in $table (null -> $nullColumnHack, conflictAlgorithm: $conflictAlgorithm)")
-            return 0L
-        }
-
-        override fun updateWithOnConflict(
-            table: String,
-            values: ContentValues,
-            whereClause: String,
-            whereArgs: Array<String>?,
-            conflictAlgorithm: Int
-        ): Int {
-            System.out.println("Update $values in $table where $whereClause (whereArguments -> $whereArgs, conflictAlgorithm: $conflictAlgorithm)")
-            return 1
-        }
-
-        override fun delete(table: String, whereClause: String, whereArgs: Array<String>?): Int {
-            System.out.println("Delete from $table where $whereClause (whereArguments -> $whereArgs)")
-            return 1
-        }
-
-        override fun execSQL(sql: String) {
-            System.out.println("Exec SQL: $sql")
-        }
-    }) }
+    private val databaseWriter by lazy { ComplexOrmWriter(TestDatabase()) }
 
     @Test
     fun emptyTableWriting() {

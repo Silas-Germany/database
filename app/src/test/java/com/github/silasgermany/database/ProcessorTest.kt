@@ -63,16 +63,16 @@ class ProcessorTest {
         assertTrue(complexOrmTables.tableConstructors.isNotEmpty(), "Constructors should exist")
         val allTablesNormalColumnsTables = complexOrmTables.normalColumns
         assertNotNull(allTablesNormalColumnsTables, "Interface should exist (has table with normal columns)")
-        assertNotNull(allTablesNormalColumnsTables.get(AllTables.NormalTable::class.java.canonicalName!!), "Table should exist (has normal columns)")
-        assertNull(allTablesNormalColumnsTables.get(AllTables.EmptyTable::class.java.canonicalName!!), "Table should not exist (no normal columns)")
-        assertNull(allTablesNormalColumnsTables.get(AllTables.NotATable::class.java.canonicalName!!), "Table should not exist (is not a table)")
+        assertNotNull(allTablesNormalColumnsTables.get(AllTables.NormalTable::class.qualifiedName!!), "Table should exist (has normal columns)")
+        assertNull(allTablesNormalColumnsTables.get(AllTables.EmptyTable::class.qualifiedName!!), "Table should not exist (no normal columns)")
+        assertNull(allTablesNormalColumnsTables.get(AllTables.NotATable::class.qualifiedName!!), "Table should not exist (is not a table)")
         assertEquals(
-            setOf("inheriting_value"), allTablesNormalColumnsTables[AllTables.IndirectTable::class.java.canonicalName!!]?.keys,
+            setOf("inheriting_value"), allTablesNormalColumnsTables[AllTables.IndirectTable::class.qualifiedName!!]?.keys,
             "Table should have indirect column"
         )
         assertEquals(
             setOf("middle_inheriting_value", "inheriting_value", "direct_value"),
-            allTablesNormalColumnsTables[AllTables.DoubleIndirectTable::class.java.canonicalName!!]?.keys,
+            allTablesNormalColumnsTables[AllTables.DoubleIndirectTable::class.qualifiedName!!]?.keys,
             "Table should have both indirect columns"
         )
     }

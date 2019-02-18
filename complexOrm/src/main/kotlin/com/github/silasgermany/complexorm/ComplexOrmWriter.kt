@@ -10,15 +10,15 @@ import java.util.*
 
 class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
 
-    val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
+    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
     fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
         val contentValues = ContentValues()
-        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).first
-        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).second
+        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
+        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
         val normalColumns = complexOrmTableInfo.normalColumns[rootTableClass]
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]

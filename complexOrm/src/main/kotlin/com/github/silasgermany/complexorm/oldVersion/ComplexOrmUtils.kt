@@ -29,10 +29,10 @@ abstract class ComplexOrmUtils {
         get() = replace("_[a-zA-Z]".toRegex()) { match -> match.value[1].toUpperCase().toString() }
 
     companion object {
-        val complexOrmSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmSchema")
+        private val complexOrmSchema = Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmSchema")
             .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
 
-        val complexOrmTables =
+        private val complexOrmTables =
                 Class.forName("com.github.silasgermany.complexorm.GeneratedComplexOrmTables")
                     .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 

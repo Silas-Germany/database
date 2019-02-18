@@ -19,7 +19,7 @@ import javax.lang.model.util.Types
 class TableInfoExtractor(private val messager: Messager, private val typeUtils: Types) {
 
     private val allTables = mutableListOf<Pair<Element, Boolean>>()
-    private val sqlTableName = ComplexOrmTable::class.java.canonicalName
+    private val sqlTableName = ComplexOrmTable::class.qualifiedName
     private val allTableInfo = mutableMapOf<String, TableInfo>()
         .run { withDefault { throw java.lang.IllegalArgumentException("Couldn't find table $it (available tables: $keys)") } }
 

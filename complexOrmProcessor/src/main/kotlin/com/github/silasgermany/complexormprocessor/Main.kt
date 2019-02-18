@@ -9,7 +9,7 @@ import javax.tools.Diagnostic
 
 class Main: AbstractProcessor() {
 
-    override fun getSupportedAnnotationTypes() = mutableSetOf(ComplexOrmAllTables::class.java.canonicalName)
+    override fun getSupportedAnnotationTypes() = mutableSetOf(ComplexOrmAllTables::class.qualifiedName)
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
     private val processor by lazy { Processor(processingEnv) }
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
