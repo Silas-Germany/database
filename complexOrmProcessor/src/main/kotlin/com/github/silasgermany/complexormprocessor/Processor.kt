@@ -12,7 +12,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
 
 
     private val targetPackage = "com.github.silasgermany.complexorm"
-    private val kaptKotlinGeneratedDir = processingEnvironment.options["kapt.kotlin.generated"]!!
+    private val kaptKotlinGeneratedDir = processingEnvironment.options.getValue("kapt.kotlin.generated")
 
     private val tableExtractor = TableInfoExtractor(processingEnvironment.messager, processingEnvironment.typeUtils)
 

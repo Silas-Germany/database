@@ -31,7 +31,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                 else when (it) {
                     ComplexOrmTypes.String -> contentValues.put(key, value as String)
                     ComplexOrmTypes.Int -> contentValues.put(key, value as Int)
-                    ComplexOrmTypes.Boolean -> contentValues.put(key, value as Boolean)
+                    ComplexOrmTypes.Boolean -> contentValues.put(key, if (value as Boolean) 1 else 0)
                     ComplexOrmTypes.Long -> contentValues.put(key, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(key, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(key, (value as Date).time)

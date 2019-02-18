@@ -47,11 +47,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                 if (column.columnName !in rootTableColumnNames)
                     throw java.lang.IllegalArgumentException("Column ${column.name} of table $className not in root table: ${getRootTableName(tableInfo)} " +
                             "(Don't delegate it with a map, if it's not a column)")
-                when (column.columnType.type) {
+                if (!writtenColumns.add(column.columnName)) null
+                else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTable, ComplexOrmTypes.ComplexOrmTables -> null
                     else -> {
-                        if (!writtenColumns.add(column.columnName)) null
-                        else "\n\t\t\"${column.columnName}\" to ComplexOrmTypes.${column.columnType.type}"
+                        "\n\t\t\"${column.columnName}\" to ComplexOrmTypes.${column.columnType.type}"
                     }
                 }
             }.takeUnless { it.isEmpty() }
@@ -71,8 +71,10 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createConnectedColumnsInfo(): PropertySpec {
         val connectedColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
-                when (column.columnType.type) {
+                if (!writtenColumns.add(column.columnName)) null
+                else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTable -> {
                         "\n\t\t\"${column.columnName}\" to \"${column.columnType.referenceTable!!}\""
                     }
@@ -89,10 +91,12 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createJoinColumnsInfo(): PropertySpec {
         val joinColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 val reverseJoinColumn = column.getAnnotationValue(ComplexOrmReverseJoinColumn::class)
                 val reverseConnectedColumn = column.getAnnotationValue(ComplexOrmReverseConnectedColumn::class)
                 if (reverseJoinColumn != null || reverseConnectedColumn != null) null
+                else if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTables -> {
                         "\n\t\t\"${column.columnName}\" to\n\t\t\t\"${column.columnType.referenceTable!!}\""
@@ -110,9 +114,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createReverseJoinColumnsInfo(): PropertySpec {
         val reverseConnectedColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 val reverseJoinColumn = column.getAnnotationValue(ComplexOrmReverseJoinColumn::class)
                 if (reverseJoinColumn == null) null
+                else if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTables -> {
                         val reverseColumn = tablesInfo.getValue(column.columnType.referenceTable!!).columns
@@ -134,9 +140,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createReverseConnectedColumnsInfo(): PropertySpec {
         val reverseConnectedColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 val reverseConnectedColumn = column.getAnnotationValue(ComplexOrmReverseConnectedColumn::class)
                 if (reverseConnectedColumn == null) null
+                else if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTables -> {
                         val reverseColumn = if (reverseConnectedColumn == Unit) tableInfo.tableName

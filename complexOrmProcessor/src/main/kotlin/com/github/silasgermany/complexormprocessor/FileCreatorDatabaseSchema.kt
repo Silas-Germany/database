@@ -33,9 +33,11 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
     fun createCreateTables(): PropertySpec {
         val relatedTables = mutableListOf<String>()
         val createTableCommands = rootTablesList.map { (_, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
             val foreignKeys = mutableListOf<String>()
             val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
                     tableInfo.columns.mapNotNull { column ->
+                        if (writtenColumns.add(column.columnName)) return@mapNotNull null
                         var columnExtra = ""
                         // check whether nullable
                         if (!column.columnType.nullable) columnExtra += " NOT NULL"

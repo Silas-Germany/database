@@ -40,8 +40,10 @@ class TestDatabase: ComplexOrmDatabaseInterface {
         return null
     }
 
+    private val cursor = TestCursor()
     override fun queryForEach(complexOrm: String, f: (Cursor) -> Unit) {
         System.out.println("Query Sql: $complexOrm")
-        f(TestCursor())
+        f(cursor)
+        f(cursor)
     }
 }

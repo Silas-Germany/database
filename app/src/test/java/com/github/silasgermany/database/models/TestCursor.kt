@@ -31,9 +31,10 @@ class TestCursor: Cursor {
         return true
     }
 
+    private var longValue = 1L
     override fun getLong(columnIndex: Int): Long {
         System.out.println("Called: getLong")
-        return 1L
+        return longValue++
     }
 
     override fun moveToFirst(): Boolean {
@@ -67,7 +68,7 @@ class TestCursor: Cursor {
 
     override fun getCount(): Int {
         System.out.println("Called: getCount")
-        return 1
+        return 2
     }
 
     override fun isFirst(): Boolean {
