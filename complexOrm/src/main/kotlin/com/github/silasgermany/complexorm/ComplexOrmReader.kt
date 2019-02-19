@@ -1,112 +1,107 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
-class ComplexOrmReader<T : ComplexOrmTable>(private val database: ComplexOrmDatabaseInterface, table: KClass<T>) {
-/*
+class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
+
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
-    private val tableClass = table.qualifiedName!!
-    private val tableName = complexOrmTableInfo.basicTableInfo.getValue(tableClass).first
+    private val complexOrmQuery = ComplexOrmQuery(database)
 
-    private val constructors get() = complexOrmTableInfo.tableConstructors[tableClass]
-    private val normalColumns get() = complexOrmTableInfo.normalColumns[tableClass]
-    private val connectedColumns get() = complexOrmTableInfo.connectedColumns[tableClass]
-    private val reverseConnectedColumns get() = complexOrmTableInfo.reverseConnectedColumns[tableClass]
-    private val joinColumns get() = complexOrmTableInfo.joinColumns[tableClass]
-    private val reverseJoinColumns get() = complexOrmTableInfo.reverseJoinColumns[tableClass]
+    private val reverseConnectedColumns get() = complexOrmTableInfo.reverseConnectedColumns
+    private val joinColumns get() = complexOrmTableInfo.joinColumns
+    private val reverseJoinColumns get() = complexOrmTableInfo.reverseJoinColumns
 
-
-    private val nextRequests = mutableMapOf<String, MutableList<ComplexOrmTable>>()
-    private val notAlreadyLoaded = mutableMapOf<String, MutableList<ComplexOrmTable>>()
-    private var alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
-    private var alreadyLoadedStart = mutableMapOf<String, Map<Long, ComplexOrmTable>>()
-
-    private val KProperty1<out ComplexOrmTable, Any?>.columnName get() = this.name
-    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
+    private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
 
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T) = getOrPut(key) { mutableMapOf() }
     private fun <T, K> MutableMap<T, MutableList<K>>.init(key: T) = getOrPut(key) { mutableListOf() }
 
-    private fun  read(
+    inline fun <reified T : ComplexOrmTable> read(
+        readTableInfo: ReadTableInfo
+    ): List<T> = read(T::class, readTableInfo)
 
+    fun <T : ComplexOrmTable> read(
+        table: KClass<T>,
+        readTableInfo: ReadTableInfo
     ): List<T> {
-        alreadyLoaded = existingEntries
-        alreadyLoadedStart = existingEntries.toList().associateTo(mutableMapOf()) { it.first to it.second.toMap() }
 
-        val result = ComplexOrmQuery().query(tableName, null).map { it.second }
+        val result = complexOrmQuery.query(table.qualifiedName!!, readTableInfo).map { it.second }
 
-        while (notAlreadyLoaded.isNotEmpty()) {
-            val missingEntryTable = notAlreadyLoaded.keys.first()
-            val missingEntries = notAlreadyLoaded[missingEntryTable]!!
-            query(
-                missingEntryTable,
-                where = "WHERE $missingEntryTable._id IN (${missingEntries.joinToString { "${it.id}" }})",
-                missingEntries = missingEntries
-            )
-            notAlreadyLoaded.remove(missingEntryTable)
+        readTableInfo.notAlreadyLoaded.forEach { (missingEntryTable, missingEntries) ->
+            readTableInfo.missingEntries = missingEntries
+            val where = "WHERE '$missingEntryTable._id' IN (${readTableInfo.missingEntries!!.joinToString { "${it.id}" }})"
+            complexOrmQuery.query(missingEntryTable, readTableInfo, where)
         }
 
-        while (nextRequests.isNotEmpty()) {
-            val connectedTable = nextRequests.keys.first()
+        readTableInfo.nextRequests.forEach { (requestTable, requestEntries) ->
+            val ids = requestEntries.map { it.id!! }.toSet().joinToString("")
+            val requestTableName = requestTable.tableName
 
-            val ids = nextRequests[connectedTable]!!.map { it.id!! }.toSet()
-            reverseConnectedColumns?.get(connectedTable)?.forEach {
-                val connectedTableName = it.value.first
-                val connectedColumn = "${it.value.second ?: connectedTable}_id"
-                val where = "WHERE $connectedTableName.${it.value.second
-                    ?: connectedTable}_id IN (${ids.joinToString()})"
+            joinColumns[requestTable]?.forEach { (connectedColumn2, connectedTable) ->
+                val connectedTableName = connectedTable.tableName
+                val connectedColumn = "${requestTableName}_id"
+                val where =
+                    "LEFT JOIN '${requestTableName}_$connectedColumn2' AS 'join_table' ON 'join_table'.'${connectedTableName}_id'='$connectedTableName'.'id' " +
+                            "WHERE 'join_table'.'${requestTableName}_id' IN ($ids)"
+                readTableInfo.connectedColumn = "'join_table'.'$connectedColumn'"
+                val joinValues = complexOrmQuery.query(connectedTable, readTableInfo, where)
 
-                val joinValues = query(connectedTableName, "$connectedTableName.$connectedColumn AS join_column", where)
+                readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
+                    val id = entry.id!!
+                    val columnName = connectedColumn2 + "" // todo
+                    entry.map[columnName] = joinValues
+                        .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
+                }
+            }
+            reverseJoinColumns.get(requestTable)?.forEach { (connectedColumn2, connectedTableAndColumnName) ->
+                val (connectedTable, connectedColumnName) = connectedTableAndColumnName
+                val connectedTableName = connectedTable.tableName
+                val connectedColumn = "${requestTableName}_id"
+                val where =
+                    "LEFT JOIN '${connectedTableName}_$connectedColumnName' AS 'reverse_join_table' ON 'reverse_join_table'.'${connectedTableName}_id' = '$connectedTableName'.'id' " +
+                            "WHERE 'reverse_join_table'.'$connectedColumn' IN ($ids)"
+
+                readTableInfo.connectedColumn = "'reverse_join_table'.'$connectedColumn'"
+                val joinValues = complexOrmQuery.query(connectedTable, readTableInfo, where)
+
+                readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
+                    val id = entry.id!!
+                    val columnName = connectedColumn2 + "" // todo
+                    entry.map[columnName] = joinValues
+                        .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
+                }
+            }
+            reverseConnectedColumns[requestTable]?.forEach { (connectedColumn, connectedTableAndColumnName) ->
+                val (connectedTable, connectedColumnName) = connectedTableAndColumnName
+                val connectedTableName = connectedTable.tableName
+                val where = "WHERE '$connectedTableName'.'${connectedColumnName}_id' IN ($ids)"
+
+                readTableInfo.connectedColumn = "'$connectedTableName'.'${connectedColumnName}_id' AS 'reverse_connected_column'"
+                val joinValues = complexOrmQuery
+                    .query(connectedTable, readTableInfo, where)
 
                 val transformedValues = joinValues.groupBy { it.first }
-                nextRequests[connectedTable]!!.forEach { entry ->
+                readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                     val id = entry.id!!
-                    entry.map[it.key.reverseUnderScore] = transformedValues[id]?.map { value ->
-                        value.second.map[(it.value.second ?: connectedTable).reverseUnderScore] = entry
+                    val columnName = connectedColumn + "" // todo
+                    val columnName2 = connectedColumn + "" // todo
+                    entry.map[columnName] = transformedValues[id]?.map { value ->
+                        value.second.map[columnName2] = entry
                         value.second
                     }.orEmpty()
-                    entry.map[it.key.reverseUnderScore] = joinValues.mapNotNull { joinEntry ->
+                    entry.map[columnName] = joinValues.mapNotNull { joinEntry ->
                         joinEntry.second.takeIf { joinEntry.first == id }
-                                ?.apply { map[(it.value.second ?: connectedTable).reverseUnderScore] = entry }
+                            ?.apply { map[columnName2] = entry }
                     }
                 }
             }
-            joinColumns?.get(connectedTable)?.forEach {
-                val connectedColumn = "${connectedTable}_id"
-                val where =
-                    "LEFT JOIN ${connectedTable}_${it.key} AS join_table ON join_table.${it.value}_id = ${it.value}._id " +
-                            "WHERE join_table.${connectedTable}_id IN (${ids.joinToString()})"
-
-                val joinValues = query(it.value, "join_table.$connectedColumn", where)
-
-                nextRequests[connectedTable]!!.forEach { entry ->
-                    val id = entry.id!!
-                    entry.map[it.key.reverseUnderScore] = joinValues
-                        .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
-                }
-            }
-            reverseJoinColumns?.get(connectedTable)?.forEach {
-                val connectedColumn = "${connectedTable}_id"
-                val where =
-                    "LEFT JOIN ${it.value.first}_${it.value.second} AS join_table ON join_table.${it.value.first}_id = ${it.value.first}.id " +
-                            "WHERE join_table.${connectedTable}_id IN (${ids.joinToString()})"
-
-                val joinValues = query(it.value.first, "join_table.$connectedColumn", where)
-
-                nextRequests[connectedTable]!!.forEach { entry ->
-                    val id = entry.id!!
-                    entry.map[it.key.reverseUnderScore] = joinValues
-                        .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
-                }
-            }
-            nextRequests.remove(connectedTable)
         }
         @Suppress("UNCHECKED_CAST")
         return (result as List<T>)
     }
-
-*/
 }

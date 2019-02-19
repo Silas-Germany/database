@@ -7,11 +7,11 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     override fun toString(): String {
         return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
-                is ComplexOrmTable -> value.id ?: "?"
+                is ComplexOrmTable -> "ComplexOrmTable(${value.id ?: "?"})"
                 is List<*> -> value.joinToString(
                     prefix = "[",
                     postfix = "]"
-                ) { (it as ComplexOrmTable).id?.toString() ?: "?" }
+                ) { "ComplexOrmTable(${(it as ComplexOrmTable).id?.toString() ?: "?"})" }
                 is String -> "\'$value\'"
                 is ByteArray -> "ByteArray(size: ${value.size})"
                 null -> "null"

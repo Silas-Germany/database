@@ -43,7 +43,8 @@ dependencies {
     //kapt project(":complexOrmProcessor")
 
     // testing
+    kaptTest project(":complexOrmProcessor")
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-    kaptTest project(":complexOrmProcessor")
+    testImplementation 'org.robolectric:robolectric:3.0'
 }

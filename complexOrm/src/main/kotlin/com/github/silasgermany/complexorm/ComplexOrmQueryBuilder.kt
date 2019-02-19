@@ -89,7 +89,7 @@ class ComplexOrmQueryBuilder {
     }
 
     fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
-        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface, table) as List<T>
+        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface) as List<T>
     }
 
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
@@ -99,6 +99,6 @@ class ComplexOrmQueryBuilder {
         val tableName = table.tableName.toLowerCase()
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
-        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface, table) as T?
+        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface) as T?
     }
 }

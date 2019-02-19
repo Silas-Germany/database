@@ -2,12 +2,12 @@ package com.github.silasgermany.complexorm.models
 
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 
-class AdditionalRequestData {
+class ReadTableInfo {
     val restrictions = mapOf<String, String>()
     private val alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
     private val givenTables = alreadyLoaded.keys
-    private val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
-    val missingEntries: List<ComplexOrmTable>? = null
+    val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
+    var missingEntries: Collection<ComplexOrmTable>? = null
     var connectedColumn: String? = null
 
     private fun <T, K> MutableMap<T, MutableSet<K>>.init(key: T) = getOrPut(key) { mutableSetOf() }
@@ -23,6 +23,7 @@ class AdditionalRequestData {
         alreadyLoaded.init(tableClassName)[table?.id!!] = table
     }
     val isMissingRequest get() = missingEntries != null
+    val notAlreadyLoaded = nextRequests.filter { it.key in givenTables }
     fun print() {
         System.out.println("Other values(restrictions, ${restrictions.size}): $restrictions")
         System.out.println("Other values(alreadyLoaded, ${alreadyLoaded.flatMap { it.value.toList() }.size}): $alreadyLoaded")

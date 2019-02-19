@@ -117,7 +117,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
 
     private fun createRelatedTableCommand(tableName: String, column: Column): String {
         val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName
-        return "\n\"$tableName\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
+        return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
                 "'${tableName}_id' INTEGER NOT NULL, " +
                 "'${referenceTableName}_id' INTEGER NOT NULL, " +
                 "PRIMARY KEY ('${tableName}_id', '${referenceTableName}_id'), " +
