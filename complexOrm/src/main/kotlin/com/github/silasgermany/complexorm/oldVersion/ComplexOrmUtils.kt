@@ -13,11 +13,11 @@ abstract class ComplexOrmUtils {
     inline val <reified T : ComplexOrmTable> KProperty1<T, *>.fullName get() = "${T::class.tableName}.$columnName"
 
     val KProperty1<out ComplexOrmTable, *>.columnName get() =
-        if (complexOrmSchema.tables.values.contains(returnType.jvmErasure.simpleName!!.sql)) "${name}_id"
+        if (returnType.jvmErasure.simpleName!!.sql in complexOrmSchema.tables.values) "${name}_id"
         else name
 
     val KClass<out ComplexOrmTable>.tableName get() = simpleName!!.sql.takeIf { complexOrmSchema.tables.values.contains(it) }
-        ?: superclasses.find { complexOrmSchema.tables.values.contains(it.simpleName?.sql) }?.simpleName?.sql!!
+        ?: superclasses.find { it.simpleName?.sql in complexOrmSchema.tables.values }?.simpleName?.sql!!
 
 
     fun <K, V> MutableMap<K, MutableList<V>>.add(key: K, value: V) = getOrPut(key) { mutableListOf() }.add(value)

@@ -12,33 +12,6 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     private val tableInfoList = tablesInfo.toList()
 
-    fun createBasicTableInfo(): PropertySpec {
-        val constructors = tableInfoList.joinToString(",") { (className, tableInfo) ->
-            val rootTable = if (tableInfo.isRoot) className else getRootTableName(tableInfo)
-            "\n\"$className\" to (\"${tableInfo.tableName}\" to \"$rootTable\")"
-        }
-        return PropertySpec.builder("basicTableInfo", pairMapType)
-            .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($constructors)")
-            .build()
-    }
-
-    private fun getRootTableName(tableInfo: TableInfo): String {
-        val nextTableInfo = tablesInfo.getValue(tableInfo.superTable!!)
-        return if (nextTableInfo.isRoot) tableInfo.superTable
-        else getRootTableName(nextTableInfo)
-    }
-
-    fun createConstructors(): PropertySpec {
-        val constructors = tableInfoList.joinToString(",") { (className, _) ->
-            "\n\"$className\" to { it: Map<String, Any?> -> $className(it as MutableMap<String, Any?>)}"
-        }
-        return PropertySpec.builder("tableConstructors", constructorsType)
-            .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($constructors)")
-            .build()
-    }
-
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
             val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map { it.columnName }
@@ -161,6 +134,48 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
         return PropertySpec.builder("reverseConnectedColumns", reverseForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($reverseConnectedColumnInfo)")
+            .build()
+    }
+
+    fun createConstructors(): PropertySpec {
+        val constructors = tableInfoList.joinToString(",") { (className, _) ->
+            "\n\"$className\" to { it: Map<String, Any?> -> $className(it as MutableMap<String, Any?>)}"
+        }
+        return PropertySpec.builder("tableConstructors", constructorsType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("mapOf($constructors)")
+            .build()
+    }
+
+    fun createBasicTableInfo(): PropertySpec {
+        val constructors = tableInfoList.joinToString(",") { (className, tableInfo) ->
+            val rootTable = if (tableInfo.isRoot) className else getRootTableName(tableInfo)
+            "\n\"$className\" to (\"${tableInfo.tableName}\" to \"$rootTable\")"
+        }
+        return PropertySpec.builder("basicTableInfo", pairMapType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("mapOf($constructors)")
+            .build()
+    }
+
+    private fun getRootTableName(tableInfo: TableInfo): String {
+        val nextTableInfo = tablesInfo.getValue(tableInfo.superTable!!)
+        return if (nextTableInfo.isRoot) tableInfo.superTable
+        else getRootTableName(nextTableInfo)
+    }
+
+    fun createColumnNames(): PropertySpec {
+        val connectedColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val writtenColumns = mutableSetOf<String>()
+            tableInfo.columns.mapNotNull { column ->
+                if (!writtenColumns.add(column.columnName)) null
+                else "\n\t\t\"${column.columnName}\" to \"${column.name}\""
+            }.takeUnless { it.isEmpty() }
+                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+        }.joinToString(",")
+        return PropertySpec.builder("columnNames", normalForeignColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("mapOf($connectedColumnInfo)")
             .build()
     }
 

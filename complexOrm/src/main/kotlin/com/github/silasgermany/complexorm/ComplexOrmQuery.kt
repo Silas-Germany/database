@@ -1,6 +1,7 @@
 package com.github.silasgermany.complexorm
 
 import android.database.Cursor
+import com.github.silasgermany.complexorm.models.AdditionalRequestData
 import com.github.silasgermany.complexorm.models.RequestData
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
@@ -16,179 +17,117 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
     private val constructors = complexOrmTableInfo.tableConstructors
+    private val columnNames = complexOrmTableInfo.columnNames
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
     private val reverseConnectedColumns = complexOrmTableInfo.reverseConnectedColumns
     private val joinColumns = complexOrmTableInfo.joinColumns
     private val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns
 
-    val restrictions = mapOf<String, String>()
-    val notAlreadyLoaded = mutableMapOf<String, MutableList<ComplexOrmTable>>()
-    var alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
-    var alreadyLoadedStart = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
-    var givenTables = setOf<String>()
-    val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
-
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T) = getOrPut(key) { mutableMapOf() }
-    private fun <T, K> MutableMap<T, MutableList<K>>.init(key: T) = getOrPut(key) { mutableListOf() }
     private fun <T, K> MutableMap<T, MutableSet<K>>.init(key: T) = getOrPut(key) { mutableSetOf() }
     private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
-
-    private val String?.reverseUnderScore get() = this!!
+    private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
+        takeUnless { it["id"] == null }?.let { constructors.getValue(tableClassName).invoke(it) }
 
     fun query(
-        tableClassName: String, connectedColumn: String? = null,
-        where: String? = null, missingEntries: List<ComplexOrmTable>? = null
+        tableClassName: String,
+        additionalRequestData: AdditionalRequestData,
+        where: String? = null
     ): List<Pair<Long?, ComplexOrmTable>> {
-        givenTables = alreadyLoaded.keys
 
-        val requestData = RequestData(tableClassName.tableName)
-        requestData.addData(tableClassName, missingEntries != null)
+        val requestData = RequestData(tableClassName.tableName, tableClassName, where, additionalRequestData)
+        requestData.addData(tableClassName)
 
-        val columns = mutableListOf("'${tableClassName.tableName}'.'id'")
-        columns.addColumns(tableClassName, missingEntries != null)
-        connectedColumn?.let { columns.add("'${tableClassName.tableName}'.'$it'") }
-
-        val tablesAndRestrictions = mutableListOf(tableClassName.tableName)
-        tablesAndRestrictions.addJoins(tableClassName, missingEntries != null)
-        where?.let { tablesAndRestrictions.add(it) } ?: tablesAndRestrictions.add("WHERE 1")
-        restrictions[tableClassName]?.let { tablesAndRestrictions += "AND $it" }
-
-        val query = "SELECT ${columns.joinToString()} FROM ${tablesAndRestrictions.joinToString(" ")};"
-
-        val result = mutableListOf<Pair<Long?, ComplexOrmTable>>()
-        database.queryForEach(query) {
+        val result: MutableList<Pair<Long?, ComplexOrmTable>> = mutableListOf()
+        database.queryForEach(requestData.query) {
             readIndex = 0
-            val (connectedId, databaseEntry) = it.readColumns(tableClassName, missingEntries, connectedColumn)
+            val (connectedId, databaseEntry) = readColumns(tableClassName, it, additionalRequestData)
             if (databaseEntry != null) {
-                alreadyLoaded.init(tableClassName)[databaseEntry.id!!] = databaseEntry
+                additionalRequestData.setTable(tableClassName, databaseEntry)
                 result.add(connectedId to databaseEntry)
             }
         }
-        alreadyLoadedStart[tableClassName] = alreadyLoaded.init(tableClassName)
         return result
     }
 
-    private fun databaseMapInit(id: Long?) = ComplexOrmTable.init(id)
-
-    private fun RequestData.addData(tableClassName: String, isMissing: Boolean, columnName: String? = null, previousColumn: String? = null) {
-        if (givenTables.contains(tableClassName) && !isMissing) return
+    private fun RequestData.addData(tableClassName: String, previousColumn: String? = null) {
+        if (additionalRequestData.alreadyGiven(tableClassName)) return
+        val tableName = previousColumn ?: tableClassName.tableName
         val prefix = previousColumn?.plus('$') ?: ""
-        normalColumns[tableClassName]?.forEach { columns.add("'${columnName ?: tableClassName.tableName}'.'${it.key}'") }
-        connectedColumns[tableClassName]?.forEach { connectedColumnData ->
-            if (reverseConnectedColumns[connectedColumnData.value]?.any { it.value.first == tableClassName } == true &&
-                alreadyLoadedStart[connectedColumnData.value] == null) return@forEach
-            if (alreadyLoadedStart[connectedColumnData.value] != null && !isMissing) {
-                columns.add("'${columnName ?: tableClassName.tableName}'.'${connectedColumnData.key}_id'")
+        normalColumns[tableClassName]?.forEach {
+            columns.add("'$tableName'.'${it.key}'")
+        }
+        connectedColumns[tableClassName]?.forEach { (connectedColumnName, connectedTableClassName) ->
+            if (isReverselyLoaded(tableClassName, connectedColumnName, additionalRequestData)) return@forEach
+            if (additionalRequestData.alreadyGiven(connectedColumnName)) {
+                columns.add("'$tableName'.'${connectedTableClassName}_id'")
                 return@forEach
             }
-            columns.add("'$prefix${connectedColumnData.key}'.'id'")
+            val connectedTableName = connectedTableClassName.tableName
+            val newConnectedTableName = "$prefix$connectedColumnName"
 
-            if (alreadyLoadedStart[connectedColumnData.value] != null && !isMissing) return@forEach
-            var where = if (connectedColumnData.value == "translation") {
-                "LEFT JOIN 'translation' AS '${connectedColumnData.key}' " +
-                        "ON '${connectedColumnData.key.removeSuffix("_translation")}_id' = '${connectedColumnData.key}'.'translation_code_id' " +
-                        "AND ${(restrictions.getValue("translation")).replace("translation.", "${connectedColumnData.key}.")}"
-            } else {
-                val joinTableName = connectedColumnData.value.tableName
-                "LEFT JOIN '$joinTableName' AS '$prefix${connectedColumnData.key}' " +
-                        "ON '$prefix${connectedColumnData.key}'.'id' = '${columnName ?: tableClassName.tableName}'.'${connectedColumnData.key}_id'"
-            }
-            restrictions[connectedColumnData.value]?.let {
-                where = where.removePrefix("LEFT ") + " AND ${it.replace("${connectedColumnData.value}.", "${connectedColumnData.key}.")}"
+            columns.add("'$newConnectedTableName'.'id'")
+
+            var where = "LEFT JOIN '$connectedTableName' AS '$newConnectedTableName' " +
+                    "ON '$newConnectedTableName'.'id'='$tableName'.'${connectedColumnName}_id'"
+            additionalRequestData.restrictions[connectedTableClassName]?.let {
+                where = where.removePrefix("LEFT ") + " AND ${it.replace("'$connectedTableClassName'.", "'$connectedTableName'.")}"
             }
             tablesAndRestrictions.add(where)
 
-            addData(connectedColumnData.value, isMissing, connectedColumnData.key, prefix + connectedColumnData.key)
-        }
-
-    }
-
-    private fun MutableList<String>.addColumns(tableClassName: String, isMissing: Boolean, columnName: String? = null, previousColumn: String? = null) {
-        if (alreadyLoadedStart[tableClassName] != null && !isMissing) return
-        val prefix = previousColumn?.plus('$') ?: ""
-        normalColumns[tableClassName]?.forEach { add("'${columnName ?: tableClassName.tableName}'.'${it.key}'") }
-        connectedColumns[tableClassName]?.forEach { joinTable ->
-            if (reverseConnectedColumns[joinTable.value]?.any { it.value.first == tableClassName } == true &&
-                alreadyLoadedStart[joinTable.value] == null) return@forEach
-            if (alreadyLoadedStart[joinTable.value] != null && !isMissing) {
-                add("'${columnName ?: tableClassName.tableName}'.'${joinTable.key}_id'")
-                return@forEach
-            }
-            add("'$prefix${joinTable.key}'.'id'")
-
-            addColumns(joinTable.value, isMissing, joinTable.key, prefix + joinTable.key)
+            addData(connectedTableClassName, newConnectedTableName)
         }
     }
 
-    private fun MutableList<String>.addJoins(tableClassName: String, isMissing: Boolean, columnName: String? = null, previousColumn: String? = null) {
-        if (alreadyLoadedStart[tableClassName] != null && !isMissing) return
-        val prefix = previousColumn?.plus('$') ?: ""
-        connectedColumns[tableClassName]?.forEach { joinTable ->
-            if (alreadyLoadedStart[joinTable.value] != null && !isMissing) return@forEach
-            var where = if (joinTable.value == "translation") {
-                "LEFT JOIN 'translation' AS '${joinTable.key}' " +
-                        "ON '${joinTable.key.removeSuffix("_translation")}_id' = '${joinTable.key}'.'translation_code_id' " +
-                        "AND ${(restrictions.getValue("translation")).replace("translation.", "${joinTable.key}.")}"
-            } else {
-                val joinTableName = joinTable.value.tableName
-                "LEFT JOIN '$joinTableName' AS '$prefix${joinTable.key}' " +
-                        "ON '$prefix${joinTable.key}'.'id' = '${columnName ?: tableClassName.tableName}'.'${joinTable.key}_id'"
-            }
-            restrictions[joinTable.value]?.let {
-                where = where.removePrefix("LEFT ") + " AND ${it.replace("${joinTable.value}.", "${joinTable.key}.")}"
-            }
-            add(where)
-            addJoins(joinTable.value, isMissing, joinTable.key, prefix + joinTable.key)
-        }
-    }
+    private fun isReverselyLoaded(tableClassName: String, connectedColumnName: String, additionalRequestData: AdditionalRequestData) =
+        reverseConnectedColumns[connectedColumnName]
+            ?.any { it.value.run { first == tableClassName && second == connectedColumnName } } == true &&
+                additionalRequestData.has(connectedColumnName)
 
-    private fun Cursor.readColumns(
-        tableClassName: String,
-        missingEntries: List<ComplexOrmTable>?,
-        connectedColumn: String? = null
-    ): Pair<Long?, ComplexOrmTable?> {
-        val id = getValue(readIndex++, ComplexOrmTypes.Long) as Long?
+    private fun readColumns(tableClassName: String, cursor: Cursor, additionalRequestData: AdditionalRequestData): Pair<Long?, ComplexOrmTable?> {
+        val id = cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long?
 
-        val databaseMap = databaseMapInit(id)
-        val alreadyLoadedTable = alreadyLoadedStart[tableClassName]
-        if (alreadyLoadedTable != null && missingEntries == null) {
-            val connectedId = connectedColumn?.let { getValue(readIndex++, ComplexOrmTypes.Long) as Long }
-            alreadyLoaded[tableClassName]?.get(id)?.let { return connectedId to it }
-            return connectedId to (alreadyLoadedTable[id] ?: constructors.getValue(tableClassName).invoke(databaseMap)
-                .also { notAlreadyLoaded.init(tableClassName).add(it) })
+        val databaseMap = ComplexOrmTable.init(id)
+        if (additionalRequestData.alreadyGiven(tableClassName)) {
+            val connectedId = additionalRequestData.connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+            additionalRequestData.getTable(tableClassName, id)?.let { return connectedId to it }
+            val table = databaseMap.createClass(tableClassName)
+            additionalRequestData.addRequest(tableClassName, table)
+            return connectedId to table
         }
 
         normalColumns[tableClassName]?.forEach {
-            val value = getValue(readIndex++, it.value)
-            databaseMap[it.key.reverseUnderScore] = value
+            val columnName = columnNames.getValue(tableClassName).getValue(it.key)
+            databaseMap[columnName] = cursor.getValue(readIndex++, it.value)
         }
-        connectedColumns[tableClassName]?.forEach { joinTableNames ->
-            if (reverseConnectedColumns[joinTableNames.value]?.any { it.value.first == tableClassName } == true &&
-                alreadyLoadedStart[joinTableNames.value] == null) return@forEach
-            val (_, databaseEntry) = readColumns(joinTableNames.value, null)
-            if (databaseEntry != null) {
-                alreadyLoaded.init(joinTableNames.value)[databaseEntry.id!!] = databaseEntry
-                val identifier = joinTableNames.key.reverseUnderScore
-                if (databaseMap[identifier] == null) databaseMap[identifier] = databaseEntry
-                else return null to databaseMap[identifier] as ComplexOrmTable
-            } else databaseMap[joinTableNames.key.reverseUnderScore] = null
-        }
-        val connectedId = connectedColumn?.let { getValue(readIndex++, ComplexOrmTypes.Long) as Long }
 
-        if (missingEntries == null) alreadyLoaded[tableClassName]?.get(id)?.let { return connectedId to it }
+        connectedColumns[tableClassName]
+            ?.filter {
+                !isReverselyLoaded(tableClassName, it.key, additionalRequestData) &&
+                        (!additionalRequestData.alreadyGiven(it.value))
+            }?.forEach { (connectedColumnName, connectedTableClassName) ->
+                val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
+                val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, additionalRequestData)
+                if (databaseEntry != null) {
+                    additionalRequestData.setTable(connectedTableClassName, databaseEntry)
+                    System.out.println("Problem: $databaseMap")
+                    if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
+                    else return null to databaseMap.getValue(columnName) as ComplexOrmTable
+                } else databaseMap[columnName] = null
+            }
+        val connectedId = additionalRequestData.connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+
+        if (!additionalRequestData.isMissingRequest)
+            additionalRequestData.getTable(tableClassName, id)?.let { return connectedId to it }
 
         if (id == null) return connectedId to null
-        val databaseEntry = if (missingEntries == null) constructors.getValue(tableClassName).invoke(databaseMap)
-        else missingEntries.find { it.id == id }!!.apply { map.putAll(databaseMap) }
-        reverseConnectedColumns[tableClassName]?.forEach { _ ->
-            nextRequests.init(tableClassName).add(databaseEntry)
-        }
-        joinColumns[tableClassName]?.asIterable()?.forEach { _ ->
-            nextRequests.init(tableClassName).add(databaseEntry)
-        }
-        reverseJoinColumns[tableClassName]?.forEach { _ ->
-            nextRequests.init(tableClassName).add(databaseEntry)
+        val databaseEntry = if (!additionalRequestData.isMissingRequest) databaseMap.createClass(tableClassName)!!
+        else additionalRequestData.missingEntries!!.find { it.id == id }!!.apply { map.putAll(databaseMap) }
+        when(tableClassName) {
+            in reverseConnectedColumns,
+            in joinColumns,
+            in reverseJoinColumns -> additionalRequestData.addRequest(tableClassName, databaseEntry)
         }
         return connectedId to databaseEntry
     }

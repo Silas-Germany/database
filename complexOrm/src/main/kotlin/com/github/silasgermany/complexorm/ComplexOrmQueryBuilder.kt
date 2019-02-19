@@ -35,7 +35,7 @@ class ComplexOrmQueryBuilder {
         selectionArguments.forEach { whereArgument ->
             val transformedWhereArgument = when (whereArgument) {
                 is String -> {
-                    if (whereArgument.contains('%'))
+                    if ('%' in whereArgument)
                         where = where.replace(" = ?", " LIKE ?")
                     "'$whereArgument'"
                 }
@@ -76,7 +76,7 @@ class ComplexOrmQueryBuilder {
             where = where.replace("??", columnName)
                 .replaceFirst("?", transformedWhereArgument)
         }
-        restrictions[tableName] = if (restrictions[tableName] == null) where
+        restrictions[tableName] = if (restrictions.containsKey(tableName)) where
         else "${restrictions[tableName]} AND $where"
         return this@ComplexOrmQueryBuilder
     }
@@ -97,7 +97,7 @@ class ComplexOrmQueryBuilder {
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName.toLowerCase()
-        this@ComplexOrmQueryBuilder.restrictions[tableName] = if (restrictions[tableName] == null) "$tableName._id = $id"
+        this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
         return ComplexOrmReader(1 as ComplexOrmDatabaseInterface, table) as T?
     }

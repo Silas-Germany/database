@@ -44,6 +44,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
                     .addProperty(tableInfoFileCreator.createReverseConnectedColumnsInfo())
                     .addProperty(tableInfoFileCreator.createConstructors())
                     .addProperty(tableInfoFileCreator.createBasicTableInfo())
+                    .addProperty(tableInfoFileCreator.createColumnNames())
                     .build()
             ).build()
         file.writeTo(File(kaptKotlinGeneratedDir))

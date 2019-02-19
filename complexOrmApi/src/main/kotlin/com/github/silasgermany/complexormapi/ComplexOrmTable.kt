@@ -23,7 +23,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     companion object {
         val default get() = mutableMapOf<String, Any?>("id" to null).run {
             withDefault {
-                throw IllegalAccessException("Key does not exist: $it in $this")
+                throw NoSuchElementException("Key does not exist: $it in $this")
             }
         }
         fun init(id: Long?) = default.also { it["id"] = id }
