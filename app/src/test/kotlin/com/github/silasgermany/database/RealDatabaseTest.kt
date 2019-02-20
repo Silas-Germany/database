@@ -3,7 +3,7 @@ package com.github.silasgermany.database
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build.VERSION_CODES.LOLLIPOP
 import com.github.silasgermany.complexorm.ComplexOrmReader
-import com.github.silasgermany.complexorm.ComplexOrmSchema
+import com.github.silasgermany.complexorm.ComplexOreInitializer
 import com.github.silasgermany.complexorm.ComplexOrmWriter
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.database.models.RealDatabase
@@ -24,19 +24,19 @@ class RealDatabaseTest {
 
     private val databaseWriter by lazy { ComplexOrmWriter(RealDatabase(db)) }
     private val databaseReader by lazy { ComplexOrmReader(RealDatabase(db)) }
-    private val databaseCreator by lazy { ComplexOrmSchema(RealDatabase(db)) }
+    private val databaseInitizer by lazy { ComplexOreInitializer(RealDatabase(db)) }
 
     private val dbFile = File("/tmp/test")
     private val db: SQLiteDatabase by lazy {
         dbFile.delete()
         SQLiteDatabase.openOrCreateDatabase(dbFile, null).also {
-            ComplexOrmSchema(RealDatabase(it)).createAllTables()
+            ComplexOreInitializer(RealDatabase(it)).createAllTables()
         }
     }
 
     @Test
     fun createTable() {
-        databaseCreator.replaceTable<AllTables.NormalTable>()
+        databaseInitizer.replaceTable<AllTables.NormalTable>()
     }
 
     @Test
@@ -62,6 +62,7 @@ class RealDatabaseTest {
         val tables = databaseReader.read<AllTables.NormalTable>(additionalRequestData)
         System.out.println("Got: $tables")
         assertEquals(2, tables.size)
+
         var table = tables.first()
         additionalRequestData.print()
         assertEquals(normalTable.booleanValue, table.booleanValue)
@@ -70,6 +71,7 @@ class RealDatabaseTest {
         assertEquals(normalTable.dateValue, table.dateValue)
         assertEquals(normalTable.byteArrayValue.toList(), table.byteArrayValue?.toList())
         assertEquals("123", table.stringValue)
+
         // Check default values:
         assertEquals(1, table.intValue)
         assertEquals(1L, table.longValue)

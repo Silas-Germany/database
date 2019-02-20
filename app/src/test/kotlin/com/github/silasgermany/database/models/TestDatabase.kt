@@ -2,7 +2,7 @@ package com.github.silasgermany.database.models
 
 import android.content.ContentValues
 import android.database.Cursor
-import com.github.silasgermany.complexorm.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 
 class TestDatabase: ComplexOrmDatabaseInterface {
     override fun insertWithOnConflict(

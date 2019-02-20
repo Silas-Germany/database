@@ -1,6 +1,7 @@
 package com.github.silasgermany.complexorm
 
 import android.database.Cursor
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
@@ -33,7 +34,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
         readTableInfo: ReadTableInfo,
         where: String? = null
     ): List<Pair<Long?, ComplexOrmTable>> {
-
         val requestInfo = RequestInfo(tableClassName.tableName, tableClassName, where, readTableInfo)
         requestInfo.addData(tableClassName)
 

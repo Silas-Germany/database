@@ -4,10 +4,11 @@ import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import com.github.silasgermany.complexorm.ComplexOrmCursor
-import com.github.silasgermany.complexorm.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmCursor
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 
-class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInterface {
+class RealDatabase(private val database: SQLiteDatabase):
+    ComplexOrmDatabaseInterface {
     override fun insertWithOnConflict(
         table: String,
         nullColumnHack: String,

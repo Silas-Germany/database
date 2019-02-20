@@ -1,14 +1,19 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmQueryBuilder {
+class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) {
 
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+    private val normalColumns = complexOrmTableInfo.normalColumns
+    private val connectedColumns = complexOrmTableInfo.connectedColumns
+    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
@@ -20,20 +25,21 @@ class ComplexOrmQueryBuilder {
 
     inline fun <reified T : ComplexOrmTable> where(column: KProperty1<T, Any?>, equals: Any?): ComplexOrmQueryBuilder =
         where(T::class, column, null, equals)
-
-    private val KProperty1<out ComplexOrmTable, Any?>.columnName get() = this.name
-    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
-
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.where(
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
         val tableName = table.tableName
-        val columnName = "$tableName.${column.columnName}"
+        val columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
+        var fullColumnName = "$tableName.$columnName"
+        if (connectedColumns[table.qualifiedName!!]?.contains(columnName) == true) fullColumnName += "_id"
+        else if (normalColumns[table.qualifiedName!!]?.contains(columnName) != true)
+            throw java.lang.IllegalArgumentException("Can't create restriction for join columns (column ${column.name} from ${table.qualifiedName}). Please restrict the target table instead")
         var where = (selection?.let { "($it)" } ?: "?? = ?")
-        if (selectionArguments.isEmpty()) where = where.replace("??", columnName)
+        if (selectionArguments.isEmpty()) where = where.replace("??", fullColumnName)
         selectionArguments.forEach { whereArgument ->
             val transformedWhereArgument = when (whereArgument) {
+                is Boolean -> if (whereArgument) "1" else "0"
                 is String -> {
                     if ('%' in whereArgument)
                         where = where.replace(" = ?", " LIKE ?")
@@ -65,19 +71,20 @@ class ComplexOrmQueryBuilder {
                         else -> throw IllegalArgumentException("Collection it not of type String, Int or null")
                     }
                 }
+                is ComplexOrmTable -> "${whereArgument.id}"
                 null -> {
                     where = where
                         .replace(" != ?", " IS NOT ?")
                         .replace(" = ?", " IS ?")
                     "NULL"
                 }
-                else -> throw IllegalArgumentException("Couldn't find type of $whereArgument")
+                else -> throw IllegalArgumentException("Can't create restriction with type of $whereArgument (${whereArgument::class})")
             }
-            where = where.replace("??", columnName)
+            where = where.replace("??", fullColumnName)
                 .replaceFirst("?", transformedWhereArgument)
         }
-        restrictions[tableName] = if (restrictions.containsKey(tableName)) where
-        else "${restrictions[tableName]} AND $where"
+        restrictions[table.qualifiedName!!] = if (table.qualifiedName!! !in restrictions) where
+        else "${restrictions[table.qualifiedName!!]} AND $where"
         return this@ComplexOrmQueryBuilder
     }
 
@@ -88,17 +95,23 @@ class ComplexOrmQueryBuilder {
         return this@ComplexOrmQueryBuilder
     }
 
-    fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
-        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface) as List<T>
-    }
-
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
 
+    fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
+        System.out.println("Exec SQL: $restrictions")
+        val readTableInfo = ReadTableInfo(restrictions, existingEntries)
+        return ComplexOrmReader(database).read(table, readTableInfo)
+            .also { readTableInfo.print() }
+    }
+
+    inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName.toLowerCase()
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
-        return ComplexOrmReader(1 as ComplexOrmDatabaseInterface) as T?
+        System.out.println("Exec SQL: $restrictions")
+        val readTableInfo = ReadTableInfo(restrictions, existingEntries)
+        return ComplexOrmReader(database).read(table, readTableInfo).getOrNull(0)
     }
 }

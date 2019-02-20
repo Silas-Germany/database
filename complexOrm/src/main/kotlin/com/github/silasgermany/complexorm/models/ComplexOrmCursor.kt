@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.models
 
 import android.content.ContentResolver
 import android.database.*

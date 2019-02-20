@@ -2,6 +2,7 @@ package com.github.silasgermany.complexorm
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes

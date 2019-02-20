@@ -2,12 +2,13 @@ package com.github.silasgermany.complexorm.models
 
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 
-class ReadTableInfo {
-    val restrictions = mapOf<String, String>()
-    private val alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
-    private val givenTables = alreadyLoaded.keys.toSet()
-    val loadingTables = mutableSetOf<String>()
-    val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
+class ReadTableInfo(
+    val restrictions: Map<String, String> = mapOf(),
+    private val alreadyLoaded: MutableMap<String, MutableMap<Long, ComplexOrmTable>> = mutableMapOf()
+) {
+    private val givenTables: Set<String> = alreadyLoaded.keys.toSet()
+    val loadingTables: MutableSet<String> = mutableSetOf()
+    val nextRequests: MutableMap<String, MutableSet<ComplexOrmTable>> = mutableMapOf()
     var missingEntries: Collection<ComplexOrmTable>? = null
     var connectedColumn: String? = null
 

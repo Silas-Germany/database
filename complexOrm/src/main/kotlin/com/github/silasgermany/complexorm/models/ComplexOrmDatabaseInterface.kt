@@ -1,8 +1,9 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.models
 
 import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.Cursor
+import com.github.silasgermany.complexorm.ComplexOrmQueryBuilder
 import com.github.silasgermany.complexorm.oldVersion.ComplexOrmCursor
 
 interface ComplexOrmDatabaseInterface {
@@ -13,6 +14,8 @@ interface ComplexOrmDatabaseInterface {
     fun delete(table: String, whereClause: String, whereArgs: Array<String>?): Int
     fun execSQL(sql: String)
     fun rawQuery(sql: String, selectionArgs: Array<String>?): Cursor?
+
+    val query get() = ComplexOrmQueryBuilder(this)
 
     fun queryForEach(sql: String, f: (Cursor) -> Unit) {
         return rawQuery(sql, null)

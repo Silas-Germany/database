@@ -57,7 +57,9 @@ interface AllTables {
         open val intValue: Int by initMap
     }
 
-    open class EmptyTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap)
+    open class EmptyTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
+        constructor(id: Long): this(init(id))
+    }
 
     open class IndirectTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
 
