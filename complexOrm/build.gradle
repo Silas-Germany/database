@@ -10,29 +10,15 @@ android {
         versionName "1.0"
     }
     buildTypes {
-        normal {
+        release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        sqlcipher {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        debug {
+            debuggable true
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
-}
-
-configurations {
-    normal
-    sqlcipher
-}
-
-import com.android.builder.core.BuilderConstants
-android.variantFilter { variant ->
-    def build = variant.buildType.name
-    if (build == BuilderConstants.DEBUG || build == BuilderConstants.RELEASE) {
-        variant.setIgnore(true)
-    }
 }
 
 dependencies {

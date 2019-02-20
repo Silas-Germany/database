@@ -11,6 +11,7 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
 
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+    private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
     private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
@@ -32,9 +33,10 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
         val tableName = table.tableName
         val columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
         var fullColumnName = "$tableName.$columnName"
-        if (connectedColumns[table.qualifiedName!!]?.contains(columnName) == true) fullColumnName += "_id"
-        else if (normalColumns[table.qualifiedName!!]?.contains(columnName) != true)
-            throw java.lang.IllegalArgumentException("Can't create restriction for join columns (column ${column.name} from ${table.qualifiedName}). Please restrict the target table instead")
+        val rootTableName = basicTableInfo.getValue(table.qualifiedName!!).second
+        if (connectedColumns[rootTableName]?.contains(columnName) == true) fullColumnName += "_id"
+        else if (normalColumns[rootTableName]?.contains(columnName) != true)
+            throw java.lang.IllegalArgumentException("Can't create restriction for join columns (column ${columnName} from ${table.qualifiedName}). Please restrict the target table instead")
         var where = (selection?.let { "($it)" } ?: "?? = ?")
         if (selectionArguments.isEmpty()) where = where.replace("??", fullColumnName)
         selectionArguments.forEach { whereArgument ->
@@ -104,8 +106,8 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
             .also { readTableInfo.print() }
     }
 
-    inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
+    inline fun <reified T : ComplexOrmTable> get(id: Long?): T? = get(T::class, id)
+    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Long?): T? {
         id ?: return null
         val tableName = table.tableName.toLowerCase()
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"

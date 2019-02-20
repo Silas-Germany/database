@@ -14,15 +14,19 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
 
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
-            val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map { it.columnName }
+            val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map {
+                if (it.columnType.type == ComplexOrmTypes.ComplexOrmTable)
+                it.columnName + "_id"
+               else it.columnName
+            }
             val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTable, ComplexOrmTypes.ComplexOrmTables -> null
                     else -> {
-                        if (column.columnName !in rootTableColumnNames)
-                            throw java.lang.IllegalArgumentException("Column ${column.name} of table $className not in root table: ${getRootTableName(tableInfo)} " +
+                        if (column.idName !in rootTableColumnNames)
+                            throw java.lang.IllegalArgumentException("Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
                                     "(Don't delegate it with a map, if it's not a column)")
                         "\n\t\t\"${column.columnName}\" to ComplexOrmTypes.${column.columnType.type}"
                     }
@@ -102,9 +106,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                 else if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
                     ComplexOrmTypes.ComplexOrmTables -> {
-                        val reverseColumn = tablesInfo.getValue(column.columnType.referenceTable!!).columns
+                        val connectedTableInfo = tablesInfo.getValue(column.columnType.referenceTable!!)
+                        val connectedRootTableInfo = if (connectedTableInfo.isRoot) connectedTableInfo else getRootTableInfo(connectedTableInfo)
+                        val reverseColumn = connectedRootTableInfo.columns
                             .find { reverseJoinColumn in arrayOf(it.columnName, it.name) }?.columnName
-                            ?: throw IllegalArgumentException("Couldn't find column $reverseJoinColumn in table ${column.columnType.referenceTable}")
+                            ?: throw IllegalArgumentException("Couldn't find column $reverseJoinColumn in table ${connectedRootTableInfo.tableName}")
                         "\n\t\t\"${column.columnName}\" to" +
                                 "\n\t\t\t(\"${column.columnType.referenceTable}\" to\n\t\t\t \"$reverseColumn\")"
                     }
