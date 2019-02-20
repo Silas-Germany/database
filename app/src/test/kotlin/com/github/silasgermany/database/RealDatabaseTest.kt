@@ -2,9 +2,8 @@ package com.github.silasgermany.database
 
 import android.database.sqlite.SQLiteDatabase
 import android.os.Build.VERSION_CODES.LOLLIPOP
-import com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema
-import com.github.silasgermany.complexorm.ComplexOrmQuery
 import com.github.silasgermany.complexorm.ComplexOrmReader
+import com.github.silasgermany.complexorm.ComplexOrmSchema
 import com.github.silasgermany.complexorm.ComplexOrmWriter
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.database.models.RealDatabase
@@ -20,18 +19,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @RunWith(RobolectricGradleTestRunner::class)
-@Config(constants = BuildConfig::class, sdk = intArrayOf(LOLLIPOP), packageName = BuildConfig.APPLICATION_ID, manifest = "/home/arch/android/rev79/database/app/src/main/AndroidManifest.xml")
+@Config(constants = BuildConfig::class, sdk = [LOLLIPOP], packageName = BuildConfig.APPLICATION_ID, manifest = "/home/arch/android/rev79/database/app/src/main/AndroidManifest.xml")
 class RealDatabaseTest {
 
     private val databaseWriter by lazy { ComplexOrmWriter(RealDatabase(db)) }
     private val databaseReader by lazy { ComplexOrmReader(RealDatabase(db)) }
-    private val databaseQuery by lazy { ComplexOrmQuery(RealDatabase(db)) }
+    private val databaseCreator by lazy { ComplexOrmSchema(RealDatabase(db)) }
 
     private val dbFile = File("/tmp/test")
     private val db: SQLiteDatabase by lazy {
         dbFile.delete()
-        SQLiteDatabase.openOrCreateDatabase(dbFile, null)
-            .apply { ComplexOrmDatabaseSchema.createTableCommands.values.forEach { execSQL(it) } }
+        SQLiteDatabase.openOrCreateDatabase(dbFile, null).also {
+            ComplexOrmSchema(RealDatabase(it)).createAllTables()
+        }
+    }
+
+    @Test
+    fun createTable() {
+        databaseCreator.replaceTable<AllTables.NormalTable>()
     }
 
     @Test

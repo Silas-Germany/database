@@ -6,6 +6,7 @@ class ReadTableInfo {
     val restrictions = mapOf<String, String>()
     private val alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
     private val givenTables = alreadyLoaded.keys.toSet()
+    val loadingTables = mutableSetOf<String>()
     val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
     var missingEntries: Collection<ComplexOrmTable>? = null
     var connectedColumn: String? = null
@@ -17,6 +18,7 @@ class ReadTableInfo {
         table?.let { nextRequests.init(tableClassName).add(it) }
     }
     fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest
+    fun alreadyLoading(tableClassName: String) = tableClassName in loadingTables
     fun has(tableClassName: String) = alreadyLoaded.containsKey(tableClassName)
     fun getTable(tableClassName: String, id: Long?) = alreadyLoaded[tableClassName]?.get(id)
     fun setTable(tableClassName: String, table: ComplexOrmTable?) {

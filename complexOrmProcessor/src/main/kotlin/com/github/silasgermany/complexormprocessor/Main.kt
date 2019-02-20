@@ -9,11 +9,15 @@ import javax.tools.Diagnostic
 
 class Main: AbstractProcessor() {
 
-    override fun getSupportedAnnotationTypes() = mutableSetOf(ComplexOrmAllTables::class.qualifiedName)
+    override fun getSupportedAnnotationTypes() = mutableSetOf(ComplexOrmAllTables::class.java.canonicalName)
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
     private val processor by lazy { Processor(processingEnv) }
     override fun process(set: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
         return try {
+            val allTablesInterface = roundEnv.getElementsAnnotatedWith(ComplexOrmAllTables::class.java)
+            if (allTablesInterface.size > 1) {
+                throw IllegalArgumentException("The project can't have more than one interface marked with @ComplexOrmAllTables (it has: ${allTablesInterface.joinToString()})")
+            }
             processor.process(roundEnv)
             true
         } catch (e: Exception) {

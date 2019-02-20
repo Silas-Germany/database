@@ -19,7 +19,7 @@ import javax.lang.model.util.Types
 class TableInfoExtractor(private val messager: Messager, private val typeUtils: Types) {
 
     private val allTables = mutableListOf<Pair<Element, Boolean>>()
-    private val sqlTableName = ComplexOrmTable::class.qualifiedName
+    private val sqlTableName = ComplexOrmTable::class.java.canonicalName
     private val allTableInfo = mutableMapOf<String, TableInfo>()
         .run { withDefault { throw java.lang.IllegalArgumentException("Couldn't find table $it (available tables: $keys)") } }
 
@@ -90,7 +90,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
                 isColumn.add("${value.simpleName}".removeSuffix("\$delegate"))
             } else if ("${value.simpleName}".endsWith("\$annotations")) {
                 annotations["${value.simpleName}".removeSuffix("\$annotations")] = value.annotationMirrors
-            } else if ("${value.simpleName}".startsWith("get")) {
+            } else if (!"${value.simpleName}".startsWith("${element.simpleName}(")) {
                 val valueName = "${value.simpleName}".removePrefix("get")
                     .run { first().toLowerCase() + substring(1) }
                 getComplexOrmTypes(value.asType())?.let {

@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexorm.models
 
 class RequestInfo(
-    private val tableName: String,
+    tableName: String,
     private val tableClassName: String,
     private val where: String?,
     val readTableInfo: ReadTableInfo

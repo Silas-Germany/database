@@ -36,6 +36,8 @@ dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$sdk_version"
+    // local-time
+    implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
 
     // ORM modules
     implementation project(':complexOrmApi')

@@ -5,7 +5,7 @@ import com.github.silasgermany.complexorm.oldVersion.ComplexOrmDatabase
 import com.github.silasgermany.database.ui.main.MainModel.*
 import java.io.File
 
-class MainPresenter(val view: MainView) {
+class MainPresenter(view: MainView) {
 
     private val databaseFile = File(view.databaseFolder, "database.db")
 

@@ -8,7 +8,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmWildcard
 import kotlin.reflect.KClass
 
-class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableInfo>) {
+class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
 
     private val rootTables = tableInfo.filter { it.value.isRoot }
     private val rootTablesList = rootTables.toList()
@@ -37,7 +37,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
             val foreignKeys = mutableListOf<String>()
             val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
                     tableInfo.columns.mapNotNull { column ->
-                        if (writtenColumns.add(column.columnName)) return@mapNotNull null
+                        if (!writtenColumns.add(column.idName)) return@mapNotNull null
                         var columnExtra = ""
                         // check whether nullable
                         if (!column.columnType.nullable) columnExtra += " NOT NULL"
@@ -67,8 +67,8 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                             }
                             ComplexOrmTypes.ComplexOrmTable -> {
                                 val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName
-                                foreignKeys.add("FOREIGN KEY ('${column.columnName}_id') REFERENCES '$referenceTableName'(id)")
-                                return@mapNotNull "'${column.columnName}_id' INTEGER$columnExtra"
+                                foreignKeys.add("FOREIGN KEY ('${column.idName}') REFERENCES '$referenceTableName'(id)")
+                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra"
                             }
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
@@ -88,7 +88,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
             ComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
-                else -> throw java.lang.IllegalArgumentException("Use '\${true}' or '\${false}' for default values of ${type.name} (not $defaultValue)")
+                else -> throw java.lang.IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
             }
             ComplexOrmTypes.Date,
             ComplexOrmTypes.LocalDate,
@@ -101,7 +101,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                 try {
                     defaultValue.toFloat().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '\${1.0}' for default values of ${type.name} (not $defaultValue)")
+                    throw java.lang.IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
             ComplexOrmTypes.Long,
@@ -109,7 +109,7 @@ class FileCreatorDatabaseSchema(private val tableInfo: MutableMap<String, TableI
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {
-                    throw java.lang.IllegalArgumentException("Use something like '\${1}' for default values of ${type.name} (not $defaultValue)")
+                    throw java.lang.IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
         }

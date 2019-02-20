@@ -50,7 +50,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
     }
 
     private fun RequestInfo.addData(tableClassName: String, previousColumn: String? = null) {
-        if (readTableInfo.alreadyGiven(tableClassName)) return
+        if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) return
         val tableName = previousColumn ?: tableClassName.tableName
         val prefix = previousColumn?.plus('$') ?: ""
         normalColumns[tableClassName]?.forEach {
@@ -74,7 +74,9 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             }
             tablesAndRestrictions.add(where)
 
+            readTableInfo.loadingTables.add(tableClassName)
             addData(connectedTableClassName, newConnectedTableName)
+            readTableInfo.loadingTables.remove(tableClassName)
         }
     }
 
@@ -87,7 +89,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
         val id = cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long?
 
         val databaseMap = ComplexOrmTable.init(id)
-        if (readTableInfo.alreadyGiven(tableClassName)) {
+        if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
             val connectedId = readTableInfo.connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             val table = databaseMap.createClass(tableClassName)
@@ -105,7 +107,9 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
                 !isReverselyLoaded(tableClassName, it.key, readTableInfo) && !readTableInfo.alreadyGiven(it.value)
             }?.forEach { (connectedColumnName, connectedTableClassName) ->
                 val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
+                readTableInfo.loadingTables.add(tableClassName)
                 val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, readTableInfo)
+                readTableInfo.loadingTables.remove(tableClassName)
                 if (databaseEntry != null) {
                     readTableInfo.setTable(connectedTableClassName, databaseEntry)
                     if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry

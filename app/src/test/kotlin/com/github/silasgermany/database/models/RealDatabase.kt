@@ -50,11 +50,11 @@ class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInte
 
     override fun queryForEach(sql: String, f: (Cursor) -> Unit) {
         rawQuery(sql, null)
-            .let {
-                (it as? CrossProcessCursor)
+            .let { cursor ->
+                (cursor as? CrossProcessCursor)
                     ?.let { ComplexOrmCursor(it) }
                     ?.takeIf { it.valid }
-                    ?: it
+                    ?: cursor
             }
             .use {
                 it.moveToFirst()

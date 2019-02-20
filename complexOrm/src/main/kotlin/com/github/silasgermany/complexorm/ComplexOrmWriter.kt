@@ -19,14 +19,15 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val contentValues = ContentValues()
         val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
-        val normalColumns = complexOrmTableInfo.normalColumns[rootTableClass]
+        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: emptyMap())+
+                mapOf("id" to ComplexOrmTypes.Long)
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
         val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
         val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
-            normalColumns?.get(sqlKey)?.also {
+            normalColumns[sqlKey]?.also {
                 if (value == null) contentValues.putNull(sqlKey)
                 else when (it) {
                     ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
@@ -42,6 +43,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                         throw IllegalArgumentException("Normal table shouldn't have ComplexOrmTable inside")
                     }
                 }.let {} // this is checking, that the when is exhaustive
+                return@forEach
             }
             connectedColumn?.get(sqlKey)?.let {
                 try {
@@ -54,7 +56,9 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
+                return@forEach
             }
+            throw IllegalArgumentException("Couldn't find column $sqlKey")
         }
         try {
             table.map["id"] = save(tableName, contentValues)

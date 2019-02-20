@@ -237,7 +237,7 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
         throw UnsupportedOperationException()
     }
 
-    @Deprecated("Since requery() is deprecated, so too is this.",
+    @Deprecated("Since reQuery() is deprecated, so too is this.",
         ReplaceWith("throw IllegalAccessException(\"depreciated\")"))
     override fun deactivate() {
         throw IllegalAccessException("depreciated")

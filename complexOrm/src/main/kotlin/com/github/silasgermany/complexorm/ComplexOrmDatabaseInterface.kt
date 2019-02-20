@@ -16,8 +16,9 @@ interface ComplexOrmDatabaseInterface {
 
     fun queryForEach(sql: String, f: (Cursor) -> Unit) {
         return rawQuery(sql, null)
-            .let {
-                (it as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }?.takeIf { ownCursor -> ownCursor.valid } ?: it
+            .let { cursor ->
+                (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
+                    ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
             }.use {
                 it ?: return@use
                 it.moveToFirst()

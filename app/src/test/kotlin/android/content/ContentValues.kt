@@ -1,6 +1,7 @@
 package android.content
 
-class ContentValues() {
+@Suppress("UNUSED")
+class ContentValues {
     private val map = mutableMapOf<String, Any?>()
     fun putNull(key: String) {
         map[key] = null

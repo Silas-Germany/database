@@ -19,9 +19,6 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
     private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
 
-    private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T) = getOrPut(key) { mutableMapOf() }
-    private fun <T, K> MutableMap<T, MutableList<K>>.init(key: T) = getOrPut(key) { mutableListOf() }
-
     inline fun <reified T : ComplexOrmTable> read(
         readTableInfo: ReadTableInfo
     ): List<T> = read(T::class, readTableInfo)
@@ -59,7 +56,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                         .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                 }
             }
-            reverseJoinColumns.get(requestTable)?.forEach { (connectedColumn2, connectedTableAndColumnName) ->
+            reverseJoinColumns[requestTable]?.forEach { (connectedColumn2, connectedTableAndColumnName) ->
                 val (connectedTable, connectedColumnName) = connectedTableAndColumnName
                 val connectedTableName = connectedTable.tableName
                 val connectedColumn = "${requestTableName}_id"
