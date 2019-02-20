@@ -19,125 +19,182 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
         count = window.numRows
         valid = count == cursor.count
         if (valid) cursor.close()
+        System.out.println("init called")
     }
 
     override fun moveToFirst(): Boolean {
         cursorPosition = 0
-        return count > 0
+        val result = count > 0
+        System.out.println("moveToFirst called: $result")
+        return result
     }
 
     override fun moveToPosition(position: Int): Boolean {
-        return takeIf { position in 0..(count - 1) }?.apply { cursorPosition = position } != null
+        val result = takeIf { position in 0..(count - 1) }?.apply { cursorPosition = position } != null
+        System.out.println("moveToPosition called: $result")
+        return result
     }
 
     override fun move(offset: Int): Boolean {
-        return moveToPosition(cursorPosition + offset)
+        val result = moveToPosition(cursorPosition + offset)
+        System.out.println("move called: $result")
+        return result
     }
 
     override fun moveToPrevious(): Boolean {
-        return takeIf { cursorPosition > 0 }?.apply { cursorPosition-- } != null
+        val result = takeIf { cursorPosition > 0 }?.apply { cursorPosition-- } != null
+        System.out.println("moveToPrevious called: $result")
+        return result
     }
 
     override fun moveToNext(): Boolean {
-        return takeIf { cursorPosition < count }?.apply { cursorPosition++ } != null
+        val result = takeIf { cursorPosition < count }?.apply { cursorPosition++ } != null
+        System.out.println("moveToNext called: $result")
+        return result
     }
 
     override fun moveToLast(): Boolean {
-        return takeIf { count > 0 }?.apply { cursorPosition = count - 1 } != null
+        val result = takeIf { count > 0 }?.apply { cursorPosition = count - 1 } != null
+        System.out.println("moveToLast called: $result")
+        return result
     }
 
     override fun isBeforeFirst(): Boolean {
-        return cursorPosition < 0
+        val result = cursorPosition < 0
+        System.out.println("isBeforeFirst called: $result")
+        return result
     }
 
     override fun isFirst(): Boolean {
-        return cursorPosition == 0
+        val result = cursorPosition == 0
+        System.out.println("isFirst called: $result")
+        return result
     }
 
     override fun isLast(): Boolean {
-        return cursorPosition == count - 1
+        val result = cursorPosition == count - 1
+        System.out.println("isLast called: $result")
+        return result
     }
 
     override fun isAfterLast(): Boolean {
-        return cursorPosition >= count
+        val result = cursorPosition >= count
+        System.out.println(" called: $result")
+        return result
     }
 
     override fun getPosition(): Int {
-        return cursorPosition
+        val result = cursorPosition
+        System.out.println("getPosition called: $result")
+        return result
     }
 
     override fun getCount(): Int {
-        return count
+        val result = count
+        System.out.println("getCount called: $result")
+        return result
     }
 
     override fun getType(columnIndex: Int): Int {
-        return window.getType(cursorPosition, columnIndex)
+        val result = window.getType(cursorPosition, columnIndex)
+        System.out.println("getType called: $result")
+        return result
     }
 
     override fun isNull(columnIndex: Int): Boolean {
-        return window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
+        val result = window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
+        System.out.println("isNull called: $result")
+        return result
     }
 
     override fun getShort(columnIndex: Int): Short {
-        return window.getShort(cursorPosition, columnIndex)
+        val result = window.getShort(cursorPosition, columnIndex)
+        System.out.println("getShort called: $result")
+        return result
     }
 
     override fun getInt(columnIndex: Int): Int {
-        return window.getInt(cursorPosition, columnIndex)
+        val result = window.getInt(cursorPosition, columnIndex)
+        System.out.println("getInt called: $result")
+        return result
     }
 
     override fun getLong(columnIndex: Int): Long {
-        return window.getLong(cursorPosition, columnIndex)
+        val result = window.getLong(cursorPosition, columnIndex)
+        System.out.println("getLong called: $result")
+        return result
     }
 
     override fun getFloat(columnIndex: Int): Float {
-        return window.getFloat(cursorPosition, columnIndex)
+        val result = window.getFloat(cursorPosition, columnIndex)
+        System.out.println("getFloat called: $result")
+        return result
     }
 
     override fun getDouble(columnIndex: Int): Double {
-        return window.getDouble(cursorPosition, columnIndex)
+        val result = window.getDouble(cursorPosition, columnIndex)
+        System.out.println("getDouble called: $result")
+        return result
     }
 
     override fun getString(columnIndex: Int): String {
-        return window.getString(cursorPosition, columnIndex)
+        val result = window.getString(cursorPosition, columnIndex)
+        System.out.println("getString called: $result")
+        return result
     }
 
     override fun getBlob(columnIndex: Int): ByteArray {
-        return window.getBlob(cursorPosition, columnIndex)
+        val result = window.getBlob(cursorPosition, columnIndex)
+        System.out.println("getBlob called: $result")
+        return result
     }
 
     override fun copyStringToBuffer(columnIndex: Int, buffer: CharArrayBuffer?) {
         window.copyStringToBuffer(cursorPosition, columnIndex, buffer)
+        System.out.println("copyStringToBuffer called")
     }
 
     override fun getColumnCount(): Int {
-        return columns?.size ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        val result = columns?.size ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        System.out.println("getColumnCount called: $result")
+        return result
     }
 
     override fun getColumnName(columnIndex: Int): String {
-        return columns?.get(columnIndex) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        val result = columns?.get(columnIndex) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        System.out.println("getColumnName called: $result")
+        return result
     }
 
     override fun getColumnIndex(columnName: String?): Int {
-        return columns?.indexOf(columnName) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        val result = columns?.indexOf(columnName) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        System.out.println("getColumnIndex called: $result")
+        return result
     }
 
     override fun getColumnNames(): Array<String> {
-        return columns ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        val result = columns ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        System.out.println("getColumnNames called: $result")
+        return result
     }
 
     override fun getColumnIndexOrThrow(columnName: String?): Int {
-        return columns?.indexOf(columnName).takeUnless { it == -1 }
+        val result = columns?.indexOf(columnName).takeUnless { it == -1 }
             ?: throw IllegalAccessException("Couldn't find column $columnName in $columns")
+        System.out.println("getColumnIndexOrThrow called: $result")
+        return result
     }
 
     override fun close() {
         window.close()
         closed = true
+        System.out.println("close called")
     }
 
     override fun isClosed(): Boolean {
-        return closed
+        val result = closed
+        System.out.println("isClosed called: $result")
+        return result
     }
 
     override fun registerContentObserver(observer: ContentObserver?) {

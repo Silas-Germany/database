@@ -15,6 +15,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
     private val reverseConnectedColumns get() = complexOrmTableInfo.reverseConnectedColumns
     private val joinColumns get() = complexOrmTableInfo.joinColumns
     private val reverseJoinColumns get() = complexOrmTableInfo.reverseJoinColumns
+    private val columnNames get() = complexOrmTableInfo.columnNames
 
     private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
 
@@ -53,7 +54,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
                 readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                     val id = entry.id!!
-                    val columnName = connectedColumn2 + "" // todo
+                    val columnName = columnNames.getValue(requestTable).getValue(connectedColumn2)
                     entry.map[columnName] = joinValues
                         .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                 }
@@ -71,7 +72,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
                 readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                     val id = entry.id!!
-                    val columnName = connectedColumn2 + "" // todo
+                    val columnName = columnNames.getValue(requestTable).getValue(connectedColumn2)
                     entry.map[columnName] = joinValues
                         .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                 }
@@ -88,8 +89,8 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                 val transformedValues = joinValues.groupBy { it.first }
                 readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                     val id = entry.id!!
-                    val columnName = connectedColumn + "" // todo
-                    val columnName2 = connectedColumn + "" // todo
+                    val columnName = columnNames.getValue(requestTable).getValue(connectedColumn)
+                    val columnName2 = columnNames.getValue(requestTable).getValue(connectedColumn)
                     entry.map[columnName] = transformedValues[id]?.map { value ->
                         value.second.map[columnName2] = entry
                         value.second

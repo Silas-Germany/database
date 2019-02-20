@@ -25,32 +25,32 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
         val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
         table.map.forEach { (key, value) ->
-            val complexOrmKey = key.toSql()
-            normalColumns?.get(complexOrmKey)?.also {
-                if (value == null) contentValues.putNull(key)
+            val sqlKey = key.toSql()
+            normalColumns?.get(sqlKey)?.also {
+                if (value == null) contentValues.putNull(sqlKey)
                 else when (it) {
-                    ComplexOrmTypes.String -> contentValues.put(key, value as String)
-                    ComplexOrmTypes.Int -> contentValues.put(key, value as Int)
-                    ComplexOrmTypes.Boolean -> contentValues.put(key, if (value as Boolean) 1 else 0)
-                    ComplexOrmTypes.Long -> contentValues.put(key, value as Long)
-                    ComplexOrmTypes.Float -> contentValues.put(key, value as Float)
-                    ComplexOrmTypes.Date -> contentValues.put(key, (value as Date).time)
-                    ComplexOrmTypes.LocalDate -> contentValues.put(key, (value as LocalDate).toEpochDay())
-                    ComplexOrmTypes.ByteArray -> contentValues.put(key, value as ByteArray)
+                    ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
+                    ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
+                    ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
+                    ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
+                    ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
+                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
+                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
+                    ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     ComplexOrmTypes.ComplexOrmTable,
                     ComplexOrmTypes.ComplexOrmTables -> {
                         throw IllegalArgumentException("Normal table shouldn't have ComplexOrmTable inside")
                     }
                 }.let {} // this is checking, that the when is exhaustive
             }
-            connectedColumn?.get(complexOrmKey)?.let {
+            connectedColumn?.get(sqlKey)?.let {
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
                     if (connectedEntry?.id != null) {
                         if (!writeDeep) return@let
                         write(connectedEntry)
-                        contentValues.put("${key.toSql()}_id", connectedEntry.id.toString())
-                    } else contentValues.putNull("${key.toSql()}_id")
+                        contentValues.put("${sqlKey.toSql()}_id", connectedEntry.id.toString())
+                    } else contentValues.putNull("${sqlKey.toSql()}_id")
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }

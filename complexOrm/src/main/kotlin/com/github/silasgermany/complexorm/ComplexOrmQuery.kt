@@ -24,8 +24,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
     private val joinColumns = complexOrmTableInfo.joinColumns
     private val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns
 
-    private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T) = getOrPut(key) { mutableMapOf() }
-    private fun <T, K> MutableMap<T, MutableSet<K>>.init(key: T) = getOrPut(key) { mutableSetOf() }
     private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
         takeUnless { it["id"] == null }?.let { constructors.getValue(tableClassName).invoke(it) }
@@ -104,8 +102,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
 
         connectedColumns[tableClassName]
             ?.filter {
-                !isReverselyLoaded(tableClassName, it.key, readTableInfo) &&
-                        (!readTableInfo.alreadyGiven(it.value))
+                !isReverselyLoaded(tableClassName, it.key, readTableInfo) && !readTableInfo.alreadyGiven(it.value)
             }?.forEach { (connectedColumnName, connectedTableClassName) ->
                 val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
                 val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, readTableInfo)
@@ -135,21 +132,17 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
     }
 
     private fun Cursor.getValue(index: Int, type: ComplexOrmTypes): Any? =
-        try {
-            when (type) {
-                ComplexOrmTypes.Boolean -> getInt(index) != 0
-                ComplexOrmTypes.Int -> getInt(index)
-                ComplexOrmTypes.Long -> getLong(index)
-                ComplexOrmTypes.Float -> getFloat(index)
-                ComplexOrmTypes.String -> getString(index)
-                ComplexOrmTypes.ByteArray -> getBlob(index)
-                ComplexOrmTypes.Date -> Date(getLong(index))
-                ComplexOrmTypes.LocalDate -> LocalDate.ofEpochDay(getLong(index))
-                ComplexOrmTypes.ComplexOrmTable,
-                ComplexOrmTypes.ComplexOrmTables -> throw IllegalArgumentException("Shouldn't get table type here")
-            }
-        } catch (e: Exception) {
-            if (isNull(index)) null
-            else throw e
+        if (isNull(index)) null
+        else when (type) {
+            ComplexOrmTypes.Boolean -> getInt(index) != 0
+            ComplexOrmTypes.Int -> getInt(index)
+            ComplexOrmTypes.Long -> getLong(index)
+            ComplexOrmTypes.Float -> getFloat(index)
+            ComplexOrmTypes.String -> getString(index)
+            ComplexOrmTypes.ByteArray -> getBlob(index)
+            ComplexOrmTypes.Date -> Date(getLong(index))
+            ComplexOrmTypes.LocalDate -> LocalDate.ofEpochDay(getLong(index))
+            ComplexOrmTypes.ComplexOrmTable,
+            ComplexOrmTypes.ComplexOrmTables -> throw IllegalArgumentException("Shouldn't get table type here")
         }
 }

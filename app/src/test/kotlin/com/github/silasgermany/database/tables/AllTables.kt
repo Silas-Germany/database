@@ -10,27 +10,28 @@ interface AllTables {
 
     open class NormalTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
         constructor(id: Long): this(init(id))
+        fun clone(booleanValue: Boolean = true) = cloneWithoutId("booleanValue" to booleanValue)
 
         @ComplexOrmReadAlways
         @ComplexOrmDefault("${true}")
-        open val booleanValue: Boolean by initMap
+        open var booleanValue: Boolean by initMap
 
         @ComplexOrmDefault("${1}")
         open val intValue: Int? by initMap
         @ComplexOrmUnique
         @ComplexOrmProperty("CHECK(LENGTH(stringValue) = 3)")
-        @ComplexOrmDefault("defaultValue")
-        open val stringValue: String by initMap
+        @ComplexOrmDefault("123")
+        open var stringValue: String by initMap
         @ComplexOrmDefault("${1L}")
         open val longValue: Long by initMap
         @ComplexOrmDefault("${1F}")
-        open val floatValue: Float by initMap
+        open var floatValue: Float by initMap
         //@ComplexOrmDefault("31/12/2018")
         open val dateValue: Date by initMap
         open val byteArrayValue: ByteArray? by initMap
 
         open val otherTableValue: EmptyTable? by initMap
-        open val otherTableValues: List<EmptyTable> by initMap
+        open var otherTableValues: List<EmptyTable> by initMap
 
         @ComplexOrmReverseConnectedColumn("normalTableValue")
         open var connectedTableValues: List<ReferenceTable> by initMap

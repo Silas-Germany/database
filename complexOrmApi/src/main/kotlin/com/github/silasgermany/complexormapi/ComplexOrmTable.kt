@@ -28,5 +28,13 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
         }
         fun init(id: Long?) = default.also { it["id"] = id }
         inline fun <reified T: ComplexOrmTable>create(id: Long) = T::class.java.getConstructor(Map::class.java).newInstance(init(id)) as T
+        inline fun <reified T: ComplexOrmTable>T.cloneWithoutId(vararg values: Pair<String, Any?>): T {
+            val newMap = default.apply {
+                putAll(map)
+                remove("id")
+                putAll(values)
+            }
+            return T::class.java.getConstructor(Map::class.java).newInstance(newMap) as T
+        }
     }
 }

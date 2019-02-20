@@ -67,7 +67,7 @@ class TestCursor: Cursor {
     }
 
     override fun getCount(): Int {
-        System.out.println("Called: getCount")
+        System.out.println("Called: result")
         return 2
     }
 

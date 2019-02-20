@@ -5,7 +5,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 class ReadTableInfo {
     val restrictions = mapOf<String, String>()
     private val alreadyLoaded = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
-    private val givenTables = alreadyLoaded.keys
+    private val givenTables = alreadyLoaded.keys.toSet()
     val nextRequests = mutableMapOf<String, MutableSet<ComplexOrmTable>>()
     var missingEntries: Collection<ComplexOrmTable>? = null
     var connectedColumn: String? = null

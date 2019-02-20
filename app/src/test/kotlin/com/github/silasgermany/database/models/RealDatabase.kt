@@ -1,8 +1,10 @@
 package com.github.silasgermany.database.models
 
 import android.content.ContentValues
+import android.database.CrossProcessCursor
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexorm.ComplexOrmDatabaseInterface
 
 class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInterface {
@@ -12,8 +14,9 @@ class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInte
         initialValues: ContentValues,
         conflictAlgorithm: Int
     ): Long {
-        System.out.println("Insert $initialValues in $table (null -> $nullColumnHack, conflictAlgorithm: $conflictAlgorithm)")
-        return database.insertWithOnConflict(table, nullColumnHack, initialValues, conflictAlgorithm)
+        val result = database.insertWithOnConflict(table, nullColumnHack, initialValues, conflictAlgorithm)
+        System.out.println("Insert $initialValues in $table (null -> $nullColumnHack, conflictAlgorithm: $conflictAlgorithm): $result")
+        return result
     }
 
     override fun updateWithOnConflict(
@@ -23,13 +26,15 @@ class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInte
         whereArgs: Array<String>?,
         conflictAlgorithm: Int
     ): Int {
-        System.out.println("Update $values in $table where $whereClause (whereArguments -> $whereArgs, conflictAlgorithm: $conflictAlgorithm)")
-        return database.updateWithOnConflict(table, values, whereClause, whereArgs, conflictAlgorithm)
+        val result = database.updateWithOnConflict(table, values, whereClause, whereArgs, conflictAlgorithm)
+        System.out.println("Update $values in $table where $whereClause (whereArguments -> $whereArgs, conflictAlgorithm: $conflictAlgorithm): $result")
+        return result
     }
 
     override fun delete(table: String, whereClause: String, whereArgs: Array<String>?): Int {
-        System.out.println("Delete from $table where $whereClause (whereArguments -> $whereArgs)")
-        return database.delete(table, whereClause, whereArgs)
+        val result = database.delete(table, whereClause, whereArgs)
+        System.out.println("Delete from $table where $whereClause (whereArguments -> $whereArgs): $result")
+        return result
     }
 
     override fun execSQL(sql: String) {
@@ -38,17 +43,25 @@ class RealDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInte
     }
 
     override fun rawQuery(sql: String, selectionArgs: Array<String>?): Cursor {
-        System.out.println("Query Sql: $sql (whereArguments -> $selectionArgs)")
-        return database.rawQuery(sql, selectionArgs)
+        val result = database.rawQuery(sql, selectionArgs)
+        System.out.println("Query Sql: $sql")// (whereArguments -> $selectionArgs): $result")
+        return result
     }
 
     override fun queryForEach(sql: String, f: (Cursor) -> Unit) {
-        rawQuery(sql, null).use {
-            it.moveToFirst()
-            repeat(it.count) { _ ->
-                f(it)
-                it.moveToNext()
+        rawQuery(sql, null)
+            .let {
+                (it as? CrossProcessCursor)
+                    ?.let { ComplexOrmCursor(it) }
+                    ?.takeIf { it.valid }
+                    ?: it
             }
-        }
+            .use {
+                it.moveToFirst()
+                repeat(it.count) { _ ->
+                    f(it)
+                    it.moveToNext()
+                }
+            }
     }
 }
