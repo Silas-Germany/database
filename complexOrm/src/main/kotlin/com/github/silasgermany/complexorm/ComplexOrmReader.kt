@@ -33,23 +33,24 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
         readTableInfo.notAlreadyLoaded.forEach { (missingEntryTable, missingEntries) ->
             readTableInfo.missingEntries = missingEntries
-            val where = "WHERE '$missingEntryTable._id' IN (${readTableInfo.missingEntries!!.joinToString { "${it.id}" }})"
+            val where = "WHERE \"$missingEntryTable\".\"id\" IN (${readTableInfo.missingEntries!!.joinToString { "${it.id}" }})"
             complexOrmQuery.query(missingEntryTable, readTableInfo, where)
         }
 
         readTableInfo.nextRequests.forEach { (requestTable, requestEntries) ->
-            val ids = requestEntries.map { it.id!! }.toSet().joinToString("")
+            val ids = requestEntries.map { it.id!! }.toSet().joinToString(",")
             val requestTableName = requestTable.tableName
 
             joinColumns[requestTable]?.forEach { (connectedColumn2, connectedTable) ->
                 val connectedTableName = connectedTable.tableName
                 val connectedColumn = "${requestTableName}_id"
                 val where =
-                    "LEFT JOIN '${requestTableName}_$connectedColumn2' AS 'join_table' ON 'join_table'.'${connectedTableName}_id'='$connectedTableName'.'id' " +
-                            "WHERE 'join_table'.'${requestTableName}_id' IN ($ids)"
-                readTableInfo.connectedColumn = "'join_table'.'$connectedColumn'"
+                    "LEFT JOIN \"${requestTableName}_$connectedColumn2\" AS \"join_table\" ON \"join_table\".\"${connectedTableName}_id\"=\"$connectedTableName\".\"id\" " +
+                            "WHERE \"join_table\".\"${requestTableName}_id\" IN ($ids)"
+                readTableInfo.connectedColumn = "\"join_table\".\"$connectedColumn\""
                 val joinValues = complexOrmQuery.query(connectedTable, readTableInfo, where)
 
+                System.out.println("REV79LOG: Problem: $joinValues;${readTableInfo.nextRequests};$requestTable")
                 readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                     val id = entry.id!!
                     val columnName = columnNames.getValue(requestTable).getValue(connectedColumn2)
@@ -62,10 +63,10 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                 val connectedTableName = connectedTable.tableName
                 val connectedColumn = "${requestTableName}_id"
                 val where =
-                    "LEFT JOIN '${connectedTableName}_$connectedColumnName' AS 'reverse_join_table' ON 'reverse_join_table'.'${connectedTableName}_id' = '$connectedTableName'.'id' " +
-                            "WHERE 'reverse_join_table'.'$connectedColumn' IN ($ids)"
+                    "LEFT JOIN \"${connectedTableName}_$connectedColumnName\" AS \"reverse_join_table\" ON \"reverse_join_table\".\"${connectedTableName}_id\" = \"$connectedTableName\".\"id\" " +
+                            "WHERE \"reverse_join_table\".\"$connectedColumn\" IN ($ids)"
 
-                readTableInfo.connectedColumn = "'reverse_join_table'.'$connectedColumn'"
+                readTableInfo.connectedColumn = "\"reverse_join_table\".\"$connectedColumn\""
                 val joinValues = complexOrmQuery.query(connectedTable, readTableInfo, where)
 
                 readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
@@ -78,9 +79,9 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
             reverseConnectedColumns[requestTable]?.forEach { (connectedColumn, connectedTableAndColumnName) ->
                 val (connectedTable, connectedColumnName) = connectedTableAndColumnName
                 val connectedTableName = connectedTable.tableName
-                val where = "WHERE '$connectedTableName'.'${connectedColumnName}_id' IN ($ids)"
+                val where = "WHERE \"$connectedTableName\".\"${connectedColumnName}_id\" IN ($ids)"
 
-                readTableInfo.connectedColumn = "'$connectedTableName'.'${connectedColumnName}_id' AS 'reverse_connected_column'"
+                readTableInfo.connectedColumn = "\"$connectedTableName\".\"${connectedColumnName}_id\" AS \"reverse_connected_column\""
                 val joinValues = complexOrmQuery
                     .query(connectedTable, readTableInfo, where)
 

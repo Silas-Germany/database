@@ -8,10 +8,24 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
         return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> "ComplexOrmTable(${value.id ?: "?"})"
-                is List<*> -> value.joinToString(
-                    prefix = "[",
-                    postfix = "]"
-                ) { "ComplexOrmTable(${(it as ComplexOrmTable).id?.toString() ?: "?"})" }
+                is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
+                    "ComplexOrmTable(${(it as ComplexOrmTable).id?.toString() ?: "?"})"
+                }
+                is String -> "\'$value\'"
+                is ByteArray -> "ByteArray(size: ${value.size})"
+                null -> "null"
+                else -> "$value"
+            }
+        }
+    }
+
+    fun showRecursive(): String {
+        return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
+            "$key: " + when (value) {
+                is ComplexOrmTable -> value.showRecursive()
+                is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
+                    (it as? ComplexOrmTable?)?.showRecursive() ?: "?"
+                }
                 is String -> "\'$value\'"
                 is ByteArray -> "ByteArray(size: ${value.size})"
                 null -> "null"

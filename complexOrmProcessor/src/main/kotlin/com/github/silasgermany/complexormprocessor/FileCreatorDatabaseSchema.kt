@@ -74,8 +74,13 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                                 return@mapNotNull null
                             }
                             ComplexOrmTypes.ComplexOrmTable -> {
-                                val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName!!
-                                foreignKeys.add("FOREIGN KEY ('${column.idName}') REFERENCES '$referenceTableName'(id)")
+                                val referenceTable = rootTables.getValue(column.columnType.referenceTable!!)
+                                val specialConnectedColumn = column.getAnnotationValue(ComplexOrmSpecialConnectedColumn::class)
+                                val connectedColumn = if (specialConnectedColumn != null) {
+                                    referenceTable.columns
+                                            .find { specialConnectedColumn in arrayOf(it.columnName, it.name, it.idName) }!!.idName
+                                } else "id"
+                                foreignKeys.add("FOREIGN KEY ('${column.idName}') REFERENCES '${referenceTable.tableName!!}'($connectedColumn)")
                                 return@mapNotNull "'${column.idName}' INTEGER$columnExtra"
                             }
                         }

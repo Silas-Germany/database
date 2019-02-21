@@ -3,9 +3,11 @@ package com.github.silasgermany.complexorm.models
 import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.Cursor
-import com.github.silasgermany.complexorm.ComplexOrmQueryBuilder
 
 interface ComplexOrmDatabaseInterface {
+    fun beginTransaction()
+    fun setTransactionSuccessful()
+    fun endTransaction()
     fun insertWithOnConflict(table: String, nullColumnHack: String,
         initialValues: ContentValues, conflictAlgorithm: Int): Long
     fun updateWithOnConflict(table: String, values: ContentValues,
@@ -13,8 +15,6 @@ interface ComplexOrmDatabaseInterface {
     fun delete(table: String, whereClause: String, whereArgs: Array<String>?): Int
     fun execSQL(sql: String)
     fun rawQuery(sql: String, selectionArgs: Array<String>?): Cursor?
-
-    val query get() = ComplexOrmQueryBuilder(this)
 
     fun queryForEach(sql: String, f: (Cursor) -> Unit) {
         return rawQuery(sql, null)!!

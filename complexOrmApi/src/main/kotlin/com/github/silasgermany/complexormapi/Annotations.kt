@@ -15,6 +15,11 @@ annotation class ComplexOrmReverseJoinColumn(val connectedColumn: String)
 @Suppress("UNUSED")
 annotation class ComplexOrmReverseConnectedColumn(val connectedColumn: String = "")
 
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+@Suppress("UNUSED")
+annotation class ComplexOrmSpecialConnectedColumn(val connectedColumn: String)
+
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)

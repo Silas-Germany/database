@@ -6,7 +6,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
-class ComplexOreInitializer(private val database: ComplexOrmDatabaseInterface) {
+class ComplexOrmInitializer(private val database: ComplexOrmDatabaseInterface) {
 
     private val complexOrmDatabaseSchema = Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface

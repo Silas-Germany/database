@@ -30,43 +30,43 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
-        val tableName = table.tableName
-        val columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
-        var fullColumnName = "$tableName.$columnName"
+        val tableName = table.java.canonicalName
+        var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
         val rootTableName = basicTableInfo.getValue(table.qualifiedName!!).second
-        if (connectedColumns[rootTableName]?.contains(columnName) == true) fullColumnName += "_id"
+        if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
         else if (normalColumns[rootTableName]?.contains(columnName) != true)
-            throw java.lang.IllegalArgumentException("Can't create restriction for join columns (column ${columnName} from ${table.qualifiedName}). Please restrict the target table instead")
-        var where = (selection?.let { "($it)" } ?: "?? = ?")
-        if (selectionArguments.isEmpty()) where = where.replace("??", fullColumnName)
+            throw IllegalArgumentException("Can't create restriction for join columns (column $columnName from ${table.qualifiedName}). " +
+                    "Please restrict the target table instead")
+        var where = (selection?.let { "($it)" } ?: "\"??\"=\"?\"")
+        if (selectionArguments.isEmpty()) where = where.replace("??", "??.\"$columnName\"")
         selectionArguments.forEach { whereArgument ->
             val transformedWhereArgument = when (whereArgument) {
                 is Boolean -> if (whereArgument) "1" else "0"
                 is String -> {
                     if ('%' in whereArgument)
-                        where = where.replace(" = ?", " LIKE ?")
-                    "'$whereArgument'"
+                        where = where.replace("\"=\"?\"", "\" LIKE \"?\"")
+                    "\"$whereArgument\""
                 }
-                is Int -> "$whereArgument"
+                is Int, is Long -> "$whereArgument"
                 is Enum<*> -> "${whereArgument.ordinal}"
                 is Collection<*> -> {
                     if (whereArgument.any { it == null }) {
                         where = when {
                             whereArgument.any { it is String } ->
-                                where.replace("??", "COALESCE(??, 'NULL')")
+                                where.replace("\"??\"", "COALESCE(\"??\", 'NULL')")
                             whereArgument.any { it is Int } ->
-                                where.replace("??", "COALESCE(??, -1)")
+                                where.replace("\"??\"", "COALESCE(\"??\", -1)")
                             !whereArgument.any { it != null } ->
-                                where.replace(" = ?", " IS ?")
+                                where.replace("\"=\"?\"", "\" IS \"?\"")
                             else -> throw IllegalArgumentException("Collection it not of type String, Int or null")
                         }
                     }
-                    where = where.replace(" = ?", " IN (?)").replace(" != ?", " NOT IN (?)")
+                    where = where.replace("\"=\"?\"", "\" IN (\"?\")").replace("\"!=\"?\"", "\" NOT IN (\"?\")")
                     when {
                         whereArgument.any { it is Int } ->
                             whereArgument.joinToString { it?.run { toString() } ?: "-1" }
                         whereArgument.any { it is String } ->
-                            whereArgument.joinToString { it?.run { "'$this'" } ?: "'NULL'" }
+                            whereArgument.joinToString { it?.run { "\"$this\"" } ?: "'NULL'" }
                         !whereArgument.any { it != null } -> "NULL"
                         whereArgument.any { it is ComplexOrmTable } ->
                             whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.toString() ?: "-1" }
@@ -76,14 +76,15 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
                 is ComplexOrmTable -> "${whereArgument.id}"
                 null -> {
                     where = where
-                        .replace(" != ?", " IS NOT ?")
-                        .replace(" = ?", " IS ?")
+                        .replace("\"!=\"?\"", "\" IS NOT \"?\"")
+                        .replace("\"=\"?\"", "\" IS \"?\"")
                     "NULL"
                 }
                 else -> throw IllegalArgumentException("Can't create restriction with type of $whereArgument (${whereArgument::class})")
             }
-            where = where.replace("??", fullColumnName)
-                .replaceFirst("?", transformedWhereArgument)
+            where = where
+                    .replace("??", "??\".\"$columnName")
+                    .replace("\"?\"", transformedWhereArgument)
         }
         restrictions[table.qualifiedName!!] = if (table.qualifiedName!! !in restrictions) where
         else "${restrictions[table.qualifiedName!!]} AND $where"

@@ -5,6 +5,18 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 
 class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInterface {
+    override fun beginTransaction() {
+        return database.beginTransaction()
+    }
+
+    override fun setTransactionSuccessful() {
+        return database.setTransactionSuccessful()
+    }
+
+    override fun endTransaction() {
+        return database.endTransaction()
+    }
+
     override fun insertWithOnConflict(table: String, nullColumnHack: String, initialValues: ContentValues, conflictAlgorithm: Int): Long {
         return database.insertWithOnConflict(table, nullColumnHack, initialValues, conflictAlgorithm)
     }

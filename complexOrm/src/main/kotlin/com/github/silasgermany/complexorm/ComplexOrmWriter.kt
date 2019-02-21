@@ -16,7 +16,16 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
-    fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
+    fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
+        try {
+            database.beginTransaction()
+            return write(table, writeDeep)
+                    .apply { database.setTransactionSuccessful() }
+        } finally {
+            database.endTransaction()
+        }
+    }
+    private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
         val contentValues = ContentValues()
         val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
@@ -25,6 +34,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
         val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
+        val specialConnectedColumn = complexOrmTableInfo.specialConnectedColumns[rootTableClass]
         val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
@@ -58,6 +68,9 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
                 return@forEach
+            }
+            specialConnectedColumn?.get(sqlKey)?.let {
+                throw UnsupportedOperationException("Can't save (yet) entries, that have special connected columns")
             }
             throw IllegalArgumentException("Couldn't find column $sqlKey")
         }
