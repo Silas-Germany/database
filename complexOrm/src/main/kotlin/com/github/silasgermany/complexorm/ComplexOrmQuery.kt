@@ -18,6 +18,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
     private val constructors = complexOrmTableInfo.tableConstructors
+    private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val columnNames = complexOrmTableInfo.columnNames
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
@@ -26,9 +27,9 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
     private val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns
     private val specialConnectedColumns = complexOrmTableInfo.specialConnectedColumns
 
-    private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
+    private val String.tableName get() = basicTableInfo.getValue(this).first
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
-        takeUnless { it["id"] == null }?.let { constructors.getValue(tableClassName).invoke(it) }
+        constructors.getValue(tableClassName).invoke(this)
 
     fun query(
         tableClassName: String,
@@ -109,67 +110,75 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             ?.any { it.value.run { first == tableClassName && second == connectedColumnName } } == true &&
                 readTableInfo.has(connectedColumnName)
 
-    private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo, connectedColumn: String?): Pair<Long?, ComplexOrmTable?> {
+    private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo,
+                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<Long?, ComplexOrmTable?> {
         val id = cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long?
 
-        val databaseMap = ComplexOrmTable.init(id)
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
             val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
+            id ?: return connectedId to null
+            val databaseMap = ComplexOrmTable.default
+            databaseMap[specialConnectedColumn ?: "id"] = id
             val table = databaseMap.createClass(tableClassName)
-            readTableInfo.addRequest(tableClassName, table)
+            readTableInfo.addMissingTable(tableClassName, table)
             return connectedId to table
         }
+        val databaseMap = ComplexOrmTable.init(id)
 
         normalColumns[tableClassName]?.forEach {
             val columnName = columnNames.getValue(tableClassName).getValue(it.key)
             databaseMap[columnName] = cursor.getValue(readIndex++, it.value)
         }
 
-        connectedColumns[tableClassName]
-            ?.filter {
-                !isReverselyLoaded(tableClassName, it.key, readTableInfo) && !readTableInfo.alreadyGiven(it.value)
-            }?.forEach { (connectedColumnName, connectedTableClassName) ->
-                val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
-                readTableInfo.loadingTables.add(tableClassName)
-                val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, readTableInfo, null)
-                readTableInfo.loadingTables.remove(tableClassName)
-                if (databaseEntry != null) {
-                    readTableInfo.setTable(connectedTableClassName, databaseEntry)
-                    if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
-                    else {
-                        val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
-                        return connectedId to databaseMap.getValue(columnName) as ComplexOrmTable
-                    }
-                } else databaseMap[columnName] = null
+        val handleConnectedColumns: (String, String, String?) -> Pair<Long?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
+            if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@handleConnectedColumns null
+            val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
+            val specialColumnName = specialConnectedColumnName?.let {
+                columnNames.getValue(basicTableInfo.getValue(connectedTableClassName).second).getValue(it.removeSuffix("_id"))
             }
-
-        specialConnectedColumns[tableClassName]
-            ?.filter {
-                !isReverselyLoaded(tableClassName, it.key, readTableInfo) && !readTableInfo.alreadyGiven(it.value.first)
-            }?.forEach { (connectedColumnName, connectedTableInfo) ->
-                    val connectedTableClassName = connectedTableInfo.first
-                    val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
-                    readTableInfo.loadingTables.add(tableClassName)
-                    val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, readTableInfo, null)
-                    readTableInfo.loadingTables.remove(tableClassName)
-                    if (databaseEntry != null) {
-                        readTableInfo.setTable(connectedTableClassName, databaseEntry)
-                        if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
-                        else {
-                            val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
-                            return connectedId to databaseMap.getValue(columnName) as ComplexOrmTable
-                        }
-                    } else databaseMap[columnName] = null
+            readTableInfo.loadingTables.add(tableClassName)
+            val (_, databaseEntry) = readColumns(connectedTableClassName, cursor, readTableInfo, null, specialColumnName)
+            readTableInfo.loadingTables.remove(tableClassName)
+            if (databaseEntry != null) {
+                readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
+                if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
+                else {
+                    val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+                    return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable
                 }
+            } else databaseMap[columnName] = null
+            return@handleConnectedColumns null
+        }
+        connectedColumns[tableClassName]?.forEach { (connectedColumnName, connectedTableClassName) ->
+            val result = handleConnectedColumns(connectedColumnName, connectedTableClassName, null)
+            if (result != null) return result
+        }
+
+        specialConnectedColumns[tableClassName]?.forEach { (connectedColumnName, connectedTableInfo) ->
+            val connectedTableClassName = connectedTableInfo.first
+            val connectingColumnName = connectedTableInfo.second
+            val result = handleConnectedColumns(connectedColumnName, connectedTableClassName, connectingColumnName)
+            if (result != null) return result
+        }
+
         val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
 
         if (!readTableInfo.isMissingRequest)
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
 
         if (id == null) return connectedId to null
-        val databaseEntry = if (!readTableInfo.isMissingRequest) databaseMap.createClass(tableClassName)!!
-        else readTableInfo.missingEntries!!.find { it.id == id }!!.apply { map.putAll(databaseMap) }
+        val databaseEntry = if (!readTableInfo.isMissingRequest) databaseMap.createClass(tableClassName)
+        else {
+            val rootTableClassName = basicTableInfo.getValue(tableClassName).second
+            val specialConnectingColumn = connectedColumn?.let {
+                columnNames.getValue(rootTableClassName).getValue(it.removeSuffix("_id"))
+            } ?: "id"
+            readTableInfo.missingEntries!!.find {
+                it::class.java.canonicalName == tableClassName &&
+                it.map[specialConnectingColumn] == connectedId
+            }!!.apply { map.putAll(databaseMap) }
+        }
         when(tableClassName) {
             in reverseConnectedColumns,
             in joinColumns,

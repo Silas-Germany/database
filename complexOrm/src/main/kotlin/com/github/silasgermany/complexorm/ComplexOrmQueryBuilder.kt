@@ -93,7 +93,7 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
 
     inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T>): ComplexOrmQueryBuilder {
-        existingEntries[table.tableName.toLowerCase()] = entries
+        existingEntries[table.qualifiedName!!] = entries
             .associateTo(mutableMapOf()) { it.id!! to it }
         return this@ComplexOrmQueryBuilder
     }
@@ -101,7 +101,6 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
 
     fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
-        System.out.println("Exec SQL: $restrictions")
         val readTableInfo = ReadTableInfo(restrictions, existingEntries)
         return ComplexOrmReader(database).read(table, readTableInfo)
             .also { readTableInfo.print() }
@@ -110,10 +109,9 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
     inline fun <reified T : ComplexOrmTable> get(id: Long?): T? = get(T::class, id)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Long?): T? {
         id ?: return null
-        val tableName = table.tableName.toLowerCase()
+        val tableName = table.tableName
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
-        System.out.println("Exec SQL: $restrictions")
         val readTableInfo = ReadTableInfo(restrictions, existingEntries)
         return ComplexOrmReader(database).read(table, readTableInfo).getOrNull(0)
     }

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmCursor
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 
-class RealDatabase(private val database: SQLiteDatabase):
+class RealTestDatabase(private val database: SQLiteDatabase):
     ComplexOrmDatabaseInterface {
     override fun insertWithOnConflict(
         table: String,
