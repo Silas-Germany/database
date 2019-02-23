@@ -22,14 +22,14 @@ class ReadTableInfo(
     fun addMissingTable(tableClassName: String, table: ComplexOrmTable?) {
         table?.let { notAlreadyLoaded.init(tableClassName).add(it) }
     }
-    fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest
+    fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest(tableClassName)
     fun alreadyLoading(tableClassName: String) = tableClassName in loadingTables
     fun has(tableClassName: String) = alreadyLoaded.containsKey(tableClassName)
     fun getTable(tableClassName: String, id: Long?) = alreadyLoaded[tableClassName]?.get(id)
     fun setTable(tableClassName: String, table: ComplexOrmTable, specialColumnValue: String? = null) {
         (table.map[specialColumnValue ?: "id"] as Long?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
-    val isMissingRequest get() = missingEntries != null
+    fun isMissingRequest(tableClassName: String) = missingEntries?.any { it::class.java.canonicalName == tableClassName } == true
     fun print() {
         System.out.println("Other values(restrictions, ${restrictions.size}): $restrictions")
         System.out.println("Other values(alreadyLoaded, ${alreadyLoaded.flatMap { it.value.toList() }.size}): $alreadyLoaded")

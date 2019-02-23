@@ -16,7 +16,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
-    fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
+    fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         try {
             database.beginTransaction()
             return write(table, writeDeep)
@@ -25,7 +25,8 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
             database.endTransaction()
         }
     }
-    private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Long? {
+
+    private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
         val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
@@ -38,7 +39,9 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
+            var keyFound = false
             normalColumns[sqlKey]?.also {
+                keyFound = true
                 if (value == null) contentValues.putNull(sqlKey)
                 else when (it) {
                     ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
@@ -54,25 +57,26 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                         throw IllegalArgumentException("Normal table shouldn't have ComplexOrmTable inside")
                     }
                 }.let {} // this is checking, that the when is exhaustive
-                return@forEach
             }
             connectedColumn?.get(sqlKey)?.let {
+                keyFound = true
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
-                    if (connectedEntry?.id != null) {
-                        if (!writeDeep) return@let
-                        write(connectedEntry)
+                    if (connectedEntry != null) {
+                        if (connectedEntry.id == null) {
+                            if (!writeDeep) return@let
+                            write(connectedEntry)
+                        }
                         contentValues.put("${sqlKey.toSql()}_id", connectedEntry.id.toString())
                     } else contentValues.putNull("${sqlKey.toSql()}_id")
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
-                return@forEach
             }
             specialConnectedColumn?.get(sqlKey)?.let {
                 throw UnsupportedOperationException("Can't save (yet) entries, that have special connected columns")
             }
-            throw IllegalArgumentException("Couldn't find column $sqlKey")
+            if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $rootTableClass")
         }
         try {
             table.map["id"] = save(tableName, contentValues)
@@ -138,7 +142,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                 }
             }
         }
-        return table.id
+        return table.id ?: 0 > 0
     }
 
     private fun delete(table: String, column: String, value: Long?) {
@@ -147,7 +151,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
     }
 
     private fun save(table: String, contentValues: ContentValues): Long {
-        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_ABORT)
+        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE)
         if (changedId == -1L) {
             changedId = contentValues.getAsLong("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
             val changed = database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)

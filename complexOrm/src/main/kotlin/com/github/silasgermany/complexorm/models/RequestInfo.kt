@@ -6,14 +6,14 @@ class RequestInfo(
         private val where: String?,
         val readTableInfo: ReadTableInfo
 ){
-    val columns = mutableListOf("'$tableName'.'id'")
-    val tablesAndRestrictions = mutableListOf("'$tableName'")
+    val columns = mutableListOf("\"$tableName\".\"id\"")
+    val tablesAndRestrictions = mutableListOf("\"$tableName\"")
 
     val query: String get() {
         readTableInfo.connectedColumn?.let { columns.add(it) }
         where?.let { tablesAndRestrictions.add(it) } ?: tablesAndRestrictions.add("WHERE 1")
         readTableInfo.restrictions[tableClassName]
-                ?.let { tablesAndRestrictions += "AND $it".replace("??", tableName) }
+                ?.let { tablesAndRestrictions += "AND $it".replace("$$", "\"$tableName\"") }
         return "SELECT ${columns.joinToString()} FROM ${tablesAndRestrictions.joinToString(" ")};"
     }
 }

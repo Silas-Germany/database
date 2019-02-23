@@ -72,7 +72,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"id\"=\"$tableName\".\"${connectedColumnName}_id\""
             readTableInfo.restrictions[connectedTableClassName]?.let {
-                where = where.removePrefix("LEFT ") + " AND ${it.replace("??", newConnectedTableName)}"
+                where = where.removePrefix("LEFT ") + " AND ${it.replace("$$", newConnectedTableName)}"
             }
             tablesAndRestrictions.add(where)
 
@@ -95,7 +95,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"$connectedTableColumn\"=\"$tableName\".\"${connectedColumnName}_id\""
             readTableInfo.restrictions[connectedTableClassName]?.let {
-                where = where.removePrefix("LEFT ") + " AND ${it.replace("??", newConnectedTableName)}"
+                where = where.removePrefix("LEFT ") + " AND ${it.replace("$$", "\"$newConnectedTableName\"")}"
             }
             tablesAndRestrictions.add(where)
 
@@ -164,19 +164,20 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
 
         val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
 
-        if (!readTableInfo.isMissingRequest)
+        if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
 
         if (id == null) return connectedId to null
-        val databaseEntry = if (!readTableInfo.isMissingRequest) databaseMap.createClass(tableClassName)
+        val databaseEntry = if (!readTableInfo.isMissingRequest(tableClassName)) databaseMap.createClass(tableClassName)
         else {
             val rootTableClassName = basicTableInfo.getValue(tableClassName).second
-            val specialConnectingColumn = connectedColumn?.let {
-                columnNames.getValue(rootTableClassName).getValue(it.removeSuffix("_id"))
+            val specialConnectingColumn = connectedColumn?.takeUnless { it.endsWith(".\"id\"") }?.let {
+                columnNames.getValue(rootTableClassName).getValue(it.removeSuffix("\"").split('"').last().removeSuffix("_id"))
             } ?: "id"
+            System.out.println("REV79LOG: $specialConnectedColumn;$connectedId;$tableClassName${readTableInfo.missingEntries?.map { it.map }}")
             readTableInfo.missingEntries!!.find {
                 it::class.java.canonicalName == tableClassName &&
-                it.map[specialConnectingColumn] == connectedId
+                        it.map[specialConnectingColumn] == connectedId
             }!!.apply { map.putAll(databaseMap) }
         }
         when(tableClassName) {
