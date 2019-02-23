@@ -17,7 +17,7 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
     private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
 
     private val restrictions = mutableMapOf<String, String>()
-    private val existingEntries = mutableMapOf<String, MutableMap<Long, ComplexOrmTable>>()
+    private val existingEntries = mutableMapOf<String, MutableMap<Int, ComplexOrmTable>>()
 
     inline fun <reified T : ComplexOrmTable> specialWhere(
         column: KProperty1<T, Any?>, selection: String,
@@ -120,8 +120,8 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
             .also { readTableInfo.print() }
     }
 
-    inline fun <reified T : ComplexOrmTable> get(id: Long?): T? = get(T::class, id)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Long?): T? {
+    inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
+    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"

@@ -31,7 +31,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: emptyMap())+
-                mapOf("id" to ComplexOrmTypes.Long)
+                mapOf("id" to ComplexOrmTypes.Int)
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
         val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
@@ -145,22 +145,22 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         return table.id ?: 0 > 0
     }
 
-    private fun delete(table: String, column: String, value: Long?) {
+    private fun delete(table: String, column: String, value: Int?) {
         value ?: return
         database.delete(table, "$column = $value", null)
     }
 
-    private fun save(table: String, contentValues: ContentValues): Long {
-        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE)
-        if (changedId == -1L) {
-            changedId = contentValues.getAsLong("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
+    private fun save(table: String, contentValues: ContentValues): Int {
+        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE).toInt()
+        if (changedId == -1) {
+            changedId = contentValues.getAsInteger("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
             val changed = database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
             if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
         }
         return changedId
     }
 
-    private fun update(table: String, contentValues: ContentValues, id: Long?) {
+    private fun update(table: String, contentValues: ContentValues, id: Int?) {
         id ?: return
         val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
         if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")

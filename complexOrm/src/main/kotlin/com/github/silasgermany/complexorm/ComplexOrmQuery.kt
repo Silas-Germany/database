@@ -35,11 +35,11 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
         tableClassName: String,
         readTableInfo: ReadTableInfo,
         where: String? = null
-    ): List<Pair<Long?, ComplexOrmTable>> {
+    ): List<Pair<Int?, ComplexOrmTable>> {
         val requestInfo = RequestInfo(tableClassName.tableName, tableClassName, where, readTableInfo)
         requestInfo.addData(tableClassName)
 
-        val result: MutableList<Pair<Long?, ComplexOrmTable>> = mutableListOf()
+        val result: MutableList<Pair<Int?, ComplexOrmTable>> = mutableListOf()
         database.queryForEach(requestInfo.query) {
             readIndex = 0
             val (connectedId, databaseEntry) = readColumns(tableClassName, it, readTableInfo, readTableInfo.connectedColumn)
@@ -111,11 +111,11 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
                 readTableInfo.has(connectedColumnName)
 
     private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo,
-                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<Long?, ComplexOrmTable?> {
-        val id = cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long?
+                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<Int?, ComplexOrmTable?> {
+        val id = cursor.getValue(readIndex++, ComplexOrmTypes.Int) as Int?
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+            val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Int) as Int }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -131,7 +131,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             databaseMap[columnName] = cursor.getValue(readIndex++, it.value)
         }
 
-        val handleConnectedColumns: (String, String, String?) -> Pair<Long?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
+        val handleConnectedColumns: (String, String, String?) -> Pair<Int?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@handleConnectedColumns null
             val columnName = columnNames.getValue(tableClassName).getValue(connectedColumnName)
             val specialColumnName = specialConnectedColumnName?.let {
@@ -144,7 +144,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+                    val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Int) as Int }
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable
                 }
             } else databaseMap[columnName] = null
@@ -162,7 +162,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Long) as Long }
+        val connectedId = connectedColumn?.let { cursor.getValue(readIndex++, ComplexOrmTypes.Int) as Int }
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }

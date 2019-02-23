@@ -4,7 +4,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 
 class ReadTableInfo(
     val restrictions: Map<String, String> = mapOf(),
-    private val alreadyLoaded: MutableMap<String, MutableMap<Long, ComplexOrmTable>> = mutableMapOf()
+    private val alreadyLoaded: MutableMap<String, MutableMap<Int, ComplexOrmTable>> = mutableMapOf()
 ) {
     private val givenTables: Set<String> = alreadyLoaded.keys.toSet()
     val loadingTables: MutableSet<String> = mutableSetOf()
@@ -25,9 +25,9 @@ class ReadTableInfo(
     fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest(tableClassName)
     fun alreadyLoading(tableClassName: String) = tableClassName in loadingTables
     fun has(tableClassName: String) = alreadyLoaded.containsKey(tableClassName)
-    fun getTable(tableClassName: String, id: Long?) = alreadyLoaded[tableClassName]?.get(id)
+    fun getTable(tableClassName: String, id: Int?) = alreadyLoaded[tableClassName]?.get(id)
     fun setTable(tableClassName: String, table: ComplexOrmTable, specialColumnValue: String? = null) {
-        (table.map[specialColumnValue ?: "id"] as Long?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
+        (table.map[specialColumnValue ?: "id"] as Int?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
     fun isMissingRequest(tableClassName: String) = missingEntries?.any { it::class.java.canonicalName == tableClassName } == true
     fun print() {
