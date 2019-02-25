@@ -12,7 +12,7 @@ import java.util.*
 class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
 
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
@@ -44,19 +44,18 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                 keyFound = true
                 if (value == null) contentValues.putNull(sqlKey)
                 else when (it) {
-                    ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
-                    ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
-                    ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
-                    ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
-                    ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
-                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
-                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
-                    ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
-                    ComplexOrmTypes.ComplexOrmTable,
-                    ComplexOrmTypes.ComplexOrmTables -> {
-                        throw IllegalArgumentException("Normal table shouldn't have ComplexOrmTable inside")
+                    "String" -> contentValues.put(sqlKey, value as String)
+                    "Int" -> contentValues.put(sqlKey, value as Int)
+                    "Boolean" -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
+                    "Long" -> contentValues.put(sqlKey, value as Long)
+                    "Float" -> contentValues.put(sqlKey, value as Float)
+                    "Date" -> contentValues.put(sqlKey, (value as Date).time)
+                    "LocalDate" -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
+                    "ByteArray" -> contentValues.put(sqlKey, value as ByteArray)
+                    else -> {
+                        throw IllegalStateException("Normal table shouldn't have ComplexOrmTable inside")
                     }
-                }.let {} // this is checking, that the when is exhaustive
+                }
             }
             connectedColumn?.get(sqlKey)?.let {
                 keyFound = true
@@ -106,8 +105,9 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
             }
             reverseJoinColumns?.get(sqlKey)?.let { reverseJoinTableData ->
                 try {
-                    val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableData.first).first
-                    val columnName = reverseJoinTableData.second
+                    val (reverseJoinTableDataFirst, reverseJoinTableDataSecond) = reverseJoinTableData.split(';').let { it[0] to it[1] }
+                    val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableDataFirst).first
+                    val columnName = reverseJoinTableDataSecond
                     delete("${joinTableName}_$columnName", "${tableName}_id", table.id)
                     val innerContentValues = ContentValues()
                     innerContentValues.put("${tableName}_id", table.id)
@@ -126,7 +126,8 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
             }
             reverseConnectedColumn?.get(sqlKey)?.let { reverseConnectedTableData ->
                 try {
-                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableData.first).first
+                    val (reverseConnectedTableDataFirst, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
+                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableDataFirst).first
                     val innerContentValues = ContentValues()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
@@ -134,13 +135,14 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
                             if (!writeDeep) return@let
                             write(joinTableEntry)
                         }
-                        innerContentValues.put("${reverseConnectedTableData.second}_id", table.id)
+                        innerContentValues.put("${reverseConnectedTableDataSecond}_id", table.id)
                         update(connectedTableName, innerContentValues, joinTableEntry.id)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
                 }
             }
+            Unit
         }
         return table.id ?: 0 > 0
     }

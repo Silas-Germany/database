@@ -4,31 +4,27 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import java.io.File
 import kotlin.reflect.KClass
 
-class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
+class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null) {
 
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
-    private val complexOrmQuery = ComplexOrmQuery(database)
-
-    private val reverseConnectedColumns get() = complexOrmTableInfo.reverseConnectedColumns
-    private val joinColumns get() = complexOrmTableInfo.joinColumns
-    private val reverseJoinColumns get() = complexOrmTableInfo.reverseJoinColumns
-    private val columnNames get() = complexOrmTableInfo.columnNames
+    private val complexOrmQuery = ComplexOrmQuery(database, cacheDir)
 
     private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
 
     inline fun <reified T : ComplexOrmTable> read(
-        readTableInfo: ReadTableInfo
+            readTableInfo: ReadTableInfo
     ): List<T> = read(T::class, readTableInfo)
 
     fun <T : ComplexOrmTable> read(
-        table: KClass<T>,
-        readTableInfo: ReadTableInfo
+            table: KClass<T>,
+            readTableInfo: ReadTableInfo
     ): List<T> {
-
+        if (cacheDir != null) readTableInfo.initFromCache(File(cacheDir, "complex_orm_$table"))
         val result = complexOrmQuery.query(table.qualifiedName!!, readTableInfo).map { it.second }
 
         while (readTableInfo.notAlreadyLoaded.isNotEmpty() || readTableInfo.nextRequests.isNotEmpty()) {
@@ -55,7 +51,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                 val ids = requestEntries.map { it.id!! }.toSet().joinToString(",")
                 val requestTableName = requestTable.tableName
 
-                joinColumns[requestTable]?.forEach { (connectedColumn2, connectedTable) ->
+                readTableInfo.getJoinColumnsValue(requestTable).forEach { (connectedColumn2, connectedTable) ->
                     val connectedTableName = connectedTable.tableName
                     val connectedColumn = "${requestTableName}_id"
                     val where =
@@ -66,13 +62,13 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
                     readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                         val id = entry.id!!
-                        val columnName = columnNames.getValue(requestTable).getValue(connectedColumn2)
+                        val columnName = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn2)
                         entry.map[columnName] = joinValues
                                 .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                     }
                 }
-                reverseJoinColumns[requestTable]?.forEach { (connectedColumn2, connectedTableAndColumnName) ->
-                    val (connectedTable, connectedColumnName) = connectedTableAndColumnName
+                readTableInfo.getReverseJoinColumnsValue(requestTable).forEach { (connectedColumn2, connectedTableAndColumnName) ->
+                    val (connectedTable, connectedColumnName) = connectedTableAndColumnName.split(';').let { it[0] to it[1] }
                     val connectedTableName = connectedTable.tableName
                     val connectedColumn = "${requestTableName}_id"
                     val where =
@@ -84,13 +80,13 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
 
                     readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                         val id = entry.id!!
-                        val columnName = columnNames.getValue(requestTable).getValue(connectedColumn2)
+                        val columnName = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn2)
                         entry.map[columnName] = joinValues
                                 .mapNotNull { joinEntry -> joinEntry.second.takeIf { joinEntry.first == id } }
                     }
                 }
-                reverseConnectedColumns[requestTable]?.forEach { (connectedColumn, connectedTableAndColumnName) ->
-                    val (connectedTable, connectedColumnName) = connectedTableAndColumnName
+                readTableInfo.getReverseConnectedColumnsValue(requestTable).forEach { (connectedColumn, connectedTableAndColumnName) ->
+                    val (connectedTable, connectedColumnName) = connectedTableAndColumnName.split(';').let { it[0] to it[1] }
                     val connectedTableName = connectedTable.tableName
                     val where = "WHERE \"$connectedTableName\".\"${connectedColumnName}_id\" IN ($ids)"
 
@@ -101,8 +97,8 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                     val transformedValues = joinValues.groupBy { it.first }
                     readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                         val id = entry.id!!
-                        val columnName = columnNames.getValue(requestTable).getValue(connectedColumn)
-                        val columnName2 = columnNames.getValue(requestTable).getValue(connectedColumn)
+                        val columnName = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn)
+                        val columnName2 = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn)
                         entry.map[columnName] = transformedValues[id]?.map { value ->
                             value.second.map[columnName2] = entry
                             value.second
@@ -116,6 +112,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface) {
                 readTableInfo.nextRequests.remove(requestTable)
             }
         }
+        readTableInfo.writeToCache()
         @Suppress("UNCHECKED_CAST")
         return (result as List<T>)
     }
