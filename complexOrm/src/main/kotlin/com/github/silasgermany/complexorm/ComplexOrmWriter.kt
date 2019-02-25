@@ -30,7 +30,7 @@ class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
         val contentValues = ContentValues()
         val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
-        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: emptyMap())+
+        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf())+
                 mapOf("id" to ComplexOrmTypes.Int)
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]

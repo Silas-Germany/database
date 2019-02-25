@@ -200,7 +200,7 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface) {
             ComplexOrmTypes.Date -> Date(getLong(index))
             ComplexOrmTypes.LocalDate -> LocalDate.ofEpochDay(getLong(index))
             ComplexOrmTypes.ComplexOrmTable,
-            ComplexOrmTypes.ComplexOrmTables -> throw IllegalArgumentException("Shouldn't get table type here")
+            ComplexOrmTypes.ComplexOrmTables -> throw IllegalStateException("Shouldn't get table type here")
         }
     }
 }

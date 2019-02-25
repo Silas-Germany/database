@@ -2,7 +2,7 @@ package com.github.silasgermany.complexormapi
 
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
-    val id: Int? by map
+    open val id: Int? by map
 
     override fun toString(): String {
         return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->

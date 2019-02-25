@@ -7,7 +7,7 @@ import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import kotlin.reflect.KClass
 
-class ComplexOrm(private val database: ComplexOrmDatabaseInterface) {
+class ComplexOrm(database: ComplexOrmDatabaseInterface) {
     constructor(database: SQLiteDatabase) : this(ComplexOrmDatabase(database))
 
     val complexOrmReader = ComplexOrmReader(database)
@@ -35,5 +35,5 @@ class ComplexOrm(private val database: ComplexOrmDatabaseInterface) {
     fun save(table: ComplexOrmTable, writeDeep: Boolean = true) =
             complexOrmWriter.save(table, writeDeep)
 
-    val query get() = ComplexOrmQueryBuilder(database)
+    val query get() = ComplexOrmQueryBuilder(complexOrmReader)
 }

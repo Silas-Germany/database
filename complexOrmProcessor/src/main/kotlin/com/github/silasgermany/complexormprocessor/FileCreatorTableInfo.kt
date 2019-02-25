@@ -4,6 +4,7 @@ import com.github.silasgermany.complexormapi.*
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import java.util.*
 
 class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>) {
 
@@ -29,11 +30,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     }
                 }
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("normalColumns", normalColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($normalColumnInfo)")
+                .initializer("sortedMapOf($normalColumnInfo)")
             .build()
     }
 
@@ -67,11 +68,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     else -> null
                 }
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("connectedColumns", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($connectedColumnInfo)")
+                .initializer("sortedMapOf($connectedColumnInfo)")
             .build()
     }
 
@@ -97,11 +98,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     else -> null
                 }
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("joinColumns", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($joinColumnInfo)")
+            .initializer("sortedMapOf($joinColumnInfo)")
             .build()
     }
 
@@ -128,11 +129,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     else -> null
                 }
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("reverseJoinColumns", reverseForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($reverseConnectedColumnInfo)")
+            .initializer("sortedMapOf($reverseConnectedColumnInfo)")
             .build()
     }
 
@@ -157,11 +158,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     else -> null
                 }
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("reverseConnectedColumns", reverseForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($reverseConnectedColumnInfo)")
+            .initializer("sortedMapOf($reverseConnectedColumnInfo)")
             .build()
     }
 
@@ -195,11 +196,11 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     else -> null
                 }
             }.takeUnless { it.isEmpty() }
-                    ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                    ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("specialConnectedColumns", reverseForeignColumnsType)
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer("mapOf($connectedColumnInfo)")
+                .initializer("sortedMapOf($connectedColumnInfo)")
                 .build()
     }
 
@@ -209,7 +210,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
         }
         return PropertySpec.builder("tableConstructors", constructorsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($constructors)")
+            .initializer("sortedMapOf($constructors)")
             .build()
     }
 
@@ -220,7 +221,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
         }
         return PropertySpec.builder("basicTableInfo", pairMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($constructors)")
+            .initializer("sortedMapOf($constructors)")
             .build()
     }
 
@@ -237,26 +238,26 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                 if (!writtenColumns.add(column.columnName)) null
                 else "\n\t\t\"${column.columnName}\" to \"${column.name}\""
             }.takeUnless { it.isEmpty() }
-                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+                ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("columnNames", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($connectedColumnInfo)")
+            .initializer("sortedMapOf($connectedColumnInfo)")
             .build()
     }
 
     private val stringType get() = String::class.asTypeName()
-    private val typesMapType get() = Map::class.asClassName().parameterizedBy(stringType, ComplexOrmTypes::class.asTypeName())
-    private val stringMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
+    private val typesMapType get() = SortedMap::class.asClassName().parameterizedBy(stringType, ComplexOrmTypes::class.asTypeName())
+    private val stringMapType get() = SortedMap::class.asClassName().parameterizedBy(stringType, stringType)
     private val pairType get() = Pair::class.asClassName().parameterizedBy(stringType, stringType)
-    private val pairMapType get() = Map::class.asClassName().parameterizedBy(stringType, pairType)
+    private val pairMapType get() = SortedMap::class.asClassName().parameterizedBy(stringType, pairType)
 
-    private val normalColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, typesMapType)
-    private val normalForeignColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, stringMapType)
-    private val reverseForeignColumnsType get() = Map::class.asClassName().parameterizedBy(stringType, pairMapType)
+    private val normalColumnsType get() = SortedMap::class.asClassName().parameterizedBy(stringType, typesMapType)
+    private val normalForeignColumnsType get() = SortedMap::class.asClassName().parameterizedBy(stringType, stringMapType)
+    private val reverseForeignColumnsType get() = SortedMap::class.asClassName().parameterizedBy(stringType, pairMapType)
 
     private val nullableAnyType get() = Any::class.asTypeName().copy(true)
     private val nullableAnyMapType get() = MutableMap::class.asClassName().parameterizedBy(stringType, nullableAnyType)
     private val constructorType get() = LambdaTypeName.get(null, nullableAnyMapType, returnType = ComplexOrmTable::class.asTypeName())
-    private val constructorsType get() = Map::class.asClassName().parameterizedBy(stringType, constructorType)
+    private val constructorsType get() = SortedMap::class.asClassName().parameterizedBy(stringType, constructorType)
 }

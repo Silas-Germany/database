@@ -1,13 +1,12 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) {
+class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
 
     private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
@@ -30,7 +29,6 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
-        val tableName = table.java.canonicalName
         var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
         val rootTableName = basicTableInfo.getValue(table.qualifiedName!!).second
         if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
@@ -116,7 +114,7 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
 
     fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
         val readTableInfo = ReadTableInfo(restrictions, existingEntries)
-        return ComplexOrmReader(database).read(table, readTableInfo)
+        return complexOrmReader.read(table, readTableInfo)
             .also { readTableInfo.print() }
     }
 
@@ -127,6 +125,6 @@ class ComplexOrmQueryBuilder(private val database: ComplexOrmDatabaseInterface) 
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries)
-        return ComplexOrmReader(database).read(table, readTableInfo).getOrNull(0)
+        return complexOrmReader.read(table, readTableInfo).getOrNull(0)
     }
 }

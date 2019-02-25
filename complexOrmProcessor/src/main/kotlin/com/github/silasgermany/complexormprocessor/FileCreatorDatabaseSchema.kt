@@ -6,6 +6,7 @@ import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmWildcard
+import java.util.*
 import kotlin.reflect.KClass
 
 class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
@@ -14,9 +15,10 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     private val rootTablesList = rootTables.toList()
 
     fun createNames(): PropertySpec {
+        val tableNames = rootTablesList.joinToString(",") { "\n${it.first}::class to \"${it.second.tableName!!}\"" }
         return PropertySpec.builder("tables", tableClassMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf(${rootTablesList.joinToString(",") { "\n${it.first}::class to \"${it.second.tableName!!}\"" }})")
+            .initializer("mapOf($tableNames)")
             .build()
     }
 
@@ -33,7 +35,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             "\n\"$it\" to \"\"\"DROP TABLE IF EXISTS '$it';\"\"\"" }
         return PropertySpec.builder("dropTableCommands", stringMapType)
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer("mapOf($dropTableCommands)"
+                .initializer("sortedMapOf($dropTableCommands)"
                 )
             .build()
     }
@@ -90,7 +92,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         } + relatedTables
         return PropertySpec.builder("createTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer(CodeBlock.of("mapOf(${createTableCommands.joinToString(",")})"))
+            .initializer(CodeBlock.of("sortedMapOf(${createTableCommands.joinToString(",")})"))
             .build()
     }
 
@@ -139,7 +141,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     }
 
     private val stringType get() = String::class.asTypeName()
-    private val stringMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
+    private val stringMapType get() = SortedMap::class.asClassName().parameterizedBy(stringType, stringType)
 
     private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
     private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))

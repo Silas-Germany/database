@@ -21,14 +21,14 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         val schemaFileCreator = FileCreatorDatabaseSchema(tableInfo)
         var fileName = "ComplexOrmDatabaseSchema"
         var file = FileSpec.builder(targetPackage, fileName)
-            .addType(
-                TypeSpec.objectBuilder(fileName)
-                    .addSuperinterface(ComplexOrmDatabaseSchemaInterface::class)
-                    .addProperty(schemaFileCreator.createNames())
-                    .addProperty(schemaFileCreator.createDropTables())
-                    .addProperty(schemaFileCreator.createCreateTables())
-                    .build()
-            ).build()
+                .addType(
+                        TypeSpec.objectBuilder(fileName)
+                                .addSuperinterface(ComplexOrmDatabaseSchemaInterface::class)
+                                .addProperty(schemaFileCreator.createNames())
+                                .addProperty(schemaFileCreator.createDropTables())
+                                .addProperty(schemaFileCreator.createCreateTables())
+                                .build()
+                ).build()
         file.writeTo(File(kaptKotlinGeneratedDir))
 
         val tableInfoFileCreator = FileCreatorTableInfo(tableInfo)
