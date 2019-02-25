@@ -27,6 +27,6 @@ fun <T: ComplexOrmTable, R> KProperty1<T, R>.getColumnName(table: KClass<T>): St
     return columnName
 }
 
-val allTables = tables.keys.toList()
+val allTables = tables.values.toList()
 
-val allTableNames = tables.values.toList()
+val allTableNames = tables.keys.toList()

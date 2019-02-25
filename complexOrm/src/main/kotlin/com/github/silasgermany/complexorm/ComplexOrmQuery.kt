@@ -7,13 +7,10 @@ import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.threeten.bp.LocalDate
-import java.io.File
 import java.util.*
 
-class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null) {
-
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
+                      private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
             complexOrmTableInfo.tableConstructors.getValue(tableClassName).invoke(this)
@@ -35,7 +32,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface, private
                 result.add(connectedId to databaseEntry)
             }
         }
-        System.out.println("REV79LOG: ${tableClassName}:${result.map { it.second.map }}")
         return result
     }
 
@@ -101,7 +97,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface, private
     private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo,
                             connectedColumn: String?, specialConnectedColumn: String? = null): Pair<Int?, ComplexOrmTable?> {
         val id = cursor.getValue(readTableInfo.readIndex++, "Int") as Int?
-        //System.out.println("REV79LOG: ")
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
             val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Int") as Int }
@@ -116,7 +111,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface, private
         val databaseMap = ComplexOrmTable.init(id)
 
         val order = readTableInfo.getNormalColumnsValue(tableClassName)
-        //System.out.println("REV79LOG: $order;${readTableInfo.readIndex};$databaseMap")
         order.forEach {
             val columnName = readTableInfo.getColumnNamesValue(tableClassName).getValue(it.key)
             databaseMap[columnName] = cursor.getValue(readTableInfo.readIndex++, it.value)
@@ -164,7 +158,6 @@ class ComplexOrmQuery(private val database: ComplexOrmDatabaseInterface, private
             val specialConnectingColumn = connectedColumn?.takeUnless { it.endsWith(".\"id\"") }?.let {
                 readTableInfo.getColumnNamesValue(rootTableClassName).getValue(it.removeSuffix("\"").split('"').last().removeSuffix("_id"))
             } ?: "id"
-            System.out.println("REV79LOG: $specialConnectedColumn;$connectedId;$tableClassName${readTableInfo.missingEntries?.map { it.map }}")
             readTableInfo.missingEntries!!.find {
                 it::class.java.canonicalName == tableClassName &&
                         it.map[specialConnectingColumn] == connectedId

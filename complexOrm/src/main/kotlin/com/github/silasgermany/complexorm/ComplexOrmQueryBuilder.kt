@@ -6,10 +6,9 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
+class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
+                             private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
@@ -111,22 +110,19 @@ class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
     }
 
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
-            .also { System.out.println("REV79LOG: ${T::class.java}:${it.map { it.map }}") }
 
     fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
-        val readTableInfo = ReadTableInfo(restrictions, existingEntries)
+        val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
         return complexOrmReader.read(table, readTableInfo)
-            .also { readTableInfo.print() }
     }
 
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
-            .also { System.out.println("REV79LOG: ${T::class.java}:${it?.map}") }
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName
         this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
         else "${restrictions[tableName]} AND $tableName._id = $id"
-        val readTableInfo = ReadTableInfo(restrictions, existingEntries)
+        val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
         return complexOrmReader.read(table, readTableInfo).getOrNull(0)
     }
 }

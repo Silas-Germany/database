@@ -9,10 +9,8 @@ import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
 import java.util.*
 
-class ComplexOrmWriter(private val database: ComplexOrmDatabaseInterface) {
-
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+class ComplexOrmWriter internal constructor(private val database: ComplexOrmDatabaseInterface,
+                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 

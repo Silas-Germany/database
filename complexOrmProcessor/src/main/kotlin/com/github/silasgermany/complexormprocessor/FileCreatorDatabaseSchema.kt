@@ -15,10 +15,10 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     private val rootTablesList = rootTables.toList()
 
     fun createNames(): PropertySpec {
-        val tableNames = rootTablesList.joinToString(",") { "\n${it.first}::class to \"${it.second.tableName!!}\"" }
+        val tableNames = rootTablesList.joinToString(",") { "\n\"${it.second.tableName!!}\" to ${it.first}::class" }
         return PropertySpec.builder("tables", tableClassMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("mapOf($tableNames)")
+            .initializer("sortedMapOf($tableNames)")
             .build()
     }
 
@@ -145,5 +145,5 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
 
     private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
     private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
-    private val tableClassMapType get() = Map::class.asClassName().parameterizedBy(tableClassType, String::class.asTypeName())
+    private val tableClassMapType get() = SortedMap::class.asClassName().parameterizedBy(String::class.asTypeName(), tableClassType)
 }

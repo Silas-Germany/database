@@ -4,7 +4,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 interface ComplexOrmDatabaseSchemaInterface {
-    val tables: Map<KClass<out ComplexOrmTable>, String>
+    val tables: SortedMap<String, KClass<out ComplexOrmTable>>
     val dropTableCommands: SortedMap<String, String>
     val createTableCommands: SortedMap<String, String>
 }

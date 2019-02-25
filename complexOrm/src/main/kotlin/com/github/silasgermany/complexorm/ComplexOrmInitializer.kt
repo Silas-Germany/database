@@ -6,23 +6,18 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
-class ComplexOrmInitializer(private val database: ComplexOrmDatabaseInterface) {
-
-    private val complexOrmDatabaseSchema = Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
-
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+class ComplexOrmInitializer internal constructor(private val database: ComplexOrmDatabaseInterface,
+                            private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface, private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() = createTableIfNotExists(T::class)
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) {
-        database.execSQL(complexOrmDatabaseSchema.createTableCommands
+        database.execSQL(complexOrmSchema.createTableCommands
             .getValue(complexOrmTableInfo.basicTableInfo.getValue("${table.qualifiedName}").first))
     }
 
     inline fun <reified T: ComplexOrmTable>dropTableIfExists() = dropTableIfExists(T::class)
     fun <T: ComplexOrmTable>dropTableIfExists(table: KClass<T>) {
-        database.execSQL(complexOrmDatabaseSchema.dropTableCommands
+        database.execSQL(complexOrmSchema.dropTableCommands
             .getValue(complexOrmTableInfo.basicTableInfo.getValue("${table.qualifiedName}").first))
     }
 
@@ -32,6 +27,6 @@ class ComplexOrmInitializer(private val database: ComplexOrmDatabaseInterface) {
     }
 
     fun createAllTables() {
-        complexOrmDatabaseSchema.createTableCommands.values.forEach { database.execSQL(it) }
+        complexOrmSchema.createTableCommands.values.forEach { database.execSQL(it) }
     }
 }

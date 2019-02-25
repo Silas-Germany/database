@@ -5,9 +5,10 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.json.JSONObject
 import java.io.File
 
-class ReadTableInfo(
-        val restrictions: Map<String, String> = mapOf(),
-        private val alreadyLoaded: MutableMap<String, MutableMap<Int, ComplexOrmTable>> = mutableMapOf()
+class ReadTableInfo constructor(
+        val restrictions: Map<String, String>,
+        private val alreadyLoaded: MutableMap<String, MutableMap<Int, ComplexOrmTable>>,
+        private val complexOrmTableInfo: ComplexOrmTableInfoInterface
 ) {
     var readIndex = 0
     private val givenTables: Set<String> = alreadyLoaded.keys.toSet()
@@ -45,9 +46,6 @@ class ReadTableInfo(
         System.out.println("Other values(connectedColumn): $connectedColumn")
     }
 
-
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
 
     private fun <T, V> MutableMap<T, V>.init(key: T, value: V) = getOrPut(key) { value }
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T, value: Map<K, V>) = getOrPut(key) { value.toMutableMap() }
@@ -106,12 +104,13 @@ class ReadTableInfo(
         }
         cacheFile?.writeText(json.toString())
     }
+
     private fun JSONObject.extract(category: String) {
         getJSONObject(category).run {
             keys().forEach { key ->
                 getJSONObject(key).run {
                     keys().forEach {
-                        cachedComplexOrmTableInfo.init(category).init(key).init(it, getString(it))
+                        cachedComplexOrmTableInfo.init(category).init(key)[it] = getString(it)
                     }
                 }
             }

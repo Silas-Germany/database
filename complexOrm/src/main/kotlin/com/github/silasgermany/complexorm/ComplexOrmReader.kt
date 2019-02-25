@@ -7,14 +7,12 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import java.io.File
 import kotlin.reflect.KClass
 
-class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null) {
+class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
+                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val complexOrmTableInfo = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-            .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+    private val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 
-    private val complexOrmQuery = ComplexOrmQuery(database, cacheDir)
-
-    private val String.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(this).first
+    private fun ReadTableInfo.getTableName(tableClassName: String) = getBasicTableInfoFirstValue(tableClassName)
 
     inline fun <reified T : ComplexOrmTable> read(
             readTableInfo: ReadTableInfo
@@ -38,7 +36,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheD
                         ?: throw IllegalStateException("Should have exactly one entry")
                 val columnName = column.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2")
                         .toLowerCase().takeUnless { it == "id" }?.plus("_id") ?: "id"
-                val fullColumnName = "\"${missingEntryTable.tableName}\".\"$columnName\""
+                val fullColumnName = "\"${readTableInfo.getTableName(missingEntryTable)}\".\"$columnName\""
                 val where = "WHERE $fullColumnName IN (${missingEntries.joinToString { "${it.map[column]}" }})"
                 readTableInfo.connectedColumn = fullColumnName
                 complexOrmQuery.query(missingEntryTable, readTableInfo, where)
@@ -49,10 +47,10 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheD
                 val requestTable = readTableInfo.nextRequests.keys.first()
                 val requestEntries = readTableInfo.nextRequests.getValue(requestTable)
                 val ids = requestEntries.map { it.id!! }.toSet().joinToString(",")
-                val requestTableName = requestTable.tableName
+                val requestTableName = readTableInfo.getTableName(requestTable)
 
                 readTableInfo.getJoinColumnsValue(requestTable).forEach { (connectedColumn2, connectedTable) ->
-                    val connectedTableName = connectedTable.tableName
+                    val connectedTableName = readTableInfo.getTableName(connectedTable)
                     val connectedColumn = "${requestTableName}_id"
                     val where =
                             "LEFT JOIN \"${requestTableName}_$connectedColumn2\" AS \"join_table\" ON \"join_table\".\"${connectedTableName}_id\"=\"$connectedTableName\".\"id\" " +
@@ -69,7 +67,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheD
                 }
                 readTableInfo.getReverseJoinColumnsValue(requestTable).forEach { (connectedColumn2, connectedTableAndColumnName) ->
                     val (connectedTable, connectedColumnName) = connectedTableAndColumnName.split(';').let { it[0] to it[1] }
-                    val connectedTableName = connectedTable.tableName
+                    val connectedTableName = readTableInfo.getTableName(connectedTable)
                     val connectedColumn = "${requestTableName}_id"
                     val where =
                             "LEFT JOIN \"${connectedTableName}_$connectedColumnName\" AS \"reverse_join_table\" ON \"reverse_join_table\".\"${connectedTableName}_id\" = \"$connectedTableName\".\"id\" " +
@@ -87,7 +85,7 @@ class ComplexOrmReader(database: ComplexOrmDatabaseInterface, private val cacheD
                 }
                 readTableInfo.getReverseConnectedColumnsValue(requestTable).forEach { (connectedColumn, connectedTableAndColumnName) ->
                     val (connectedTable, connectedColumnName) = connectedTableAndColumnName.split(';').let { it[0] to it[1] }
-                    val connectedTableName = connectedTable.tableName
+                    val connectedTableName = readTableInfo.getTableName(connectedTable)
                     val where = "WHERE \"$connectedTableName\".\"${connectedColumnName}_id\" IN ($ids)"
 
                     readTableInfo.connectedColumn = "\"$connectedTableName\".\"${connectedColumnName}_id\" AS \"reverse_connected_column\""
