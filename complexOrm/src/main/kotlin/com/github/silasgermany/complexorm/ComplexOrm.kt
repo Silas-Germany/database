@@ -5,12 +5,13 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
+import java.io.File
 import kotlin.reflect.KClass
 
-class ComplexOrm(database: ComplexOrmDatabaseInterface) {
+class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) {
     constructor(database: SQLiteDatabase) : this(ComplexOrmDatabase(database))
 
-    val complexOrmReader = ComplexOrmReader(database)
+    val complexOrmReader = ComplexOrmReader(database, cacheDir)
     val complexOrmInitializer = ComplexOrmInitializer(database)
     val complexOrmWriter = ComplexOrmWriter(database)
 

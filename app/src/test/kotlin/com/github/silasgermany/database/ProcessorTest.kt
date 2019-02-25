@@ -67,11 +67,11 @@ class ProcessorTest {
         assertNull(allTablesNormalColumnsTables[AllTables.EmptyTable::class.java.canonicalName!!], "Table should not exist (no normal columns)")
         assertNull(allTablesNormalColumnsTables[AllTables.NotATable::class.java.canonicalName!!], "Table should not exist (is not a table)")
         assertEquals(
-            setOf("inheriting_value"), allTablesNormalColumnsTables[AllTables.IndirectTable::class.java.canonicalName!!]?.keys,
+            mutableSetOf("inheriting_value"), allTablesNormalColumnsTables[AllTables.IndirectTable::class.java.canonicalName!!]?.keys,
             "Table should have indirect column"
         )
         assertEquals(
-            setOf("middle_inheriting_value", "inheriting_value", "direct_value"),
+            mutableSetOf("middle_inheriting_value", "inheriting_value", "direct_value"),
             allTablesNormalColumnsTables[AllTables.DoubleIndirectTable::class.java.canonicalName!!]?.keys,
             "Table should have both indirect columns"
         )

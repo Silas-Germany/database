@@ -56,7 +56,7 @@ class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
                         where = when {
                             whereArgument.any { it is String } ->
                                 where.replace("??", "COALESCE(??, 'NULL')")
-                            whereArgument.any { it is Int } ->
+                            whereArgument.any { it is Enum<*> || it is Int || it is Long || it is ComplexOrmTable } ->
                                 where.replace("??", "COALESCE(??, -1)")
                             !whereArgument.any { it != null } ->
                                 where
@@ -111,6 +111,7 @@ class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
     }
 
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
+            .also { System.out.println("REV79LOG: ${T::class.java}:${it.map { it.map }}") }
 
     fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
         val readTableInfo = ReadTableInfo(restrictions, existingEntries)
@@ -119,6 +120,7 @@ class ComplexOrmQueryBuilder(private val complexOrmReader: ComplexOrmReader) {
     }
 
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
+            .also { System.out.println("REV79LOG: ${T::class.java}:${it?.map}") }
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
         val tableName = table.tableName

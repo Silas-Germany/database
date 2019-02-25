@@ -9,6 +9,18 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 
 class RealTestDatabase(private val database: SQLiteDatabase):
     ComplexOrmDatabaseInterface {
+    override fun beginTransaction() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun setTransactionSuccessful() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun endTransaction() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun insertWithOnConflict(
         table: String,
         nullColumnHack: String,

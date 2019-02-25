@@ -9,7 +9,7 @@ import java.util.*
 interface AllTables {
 
     open class NormalTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        constructor(id: Long): this(init(id))
+        constructor(id: Int): this(init(id))
         fun clone(booleanValue: Boolean = true) = cloneWithoutId("booleanValue" to booleanValue)
 
         @ComplexOrmReadAlways
@@ -58,7 +58,7 @@ interface AllTables {
     }
 
     open class EmptyTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        constructor(id: Long): this(init(id))
+        constructor(id: Int): this(init(id))
     }
 
     open class IndirectTable(initMap: MutableMap<String, Any?> = default): BaseTable(initMap)
@@ -68,7 +68,7 @@ interface AllTables {
     }
 
     open class ReferenceTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        constructor(id: Long): this(init(id))
+        constructor(id: Int): this(init(id))
 
         open var normalTable: NormalTable? by initMap
         open var normalTableValue: NormalTable by initMap

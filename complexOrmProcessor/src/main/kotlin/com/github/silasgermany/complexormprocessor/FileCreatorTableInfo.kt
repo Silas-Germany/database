@@ -26,13 +26,13 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                         if (column.idName !in rootTableColumnNames)
                             throw java.lang.IllegalArgumentException("Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
                                     "(Don't delegate it with a map, if it's not a column)")
-                        "\n\t\t\"${column.columnName}\" to ComplexOrmTypes.${column.columnType.type}"
+                        "\n\t\t\"${column.columnName}\" to \"${column.columnType.type}\""
                     }
                 }
             }.takeUnless { it.isEmpty() }
                 ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
-        return PropertySpec.builder("normalColumns", normalColumnsType)
+        return PropertySpec.builder("normalColumns", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
                 .initializer("sortedMapOf($normalColumnInfo)")
             .build()
@@ -123,7 +123,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                                     .find { reverseJoinColumn in arrayOf(it.columnName, it.name) }?.columnName
                                     ?: throw IllegalArgumentException("Couldn't find column $reverseJoinColumn in table ${connectedRootTableInfo.tableName}")
                             "\n\t\t\"${column.columnName}\" to" +
-                                    "\n\t\t\t(\"${column.columnType.referenceTable}\" to\n\t\t\t \"$reverseColumn\")"
+                                    "\n\t\t\t\"${column.columnType.referenceTable};\" +\n\t\t\t \"$reverseColumn\""
                         }
                     }
                     else -> null
@@ -131,7 +131,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             }.takeUnless { it.isEmpty() }
                 ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
-        return PropertySpec.builder("reverseJoinColumns", reverseForeignColumnsType)
+        return PropertySpec.builder("reverseJoinColumns", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("sortedMapOf($reverseConnectedColumnInfo)")
             .build()
@@ -152,7 +152,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                                     .find { it.name == reverseConnectedColumn }?.columnName
                                     ?: reverseConnectedColumn
                             "\n\t\t\"${column.columnName}\" to" +
-                                    "\n\t\t\t(\"${column.columnType.referenceTable}\" to\n\t\t\t\"$reverseColumn\")"
+                                    "\n\t\t\t\"${column.columnType.referenceTable};\" +\n\t\t\t\"$reverseColumn\""
                         }
                     }
                     else -> null
@@ -160,7 +160,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             }.takeUnless { it.isEmpty() }
                 ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
-        return PropertySpec.builder("reverseConnectedColumns", reverseForeignColumnsType)
+        return PropertySpec.builder("reverseConnectedColumns", normalForeignColumnsType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("sortedMapOf($reverseConnectedColumnInfo)")
             .build()
@@ -190,7 +190,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                             val connectedColumn = connectedRootTableInfo.columns
                                     .find { specialConnectedColumn in arrayOf(it.columnName, it.name) }?.idName
                             "\n\t\t\"${column.columnName}\" to" +
-                                    "\n\t\t\t(\"${column.columnType.referenceTable}\" to\n\t\t\t\"$connectedColumn\")"
+                                    "\n\t\t\t\"${column.columnType.referenceTable};\" +\n\t\t\t\"$connectedColumn\""
                         }
                     }
                     else -> null
@@ -198,7 +198,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             }.takeUnless { it.isEmpty() }
                     ?.run { "\n\"$className\" to sortedMapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
-        return PropertySpec.builder("specialConnectedColumns", reverseForeignColumnsType)
+        return PropertySpec.builder("specialConnectedColumns", normalForeignColumnsType)
                 .addModifiers(KModifier.OVERRIDE)
                 .initializer("sortedMapOf($connectedColumnInfo)")
                 .build()

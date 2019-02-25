@@ -1,12 +1,12 @@
 package com.github.silasgermany.database.ui.main
 
 import android.util.Log
-import com.github.silasgermany.complexorm.oldVersion.ComplexOrmDatabase
 import com.github.silasgermany.database.ui.main.MainModel.*
 import java.io.File
 
 class MainPresenter(view: MainView) {
 
+    /*
     private val databaseFile = File(view.databaseFolder, "database.db")
 
     init {
@@ -27,4 +27,5 @@ class MainPresenter(view: MainView) {
             Log.e("DATABASE", "${e.message}; ${e.stackTrace.joinToString()}")
         }
     }
+    // */
 }
