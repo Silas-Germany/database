@@ -16,7 +16,7 @@ class WriterTest {
 
     @Test
     fun emptyTableWriting() {
-        databaseWriter.write(AllTables.EmptyTable())
+        databaseWriter.save(AllTables.EmptyTable())
     }
 
     @Test
@@ -25,26 +25,26 @@ class WriterTest {
         normalTable.longValue = 1L
         normalTable.dateValue = Date()
         normalTable.byteArrayValue = ByteArray(10)
-        databaseWriter.write(normalTable)
+        databaseWriter.save(normalTable)
     }
 
     @Test
     fun connectedTablesWriting() {
         val referenceTable = AllTables.ReferenceTable()
-        referenceTable.normalTable = AllTables.NormalTable(1L)
+        referenceTable.normalTable = AllTables.NormalTable(1)
         referenceTable.normalTableValue = AllTables.NormalTable()
-        referenceTable.normalTableValues = listOf(AllTables.NormalTable(), AllTables.NormalTable(2L))
-        databaseWriter.write(referenceTable)
+        referenceTable.normalTableValues = listOf(AllTables.NormalTable(), AllTables.NormalTable(2))
+        databaseWriter.save(referenceTable)
     }
 
     @Test
     fun reverseConnectedTablesWriting() {
         val normalTable = AllTables.NormalTable()
-        normalTable.connectedTableValues = listOf(AllTables.ReferenceTable(1L))
-        normalTable.otherWritingConnectedTableValues = listOf(AllTables.ReferenceTable(2L))
-        normalTable.columnEqualsTableNameConnectedTableValues = listOf(AllTables.ReferenceTable(3L))
-        normalTable.joinTableValues = listOf(AllTables.ReferenceTable(4L))
-        normalTable.otherWritingJoinTableValues = listOf(AllTables.ReferenceTable(5L))
-        databaseWriter.write(normalTable)
+        normalTable.connectedTableValues = listOf(AllTables.ReferenceTable(1))
+        normalTable.otherWritingConnectedTableValues = listOf(AllTables.ReferenceTable(2))
+        normalTable.columnEqualsTableNameConnectedTableValues = listOf(AllTables.ReferenceTable(3))
+        normalTable.joinTableValues = listOf(AllTables.ReferenceTable(4))
+        normalTable.otherWritingJoinTableValues = listOf(AllTables.ReferenceTable(5))
+        databaseWriter.save(normalTable)
     }
 }
