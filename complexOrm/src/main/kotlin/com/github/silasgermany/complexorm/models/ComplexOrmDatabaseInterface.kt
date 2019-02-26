@@ -26,4 +26,14 @@ interface ComplexOrmDatabaseInterface {
                 (0 until it.count).forEach { _ -> f(it); it.moveToNext() }
             }
     }
+
+    fun <T>queryMap(sql: String, f: (Cursor) -> T) =
+        rawQuery(sql, null)!!
+            .let { cursor ->
+                (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
+                    ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
+            }.use {
+                it.moveToFirst()
+                (0 until it.count).map { _ -> f(it).apply { it.moveToNext() } }
+            }
 }

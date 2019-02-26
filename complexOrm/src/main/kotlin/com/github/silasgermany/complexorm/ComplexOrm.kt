@@ -31,6 +31,9 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun <T : ComplexOrmTable> read(table: KClass<T>, readTableInfo: ReadTableInfo) =
             complexOrmReader.read(table, readTableInfo)
 
+    inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: Int) =
+            complexOrmReader.complexOrmQuery.getOneColumn(T::class, column, id, R::class)
+
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() =
             complexOrmInitializer.createTableIfNotExists<T>()
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) =
@@ -59,9 +62,11 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
         complexOrmTableInfo.normalColumns[table.name]?.toList() ?: emptyList()
     fun getConnectedColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.connectedColumns[table.name]?.keys?.map { "${it}_id" } ?: emptyList()
+    fun getJoinColumnNames(table: KClass<out ComplexOrmTable>) =
+            complexOrmTableInfo.joinColumns[table.name]?.keys?.toList() ?: emptyList()
     fun getJoinTableNames(table: KClass<out ComplexOrmTable>): List<String> {
         val tableName = table.tableName
-        return complexOrmTableInfo.joinColumns[table.name]?.keys?.map { "${tableName}_$it" } ?: emptyList()
+        return getJoinTableNames(table).map { "${tableName}_$it" }
     }
 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =

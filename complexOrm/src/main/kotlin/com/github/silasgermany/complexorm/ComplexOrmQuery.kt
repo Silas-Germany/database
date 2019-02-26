@@ -8,9 +8,26 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.threeten.bp.LocalDate
 import java.util.*
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+
+
+    fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: Int, returnClass: KClass<V>): V? {
+        return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = $id") {
+            @Suppress("UNCHECKED_CAST")
+            if (it.isNull(0)) null
+            else when (returnClass) {
+                Boolean::class -> (it.getInt(0) == 0) as V
+                Int::class -> it.getInt(0) as V
+                Long::class -> it.getLong(0) as V
+                String::class -> it.getString(0) as V
+                else -> throw IllegalArgumentException("Doesn't have type ${returnClass.java.simpleName}")
+            }
+        }.firstOrNull()
+    }
 
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
             complexOrmTableInfo.tableConstructors.getValue(tableClassName).invoke(this)

@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
                        complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
+    val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 
     private fun ReadTableInfo.getTableName(tableClassName: String) = getBasicTableInfoFirstValue(tableClassName)
 
