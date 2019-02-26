@@ -26,8 +26,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
-        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).first
-        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.qualifiedName!!).second
+        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).first
+        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table::class.java.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf())+
                 mapOf("id" to ComplexOrmTypes.Int)
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]

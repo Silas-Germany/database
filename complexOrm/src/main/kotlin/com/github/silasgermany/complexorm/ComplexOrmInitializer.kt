@@ -12,13 +12,13 @@ class ComplexOrmInitializer internal constructor(private val database: ComplexOr
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() = createTableIfNotExists(T::class)
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) {
         database.execSQL(complexOrmSchema.createTableCommands
-            .getValue(complexOrmTableInfo.basicTableInfo.getValue("${table.qualifiedName}").first))
+            .getValue(complexOrmTableInfo.basicTableInfo.getValue(table.java.canonicalName).first))
     }
 
     inline fun <reified T: ComplexOrmTable>dropTableIfExists() = dropTableIfExists(T::class)
     fun <T: ComplexOrmTable>dropTableIfExists(table: KClass<T>) {
         database.execSQL(complexOrmSchema.dropTableCommands
-            .getValue(complexOrmTableInfo.basicTableInfo.getValue("${table.qualifiedName}").first))
+            .getValue(complexOrmTableInfo.basicTableInfo.getValue(table.java.canonicalName).first))
     }
 
     inline fun <reified T: ComplexOrmTable>replaceTable() {

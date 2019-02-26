@@ -8,7 +8,7 @@ import java.io.File
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
-                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                       complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 
@@ -23,7 +23,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             readTableInfo: ReadTableInfo
     ): List<T> {
         if (cacheDir != null) readTableInfo.initFromCache(File(cacheDir, "complex_orm_$table"))
-        val result = complexOrmQuery.query(table.qualifiedName!!, readTableInfo).map { it.second }
+        val result = complexOrmQuery.query(table.java.canonicalName!!, readTableInfo).map { it.second }
 
         while (readTableInfo.notAlreadyLoaded.isNotEmpty() || readTableInfo.nextRequests.isNotEmpty()) {
             while (readTableInfo.notAlreadyLoaded.isNotEmpty()) {

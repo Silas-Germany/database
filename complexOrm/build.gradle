@@ -24,12 +24,8 @@ android {
 dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    // reflexion
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // local-time
     implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
-    // sql-cipher
-    implementation "net.zetetic:android-database-sqlcipher:4.0.1@aar"
     // ORM annotations
     implementation project(':complexOrmApi')
 }

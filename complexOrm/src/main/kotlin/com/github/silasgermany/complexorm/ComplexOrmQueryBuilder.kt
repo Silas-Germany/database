@@ -12,10 +12,15 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
-    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(qualifiedName!!).first
+    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Int, ComplexOrmTable>>()
+
+    private inline fun <reified T : ComplexOrmTable> specialWhere(
+        selection: String,
+        vararg selectionArguments: Pair<KProperty1<T, Any?>, Any?>
+    ): ComplexOrmQueryBuilder = where(T::class, selectionArguments[0].first, selection, *selectionArguments)
 
     inline fun <reified T : ComplexOrmTable> specialWhere(
         column: KProperty1<T, Any?>, selection: String,
@@ -29,10 +34,10 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
         var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
-        val rootTableName = basicTableInfo.getValue(table.qualifiedName!!).second
+        val rootTableName = basicTableInfo.getValue(table.java.canonicalName!!).second
         if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
         else if (normalColumns[rootTableName]?.contains(columnName) != true)
-            throw IllegalArgumentException("Can't create restriction for join columns (column $columnName from ${table.qualifiedName}). " +
+            throw IllegalArgumentException("Can't create restriction for join columns (column $columnName from ${table.java.canonicalName}). " +
                     "Please restrict the target table instead")
         var where = (selection?.let { "($it)" } ?: "??=?")
         if (selectionArguments.isEmpty()) where = where.replace("??", "$$.\"$columnName\"")
@@ -97,14 +102,14 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
                     .replace("??", "$$.\"$columnName\"")
                     .replaceFirst("?", transformedWhereArgument)
         }
-        restrictions[table.qualifiedName!!] = if (table.qualifiedName!! !in restrictions) where
-        else "${restrictions[table.qualifiedName!!]} AND $where"
+        restrictions[table.java.canonicalName!!] = if (table.java.canonicalName !in restrictions) where
+        else "${restrictions[table.java.canonicalName!!]} AND $where"
         return this@ComplexOrmQueryBuilder
     }
 
     inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T>): ComplexOrmQueryBuilder {
-        existingEntries[table.qualifiedName!!] = entries
+        existingEntries[table.java.canonicalName!!] = entries
             .associateTo(mutableMapOf()) { it.id!! to it }
         return this@ComplexOrmQueryBuilder
     }
