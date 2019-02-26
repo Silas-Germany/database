@@ -11,8 +11,11 @@ class ComplexOrmInitializer internal constructor(private val database: ComplexOr
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() = createTableIfNotExists(T::class)
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) {
-        database.execSQL(complexOrmSchema.createTableCommands
-            .getValue(complexOrmTableInfo.basicTableInfo.getValue(table.java.canonicalName).first))
+        val (rootTableName, rootTableClass) = complexOrmTableInfo.basicTableInfo.getValue(table.java.canonicalName)
+        database.execSQL(complexOrmSchema.createTableCommands.getValue(rootTableName))
+        complexOrmTableInfo.joinColumns[rootTableClass]?.keys?.forEach {
+            database.execSQL(complexOrmSchema.createTableCommands.getValue("${rootTableName}_$it"))
+        }
     }
 
     inline fun <reified T: ComplexOrmTable>dropTableIfExists() = dropTableIfExists(T::class)

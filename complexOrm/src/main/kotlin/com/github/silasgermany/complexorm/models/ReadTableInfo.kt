@@ -36,7 +36,7 @@ class ReadTableInfo constructor(
     fun setTable(tableClassName: String, table: ComplexOrmTable, specialColumnValue: String? = null) {
         (table.map[specialColumnValue ?: "id"] as Int?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
-    fun isMissingRequest(tableClassName: String) = missingEntries?.any { it::class.java.canonicalName == tableClassName } == true
+    fun isMissingRequest(tableClassName: String) = missingEntries?.any { it.javaClass.canonicalName == tableClassName } == true
     fun print() {
         System.out.println("Other values(restrictions, ${restrictions.size}): $restrictions")
         System.out.println("Other values(alreadyLoaded, ${alreadyLoaded.flatMap { it.value.toList() }.size}): $alreadyLoaded")

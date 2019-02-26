@@ -5,7 +5,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     open val id: Int? by map
 
     override fun toString(): String {
-        return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "${this.javaClass.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> "ComplexOrmTable(${value.id ?: "?"})"
                 is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
@@ -20,7 +20,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     }
 
     fun showRecursive(): String {
-        return map.toList().joinToString(prefix = "${this::class.java.simpleName}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "${this.javaClass.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> value.showRecursive()
                 is List<*> -> value.joinToString(prefix = "[", postfix = "]") {

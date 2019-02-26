@@ -43,7 +43,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     fun createCreateTables(): PropertySpec {
         val relatedTables = mutableListOf<String>()
         val createTableCommands = rootTablesList.map { (_, tableInfo) ->
-            val writtenColumns = mutableSetOf<String>()
+            val writtenColumns = mutableSetOf("id")
             val foreignKeys = mutableListOf<String>()
             val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
                     tableInfo.columns.mapNotNull { column ->

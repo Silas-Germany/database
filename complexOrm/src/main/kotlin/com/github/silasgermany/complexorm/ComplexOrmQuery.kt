@@ -159,7 +159,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.getColumnNamesValue(rootTableClassName).getValue(it.removeSuffix("\"").split('"').last().removeSuffix("_id"))
             } ?: "id"
             readTableInfo.missingEntries!!.find {
-                it::class.java.canonicalName == tableClassName &&
+                it.javaClass.canonicalName == tableClassName &&
                         it.map[specialConnectingColumn] == connectedId
             }!!.apply { map.putAll(databaseMap) }
         }
