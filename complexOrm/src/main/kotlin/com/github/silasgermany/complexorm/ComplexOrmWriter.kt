@@ -1,6 +1,7 @@
 package com.github.silasgermany.complexorm
 
 import android.content.ContentValues
+import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
@@ -8,6 +9,8 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
 import java.util.*
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 class ComplexOrmWriter internal constructor(private val database: ComplexOrmDatabaseInterface,
                        private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
@@ -24,9 +27,12 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         }
     }
 
+    val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(javaClass.canonicalName!!).first
+    val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
+
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
-        val tableName = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).first
+        val tableName = table.tableName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf())+
                 mapOf("id" to ComplexOrmTypes.Int)
@@ -164,5 +170,74 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         id ?: return
         val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
         if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
+    }
+
+    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: Int, value: R) {
+        val contentValues = ContentValues()
+        when (value) {
+            is Int -> contentValues.put(column.name.toSql(), value)
+            is String -> contentValues.put(column.name.toSql(), value)
+            is Long -> contentValues.put(column.name.toSql(), value)
+            is Boolean -> contentValues.put(column.name.toSql(), value)
+            is ByteArray -> contentValues.put(column.name.toSql(), value)
+            else -> throw IllegalArgumentException("Can't save value $value (unknown type)")
+        }
+        contentValues.put("id", id)
+        save(table.tableName, contentValues)
+    }
+
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) {
+        val tableClass = table.java.canonicalName
+        val tableName = table.tableName
+        (additionalValues ?: ContentValues()).also {
+            if (oldId != newId) it.put(ComplexOrmTable::id.name.toSql(), newId)
+            try {
+                database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            } catch (e: SQLiteConstraintException) {
+                database.delete(tableName, "id = $newId", null)
+                database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            }
+        }
+        if (oldId == newId) return
+        complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
+            connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
+                val idColumnName = "${tableName}_id"
+                val contentValues = ContentValues()
+                contentValues.put(idColumnName, newId)
+                database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
+                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            }
+        }
+        complexOrmTableInfo.joinColumns.forEach { connectedTable ->
+            connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
+                val idColumnName = "${tableName}_id"
+                val contentValues = ContentValues()
+                contentValues.put(idColumnName, newId)
+                database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
+                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            }
+        }
+        complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
+            connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
+                val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
+                val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
+                val idColumnName = "${tableName}_id"
+                val contentValues = ContentValues()
+                contentValues.put(idColumnName, newId)
+                database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
+                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            }
+        }
+        complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
+            connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
+                val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
+                val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
+                val idColumnName = "${connectedColumn}_id"
+                val contentValues = ContentValues()
+                contentValues.put(idColumnName, newId)
+                database.updateWithOnConflict(connectedTableName, contentValues,
+                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            }
+        }
     }
 }
