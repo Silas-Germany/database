@@ -121,6 +121,9 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
         return complexOrmReader.read(table, readTableInfo)
     }
 
+    override fun toString() = restrictions.values
+            .joinToString(" AND ").replace("$$.", "")
+
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null

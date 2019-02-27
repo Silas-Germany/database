@@ -17,7 +17,7 @@ class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDataba
         return database.endTransaction()
     }
 
-    override fun insertWithOnConflict(table: String, nullColumnHack: String, initialValues: ContentValues, conflictAlgorithm: Int): Long {
+    override fun insertWithOnConflict(table: String, nullColumnHack: String?, initialValues: ContentValues, conflictAlgorithm: Int): Long {
         return database.insertWithOnConflict(table, nullColumnHack, initialValues, conflictAlgorithm)
     }
 

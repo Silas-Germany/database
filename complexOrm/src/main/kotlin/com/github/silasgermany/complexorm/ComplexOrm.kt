@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
@@ -33,6 +34,12 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
 
     inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: Int) =
             complexOrmReader.complexOrmQuery.getOneColumn(T::class, column, id, R::class)
+
+    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: Int, value: R?) =
+            complexOrmWriter.saveOneColumn(T::class, column, id, value)
+
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) =
+            complexOrmWriter.changeId(table, oldId, newId, additionalValues)
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() =
             complexOrmInitializer.createTableIfNotExists<T>()
@@ -68,6 +75,9 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
         val tableName = table.tableName
         return getJoinTableNames(table).map { "${tableName}_$it" }
     }
+
+    fun getRootTableClass(tableName: String) =
+        complexOrmSchema.tables.getValue(tableName)
 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =
         T::class.tableName + "." + columnName(T::class, column)

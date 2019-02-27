@@ -8,7 +8,7 @@ interface ComplexOrmDatabaseInterface {
     fun beginTransaction()
     fun setTransactionSuccessful()
     fun endTransaction()
-    fun insertWithOnConflict(table: String, nullColumnHack: String,
+    fun insertWithOnConflict(table: String, nullColumnHack: String?,
         initialValues: ContentValues, conflictAlgorithm: Int): Long
     fun updateWithOnConflict(table: String, values: ContentValues,
         whereClause: String, whereArgs: Array<String>?, conflictAlgorithm: Int): Int
