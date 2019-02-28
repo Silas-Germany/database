@@ -42,6 +42,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
                 complexOrmQuery.query(missingEntryTable, readTableInfo, where)
                 readTableInfo.notAlreadyLoaded.remove(missingEntryTable)
             }
+            readTableInfo.missingEntries = null
 
             while (readTableInfo.nextRequests.isNotEmpty()) {
                 val requestTable = readTableInfo.nextRequests.keys.first()

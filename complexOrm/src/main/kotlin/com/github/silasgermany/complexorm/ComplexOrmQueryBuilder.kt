@@ -127,9 +127,9 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
     inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
         id ?: return null
-        val tableName = table.tableName
-        this@ComplexOrmQueryBuilder.restrictions[tableName] = if (tableName in restrictions) "$tableName._id = $id"
-        else "${restrictions[tableName]} AND $tableName._id = $id"
+        val tableClassName = table.java.canonicalName!!
+        this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = $id"
+        else "${restrictions[tableClassName]} AND $$.id = $id"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
         return complexOrmReader.read(table, readTableInfo).getOrNull(0)
     }

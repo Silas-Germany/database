@@ -8,6 +8,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -176,10 +177,12 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             val specialConnectingColumn = connectedColumn?.takeUnless { it.endsWith(".\"id\"") }?.let {
                 readTableInfo.getColumnNamesValue(rootTableClassName).getValue(it.removeSuffix("\"").split('"').last().removeSuffix("_id"))
             } ?: "id"
+            val connectingId = if (specialConnectedColumn == "id") id else connectedId
             readTableInfo.missingEntries!!.find {
                 it.javaClass.canonicalName == tableClassName &&
-                        it.map[specialConnectingColumn] == connectedId
-            }!!.apply { map.putAll(databaseMap) }
+                        it.map[specialConnectingColumn] == connectingId
+            }?.apply { map.putAll(databaseMap) }
+                    ?: throw IllegalStateException("Couldn't find $tableClassName and $connectingId in ${readTableInfo.missingEntries}")
         }
         if (readTableInfo.getReverseConnectedColumnsValue(tableClassName).isNotEmpty()
                 || readTableInfo.getJoinColumnsValue(tableClassName).isNotEmpty()
@@ -199,7 +202,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
             ComplexOrmTypes.Date -> Date(getLong(index))
-            ComplexOrmTypes.LocalDate -> LocalDate.ofEpochDay(getLong(index))
+            ComplexOrmTypes.LocalDate -> LocalDate.parse(getString(index), DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         }
     }
 }

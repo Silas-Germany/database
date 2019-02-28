@@ -46,7 +46,6 @@ class ReadTableInfo constructor(
         System.out.println("Other values(connectedColumn): $connectedColumn")
     }
 
-
     private fun <T, V> MutableMap<T, V>.init(key: T, value: V) = getOrPut(key) { value }
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T, value: Map<K, V>) = getOrPut(key) { value.toMutableMap() }
 

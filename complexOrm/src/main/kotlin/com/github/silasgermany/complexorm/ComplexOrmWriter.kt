@@ -32,21 +32,28 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
         val tableName = table.tableName
+        val tableClassName = table.javaClass.canonicalName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
-        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf())+
+        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
                 mapOf("id" to "Int")
-        val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
-        val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
-        val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
-        val specialConnectedColumn = complexOrmTableInfo.specialConnectedColumns[rootTableClass]
-        val reverseConnectedColumn = complexOrmTableInfo.reverseConnectedColumns[rootTableClass]
+        val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.joinColumns[tableClassName] ?: sortedMapOf())
+        val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.reverseJoinColumns[tableClassName] ?: sortedMapOf())
+        val connectedColumns = (complexOrmTableInfo.connectedColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.connectedColumns[tableClassName] ?: sortedMapOf())
+        val specialConnectedColumns = (complexOrmTableInfo.specialConnectedColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.specialConnectedColumns[tableClassName] ?: sortedMapOf())
+        val reverseConnectedColumns = (complexOrmTableInfo.reverseConnectedColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.reverseConnectedColumns[tableClassName] ?: sortedMapOf())
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
             var keyFound = false
             normalColumns[sqlKey]?.also { type ->
                 keyFound = true
-                if (value == null) contentValues.putNull(sqlKey)
-                else when (ComplexOrmTypes.values().find { it.name == type } ?: throw java.lang.IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
+                if (value == null) {
+                    if (sqlKey != "id") contentValues.putNull(sqlKey)
+                } else when (ComplexOrmTypes.values().find { it.name == type } ?: throw java.lang.IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
                     ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
                     ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
                     ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
@@ -60,7 +67,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     }
                 }
             }
-            connectedColumn?.get(sqlKey)?.let {
+            connectedColumns.get(sqlKey)?.let {
                 keyFound = true
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
@@ -75,8 +82,13 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
             }
-            specialConnectedColumn?.get(sqlKey)?.let {
+            specialConnectedColumns.get(sqlKey)?.let {
                 throw UnsupportedOperationException("Can't save (yet) entries, that have special connected columns")
+            }
+            when (sqlKey) {
+                in joinColumns,
+                    in reverseJoinColumns,
+                    in reverseConnectedColumns -> keyFound = true
             }
             if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $rootTableClass")
         }
@@ -87,7 +99,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         }
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
-            joinColumns?.get(sqlKey)?.let { joinTable ->
+            joinColumns.get(sqlKey)?.let { joinTable ->
                 try {
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(joinTable).first
                     delete("${tableName}_$sqlKey", "${tableName}_id", table.id)
@@ -106,7 +118,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
-            reverseJoinColumns?.get(sqlKey)?.let { reverseJoinTableData ->
+            reverseJoinColumns.get(sqlKey)?.let { reverseJoinTableData ->
                 try {
                     val (reverseJoinTableDataFirst, reverseJoinTableDataSecond) = reverseJoinTableData.split(';').let { it[0] to it[1] }
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableDataFirst).first
@@ -127,7 +139,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
-            reverseConnectedColumn?.get(sqlKey)?.let { reverseConnectedTableData ->
+            reverseConnectedColumns.get(sqlKey)?.let { reverseConnectedTableData ->
                 try {
                     val (reverseConnectedTableDataFirst, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableDataFirst).first
@@ -145,10 +157,11 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
                 }
             }
-            Unit
         }
         return table.id ?: 0 > 0
     }
+
+    operator fun <K, V> Map<out K, V>?.contains(key: K) = this?.containsKey(key) == true
 
     private fun delete(table: String, column: String, value: Int?) {
         value ?: return
@@ -186,58 +199,70 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
 
     fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) {
-        val tableClass = table.java.canonicalName
-        val tableName = table.tableName
-        (additionalValues ?: ContentValues()).also {
-            if (oldId != newId) it.put(ComplexOrmTable::id.name.toSql(), newId)
-            try {
-                database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
-            } catch (e: Exception) {
-                if (!e.toString().contains("SQLiteConstraintException")) throw e
-                database.delete(tableName, "id = $newId", null)
-                database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+        database.beginTransaction()
+        try {
+            val tableClass = table.java.canonicalName
+            val tableName = table.tableName
+            (additionalValues ?: ContentValues()).also {
+                if (oldId != newId) it.put(ComplexOrmTable::id.name.toSql(), newId)
+                try {
+                    System.out.println("REV79LOG: $tableName: ${it.valueSet()} WHERE id = $oldId")
+                    database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                } catch (e: Exception) {
+                    if (!e.toString().contains("SQLiteConstraintException")) throw e
+                    database.delete(tableName, "id = $newId", null)
+                    database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                }
             }
-        }
-        if (oldId == newId) return
-        complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
-            connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
-                val idColumnName = "${tableName}_id"
-                val contentValues = ContentValues()
-                contentValues.put(idColumnName, newId)
-                database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
-                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            if (oldId == newId) return
+            complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
+                connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
+                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTable.key).first
+                    val idColumnName = "${connectedColumn.key}_id"
+                    val contentValues = ContentValues()
+                    contentValues.put(idColumnName, newId)
+                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    database.updateWithOnConflict(connectedTableName, contentValues,
+                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                }
             }
-        }
-        complexOrmTableInfo.joinColumns.forEach { connectedTable ->
-            connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
-                val idColumnName = "${tableName}_id"
-                val contentValues = ContentValues()
-                contentValues.put(idColumnName, newId)
-                database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
-                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            complexOrmTableInfo.joinColumns.forEach { connectedTable ->
+                connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
+                    val idColumnName = "${tableName}_id"
+                    val contentValues = ContentValues()
+                    contentValues.put(idColumnName, newId)
+                    System.out.println("REV79LOG: ${tableName}_${connectedColumn.key}: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
+                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                }
             }
-        }
-        complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
-            connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
-                val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
-                val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
-                val idColumnName = "${tableName}_id"
-                val contentValues = ContentValues()
-                contentValues.put(idColumnName, newId)
-                database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
-                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
+                connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
+                    val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
+                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
+                    val idColumnName = "${tableName}_id"
+                    val contentValues = ContentValues()
+                    contentValues.put(idColumnName, newId)
+                    System.out.println("REV79LOG: ${connectedTableName}_$connectedColumn: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
+                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                }
             }
-        }
-        complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
-            connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
-                val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
-                val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
-                val idColumnName = "${connectedColumn}_id"
-                val contentValues = ContentValues()
-                contentValues.put(idColumnName, newId)
-                database.updateWithOnConflict(connectedTableName, contentValues,
-                        "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            complexOrmTableInfo.reverseConnectedColumns.forEach { connectedTable ->
+                connectedTable.value.filter { it.value.split(';')[0] == tableClass }.forEach { connectedTableAndColumn ->
+                    val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
+                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
+                    val idColumnName = "${connectedColumn}_id"
+                    val contentValues = ContentValues()
+                    contentValues.put(idColumnName, newId)
+                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    database.updateWithOnConflict(connectedTableName, contentValues,
+                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                }
             }
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
         }
     }
 }
