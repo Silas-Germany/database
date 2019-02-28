@@ -1,6 +1,10 @@
 package com.github.silasgermany.complexormprocessor
 
-import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormapi.ComplexOrmReverseConnectedColumn
+import com.github.silasgermany.complexormapi.ComplexOrmReverseJoinColumn
+import com.github.silasgermany.complexormapi.ComplexOrmSpecialConnectedColumn
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormprocessor.models.InternComplexOrmTypes
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -13,7 +17,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
     fun createNormalColumnsInfo(): PropertySpec {
         val normalColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
             val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map {
-                if (it.columnType.type == ComplexOrmTypes.ComplexOrmTable)
+                if (it.columnType.type == InternComplexOrmTypes.ComplexOrmTable)
                     it.columnName + "_id"
                 else it.columnName
             }
@@ -21,7 +25,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             tableInfo.columns.mapNotNull { column ->
                 if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTable, ComplexOrmTypes.ComplexOrmTables -> null
+                    InternComplexOrmTypes.ComplexOrmTable, InternComplexOrmTypes.ComplexOrmTables -> null
                     else -> {
                         if (column.idName !in rootTableColumnNames)
                             throw java.lang.IllegalArgumentException("Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
@@ -52,7 +56,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             tableInfo.columns.mapNotNull { column ->
                 if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTable -> {
+                    InternComplexOrmTypes.ComplexOrmTable -> {
                         val rootTableInfo = if (tableInfo.isRoot) tableInfo
                         else getRootTableInfo(tableInfo)
                         val rootColumn = rootTableInfo.columns.find { column.name == it.name }!!
@@ -83,7 +87,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTables -> {
+                    InternComplexOrmTypes.ComplexOrmTables -> {
                         val reverseJoinColumn = column.getAnnotationValue(ComplexOrmReverseJoinColumn::class)
                         val reverseConnectedColumn = column.getAnnotationValue(ComplexOrmReverseConnectedColumn::class)
                         if (reverseJoinColumn != null || reverseConnectedColumn != null) null
@@ -111,7 +115,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTables -> {
+                    InternComplexOrmTypes.ComplexOrmTables -> {
                         val reverseJoinColumn = column.getAnnotationValue(ComplexOrmReverseJoinColumn::class)
                         if (reverseJoinColumn == null) null
                         else if (!writtenColumns.add(column.columnName)) null
@@ -142,7 +146,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             val writtenColumns = mutableSetOf<String>()
             tableInfo.columns.mapNotNull { column ->
                 when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTables -> {
+                    InternComplexOrmTypes.ComplexOrmTables -> {
                         val reverseConnectedColumn = column.getAnnotationValue(ComplexOrmReverseConnectedColumn::class)
                         if (reverseConnectedColumn == null) null
                         else if (!writtenColumns.add(column.columnName)) null
@@ -174,7 +178,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             tableInfo.columns.mapNotNull { column ->
                 if (!writtenColumns.add(column.columnName)) null
                 else when (column.columnType.type) {
-                    ComplexOrmTypes.ComplexOrmTable -> {
+                    InternComplexOrmTypes.ComplexOrmTable -> {
                         if (column.columnName !in rootTableColumnNames)
                             throw java.lang.IllegalArgumentException("Column ${column.name} of table $className not in root table: ${getRootTableName(tableInfo)} " +
                                     "(Don't delegate it with a map, if it's not a column)")

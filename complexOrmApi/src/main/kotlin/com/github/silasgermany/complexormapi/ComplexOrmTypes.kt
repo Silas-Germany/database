@@ -8,7 +8,5 @@ enum class ComplexOrmTypes {
     Float,
     Date,
     LocalDate,
-    ByteArray,
-    ComplexOrmTable,
-    ComplexOrmTables
+    ByteArray
 }

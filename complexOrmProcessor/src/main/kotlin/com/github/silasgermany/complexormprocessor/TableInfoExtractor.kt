@@ -3,9 +3,9 @@ package com.github.silasgermany.complexormprocessor
 import com.github.silasgermany.complexormapi.ComplexOrmAllTables
 import com.github.silasgermany.complexormapi.ComplexOrmReadAlways
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import com.github.silasgermany.complexormprocessor.models.Column
 import com.github.silasgermany.complexormprocessor.models.ColumnType
+import com.github.silasgermany.complexormprocessor.models.InternComplexOrmTypes
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -82,7 +82,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         val types = mutableMapOf<String, ColumnType>()
             .withDefault { columnName ->
                 throw IllegalArgumentException("Type of column $columnName in table ${element.simpleName} is not valid: " +
-                        "It has to be one of the following types: ${ComplexOrmTypes.values().map { it.name }}") }
+                        "It has to be one of the following types: ${InternComplexOrmTypes.values().map { it.name }}") }
         val annotations = mutableMapOf<String, List<AnnotationMirror>>()
             .withDefault { emptyList() }
         element.enclosedElements.forEach { value ->
@@ -93,10 +93,10 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             } else if (!"${value.simpleName}".startsWith("${element.simpleName}(")) {
                 val valueName = "${value.simpleName}".removePrefix("get")
                     .run { first().toLowerCase() + substring(1) }
-                getComplexOrmTypes(value.asType())?.let {
+                getInternComplexOrmTypes(value.asType())?.let {
                     val table = when(it) {
-                        ComplexOrmTypes.ComplexOrmTable -> "${value.asType()}".removePrefix("()")
-                        ComplexOrmTypes.ComplexOrmTables -> "${value.asType()}".removeSurrounding("()java.util.List<", ">")
+                        InternComplexOrmTypes.ComplexOrmTable -> "${value.asType()}".removePrefix("()")
+                        InternComplexOrmTypes.ComplexOrmTables -> "${value.asType()}".removeSurrounding("()java.util.List<", ">")
                         else -> null
                     }
                     types[valueName] =
@@ -133,21 +133,21 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         }
     }
 
-    private fun getComplexOrmTypes(type: TypeMirror): ComplexOrmTypes? {
+    private fun getInternComplexOrmTypes(type: TypeMirror): InternComplexOrmTypes? {
         val typeName = type.toString().removePrefix("()")
         return when (typeName) {
-            "boolean", "java.lang.Boolean" -> ComplexOrmTypes.Boolean
-            "int", "java.lang.Integer" -> ComplexOrmTypes.Int
-            "long", "java.lang.Long" -> ComplexOrmTypes.Long
-            "float", "java.lang.Float" -> ComplexOrmTypes.Float
-            "java.lang.String" -> ComplexOrmTypes.String
-            "java.util.Date" -> ComplexOrmTypes.Date
-            "org.threeten.bp.LocalDate" -> ComplexOrmTypes.LocalDate
-            "byte[]" -> ComplexOrmTypes.ByteArray
+            "boolean", "java.lang.Boolean" -> InternComplexOrmTypes.Boolean
+            "int", "java.lang.Integer" -> InternComplexOrmTypes.Int
+            "long", "java.lang.Long" -> InternComplexOrmTypes.Long
+            "float", "java.lang.Float" -> InternComplexOrmTypes.Float
+            "java.lang.String" -> InternComplexOrmTypes.String
+            "java.util.Date" -> InternComplexOrmTypes.Date
+            "org.threeten.bp.LocalDate" -> InternComplexOrmTypes.LocalDate
+            "byte[]" -> InternComplexOrmTypes.ByteArray
             else -> {
                 return when {
-                    typeName.startsWith("java.util.List") -> ComplexOrmTypes.ComplexOrmTables
-                    typeName in allTableTypes -> ComplexOrmTypes.ComplexOrmTable
+                    typeName.startsWith("java.util.List") -> InternComplexOrmTypes.ComplexOrmTables
+                    typeName in allTableTypes -> InternComplexOrmTypes.ComplexOrmTable
                     else -> null
                 }
             }

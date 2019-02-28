@@ -6,6 +6,7 @@ import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
 import java.util.*
 import kotlin.reflect.KClass
@@ -190,16 +191,15 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private fun Cursor.getValue(index: Int, type: String): Any? {
         return if (isNull(index)) null
-        else when (type) {
-            "Boolean" -> getInt(index) != 0
-            "Int" -> getInt(index)
-            "Long" -> getLong(index)
-            "Float" -> getFloat(index)
-            "String" -> getString(index)
-            "ByteArray" -> getBlob(index)
-            "Date" -> Date(getLong(index))
-            "LocalDate" -> LocalDate.ofEpochDay(getLong(index))
-            else -> throw IllegalStateException("Shouldn't get table type here")
+        else when (type.asType) {
+            ComplexOrmTypes.Boolean -> getInt(index) != 0
+            ComplexOrmTypes.Int -> getInt(index)
+            ComplexOrmTypes.Long -> getLong(index)
+            ComplexOrmTypes.Float -> getFloat(index)
+            ComplexOrmTypes.String -> getString(index)
+            ComplexOrmTypes.ByteArray -> getBlob(index)
+            ComplexOrmTypes.Date -> Date(getLong(index))
+            ComplexOrmTypes.LocalDate -> LocalDate.ofEpochDay(getLong(index))
         }
     }
 }

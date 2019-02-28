@@ -1,7 +1,6 @@
 package com.github.silasgermany.complexorm
 
 import android.content.ContentValues
-import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
@@ -35,7 +34,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         val tableName = table.tableName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf())+
-                mapOf("id" to ComplexOrmTypes.Int)
+                mapOf("id" to "Int")
         val joinColumns = complexOrmTableInfo.joinColumns[rootTableClass]
         val reverseJoinColumns = complexOrmTableInfo.reverseJoinColumns[rootTableClass]
         val connectedColumn = complexOrmTableInfo.connectedColumns[rootTableClass]
@@ -44,18 +43,18 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
             var keyFound = false
-            normalColumns[sqlKey]?.also {
+            normalColumns[sqlKey]?.also { type ->
                 keyFound = true
                 if (value == null) contentValues.putNull(sqlKey)
-                else when (it) {
-                    "String" -> contentValues.put(sqlKey, value as String)
-                    "Int" -> contentValues.put(sqlKey, value as Int)
-                    "Boolean" -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
-                    "Long" -> contentValues.put(sqlKey, value as Long)
-                    "Float" -> contentValues.put(sqlKey, value as Float)
-                    "Date" -> contentValues.put(sqlKey, (value as Date).time)
-                    "LocalDate" -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
-                    "ByteArray" -> contentValues.put(sqlKey, value as ByteArray)
+                else when (ComplexOrmTypes.values().find { it.name == type } ?: throw java.lang.IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
+                    ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
+                    ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
+                    ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
+                    ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
+                    ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
+                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
+                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
+                    ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     else -> {
                         throw IllegalStateException("Normal table shouldn't have ComplexOrmTable inside")
                     }
@@ -193,7 +192,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             if (oldId != newId) it.put(ComplexOrmTable::id.name.toSql(), newId)
             try {
                 database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
-            } catch (e: SQLiteConstraintException) {
+            } catch (e: Exception) {
+                if (!e.toString().contains("SQLiteConstraintException")) throw e
                 database.delete(tableName, "id = $newId", null)
                 database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
             }

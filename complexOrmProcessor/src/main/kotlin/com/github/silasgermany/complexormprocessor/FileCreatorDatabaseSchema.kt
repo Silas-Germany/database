@@ -2,6 +2,7 @@ package com.github.silasgermany.complexormprocessor
 
 import com.github.silasgermany.complexormapi.*
 import com.github.silasgermany.complexormprocessor.models.Column
+import com.github.silasgermany.complexormprocessor.models.InternComplexOrmTypes
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -27,7 +28,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val dropTableCommands = (rootTablesList.map {
             val tableName = it.second.tableName!!
             it.second.columns.forEach { column ->
-                if (column.columnType.type == ComplexOrmTypes.ComplexOrmTables)
+                if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables)
                     joinTables.add("${tableName}_${column.columnName}")
             }
             tableName
@@ -63,19 +64,19 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         // get type
                         val complexOrmType = when (column.columnType.type) {
-                            ComplexOrmTypes.String -> "TEXT"
-                            ComplexOrmTypes.Boolean,
-                            ComplexOrmTypes.Date,
-                            ComplexOrmTypes.LocalDate -> "NUMERIC"
-                            ComplexOrmTypes.Long,
-                            ComplexOrmTypes.Int -> "INTEGER"
-                            ComplexOrmTypes.Float -> "REAL"
-                            ComplexOrmTypes.ByteArray -> "BLOB"
-                            ComplexOrmTypes.ComplexOrmTables -> {
+                            InternComplexOrmTypes.String -> "TEXT"
+                            InternComplexOrmTypes.Boolean,
+                            InternComplexOrmTypes.Date,
+                            InternComplexOrmTypes.LocalDate,
+                            InternComplexOrmTypes.Long,
+                            InternComplexOrmTypes.Int -> "INTEGER"
+                            InternComplexOrmTypes.Float -> "REAL"
+                            InternComplexOrmTypes.ByteArray -> "BLOB"
+                            InternComplexOrmTypes.ComplexOrmTables -> {
                                 relatedTables.add(createRelatedTableCommand(tableInfo.tableName!!, column))
                                 return@mapNotNull null
                             }
-                            ComplexOrmTypes.ComplexOrmTable -> {
+                            InternComplexOrmTypes.ComplexOrmTable -> {
                                 val referenceTable = rootTables.getValue(column.columnType.referenceTable!!)
                                 val specialConnectedColumn = column.getAnnotationValue(ComplexOrmSpecialConnectedColumn::class)
                                 val connectedColumn = if (specialConnectedColumn != null) {
@@ -96,31 +97,31 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             .build()
     }
 
-    private fun defaultValue(type: ComplexOrmTypes, defaultValue: String?): String {
+    private fun defaultValue(type: InternComplexOrmTypes, defaultValue: String?): String {
         defaultValue ?: return ""
         return " DEFAULT " + when(type) {
-            ComplexOrmTypes.String -> "'$defaultValue'"
-            ComplexOrmTypes.Boolean -> when (defaultValue) {
+            InternComplexOrmTypes.String -> "'$defaultValue'"
+            InternComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
                 else -> throw java.lang.IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
             }
-            ComplexOrmTypes.Date,
-            ComplexOrmTypes.LocalDate,
-            ComplexOrmTypes.ByteArray,
-            ComplexOrmTypes.ComplexOrmTables,
-            ComplexOrmTypes.ComplexOrmTable -> {
+            InternComplexOrmTypes.Date,
+            InternComplexOrmTypes.LocalDate,
+            InternComplexOrmTypes.ByteArray,
+            InternComplexOrmTypes.ComplexOrmTables,
+            InternComplexOrmTypes.ComplexOrmTable -> {
                 throw IllegalArgumentException("Default value not allowed for ${type.name} (has $defaultValue)")
             }
-            ComplexOrmTypes.Float -> {
+            InternComplexOrmTypes.Float -> {
                 try {
                     defaultValue.toFloat().toString()
                 } catch (e: Exception) {
                     throw java.lang.IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
-            ComplexOrmTypes.Long,
-            ComplexOrmTypes.Int -> {
+            InternComplexOrmTypes.Long,
+            InternComplexOrmTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Exception) {

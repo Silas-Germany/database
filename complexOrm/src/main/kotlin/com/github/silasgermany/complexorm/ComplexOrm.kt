@@ -66,7 +66,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun getNormalColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.normalColumns[table.name]?.keys?.toList() ?: emptyList()
     fun getNormalColumns(table: KClass<out ComplexOrmTable>) =
-        complexOrmTableInfo.normalColumns[table.name]?.toList() ?: emptyList()
+        complexOrmTableInfo.normalColumns[table.name]?.map { it.key to it.value.asType } ?: emptyList()
     fun getConnectedColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.connectedColumns[table.name]?.keys?.map { "${it}_id" } ?: emptyList()
     fun getJoinColumnNames(table: KClass<out ComplexOrmTable>) =
@@ -77,7 +77,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     }
 
     fun getRootTableClass(tableName: String) =
-        complexOrmSchema.tables.getValue(tableName)
+        complexOrmSchema.tables.getValue(tableName.toSql())
 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =
         T::class.tableName + "." + columnName(T::class, column)
