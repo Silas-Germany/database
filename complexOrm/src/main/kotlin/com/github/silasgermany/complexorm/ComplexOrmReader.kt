@@ -14,6 +14,12 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
 
     private fun ReadTableInfo.getTableName(tableClassName: String) = getBasicTableInfoFirstValue(tableClassName)
 
+    init {
+        cacheDir?.listFiles()?.forEach {
+            it.delete()
+        }
+    }
+
     inline fun <reified T : ComplexOrmTable> read(
             readTableInfo: ReadTableInfo
     ): List<T> = read(T::class, readTableInfo)
