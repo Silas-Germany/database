@@ -36,7 +36,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         val tableClassName = table.javaClass.canonicalName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
-                mapOf("id" to "Int")
+                mapOf("id" to "Long")
         val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: sortedMapOf()) +
                 (complexOrmTableInfo.joinColumns[tableClassName] ?: sortedMapOf())
         val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: sortedMapOf()) +
@@ -164,28 +164,28 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     operator fun <K, V> Map<out K, V>?.contains(key: K) = this?.containsKey(key) == true
 
-    private fun delete(table: String, column: String, value: Int?) {
+    private fun delete(table: String, column: String, value: Long?) {
         value ?: return
         database.delete(table, "$column = $value", null)
     }
 
-    private fun save(table: String, contentValues: ContentValues): Int {
-        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE).toInt()
-        if (changedId == -1) {
-            changedId = contentValues.getAsInteger("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
+    private fun save(table: String, contentValues: ContentValues): Long {
+        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE)
+        if (changedId == -1L) {
+            changedId = contentValues.getAsLong("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
             val changed = database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
             if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
         }
         return changedId
     }
 
-    private fun update(table: String, contentValues: ContentValues, id: Int?) {
+    private fun update(table: String, contentValues: ContentValues, id: Long?) {
         id ?: return
         val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
         if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
     }
 
-    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: Int, value: R) {
+    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: Long, value: R) {
         val contentValues = ContentValues()
         when (value) {
             is Int -> contentValues.put(column.name.toSql(), value)
@@ -199,7 +199,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         save(table.tableName, contentValues)
     }
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) {
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Long, newId: Long, additionalValues: ContentValues? = null) {
         database.beginTransaction()
         try {
             val tableClass = table.java.canonicalName

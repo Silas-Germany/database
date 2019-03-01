@@ -32,13 +32,13 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun <T : ComplexOrmTable> read(table: KClass<T>, readTableInfo: ReadTableInfo) =
             complexOrmReader.read(table, readTableInfo)
 
-    inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: Int) =
+    inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: Long) =
             complexOrmReader.complexOrmQuery.getOneColumn(T::class, column, id, R::class)
 
-    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: Int, value: R?) =
+    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: Long, value: R?) =
             complexOrmWriter.saveOneColumn(T::class, column, id, value)
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) =
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Long, newId: Long, additionalValues: ContentValues? = null) =
             complexOrmWriter.changeId(table, oldId, newId, additionalValues)
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() =
