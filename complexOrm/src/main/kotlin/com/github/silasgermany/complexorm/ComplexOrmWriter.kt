@@ -7,6 +7,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.threeten.bp.LocalDate
+import org.threeten.bp.format.DateTimeFormatter
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -60,7 +61,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
-                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toEpochDay())
+                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     else -> {
                         throw IllegalStateException("Normal table shouldn't have ComplexOrmTable inside")

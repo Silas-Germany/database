@@ -64,10 +64,10 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         // get type
                         val complexOrmType = when (column.columnType.type) {
+                            InternComplexOrmTypes.LocalDate,
                             InternComplexOrmTypes.String -> "TEXT"
                             InternComplexOrmTypes.Boolean,
                             InternComplexOrmTypes.Date,
-                            InternComplexOrmTypes.LocalDate,
                             InternComplexOrmTypes.Long,
                             InternComplexOrmTypes.Int -> "INTEGER"
                             InternComplexOrmTypes.Float -> "REAL"
