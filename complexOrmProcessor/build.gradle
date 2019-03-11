@@ -5,11 +5,11 @@ dependencies {
     // default
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     // kotlin-poet
-    implementation "com.squareup:kotlinpoet:1.0.1"
+    implementation "com.squareup:kotlinpoet:1.1.0"
     // ORM annotations
     implementation project(':complexOrmApi')
     // local-time
-    implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
+    implementation "com.jakewharton.threetenabp:threetenabp:1.2.0"
 }
 
 sourceCompatibility = "7"
