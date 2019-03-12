@@ -92,7 +92,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     in reverseJoinColumns,
                     in reverseConnectedColumns -> keyFound = true
             }
-            if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $rootTableClass")
+            if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $tableClassName")
         }
         try {
             table.map["id"] = save(tableName, contentValues)
@@ -120,7 +120,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
-            reverseJoinColumns.get(sqlKey)?.let { reverseJoinTableData ->
+            reverseJoinColumns[sqlKey]?.let { reverseJoinTableData ->
                 try {
                     val (reverseJoinTableDataFirst, reverseJoinTableDataSecond) = reverseJoinTableData.split(';').let { it[0] to it[1] }
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableDataFirst).first
@@ -141,7 +141,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
-            reverseConnectedColumns.get(sqlKey)?.let { reverseConnectedTableData ->
+            reverseConnectedColumns[sqlKey]?.let { reverseConnectedTableData ->
                 try {
                     val (reverseConnectedTableDataFirst, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableDataFirst).first
@@ -183,7 +183,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     private fun update(table: String, contentValues: ContentValues, id: Int?) {
         id ?: return
         val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
-        if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
+        if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table (ID: $id)")
     }
 
     fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: Int, value: R) {

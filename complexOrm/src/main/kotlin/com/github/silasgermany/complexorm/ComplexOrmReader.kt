@@ -77,7 +77,8 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
                     val connectedTableName = readTableInfo.getTableName(connectedTable)
                     val connectedColumn = "${requestTableName}_id"
                     val where =
-                            "LEFT JOIN \"${connectedTableName}_$connectedColumnName\" AS \"reverse_join_table\" ON \"reverse_join_table\".\"${connectedTableName}_id\" = \"$connectedTableName\".\"id\" " +
+                            "LEFT JOIN \"${connectedTableName}_$connectedColumnName\" AS \"reverse_join_table\" " +
+                                    "ON \"reverse_join_table\".\"${connectedTableName}_id\" = \"$connectedTableName\".\"id\" " +
                                     "WHERE \"reverse_join_table\".\"$connectedColumn\" IN ($ids)"
 
                     readTableInfo.connectedColumn = "\"reverse_join_table\".\"$connectedColumn\""
@@ -103,10 +104,11 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
                     readTableInfo.nextRequests[requestTable]!!.forEach { entry ->
                         val id = entry.id!!
                         val columnName = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn)
-                        val columnName2 = readTableInfo.getColumnNamesValue(requestTable).getValue(connectedColumn)
+                        val rootTableClassName = readTableInfo.getBasicTableInfoSecondValue(connectedTable)
+                        val columnName2 = readTableInfo.getColumnNamesValue(rootTableClassName).getValue(connectedColumnName)
                         entry.map[columnName] = transformedValues[id]?.map { value ->
-                            value.second.map[columnName2] = entry
                             value.second
+                                    .apply { map[columnName2] = entry }
                         }.orEmpty()
                         entry.map[columnName] = joinValues.mapNotNull { joinEntry ->
                             joinEntry.second.takeIf { joinEntry.first == id }
