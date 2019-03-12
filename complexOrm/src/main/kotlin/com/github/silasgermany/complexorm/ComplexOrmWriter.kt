@@ -36,6 +36,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         val tableClassName = table.javaClass.canonicalName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
+                (complexOrmTableInfo.normalColumns[tableClassName] ?: sortedMapOf()) +
                 mapOf("id" to "Int")
         val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: sortedMapOf()) +
                 (complexOrmTableInfo.joinColumns[tableClassName] ?: sortedMapOf())
@@ -68,7 +69,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     }
                 }
             }
-            connectedColumns.get(sqlKey)?.let {
+            connectedColumns[sqlKey]?.let {
                 keyFound = true
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
@@ -83,7 +84,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
             }
-            specialConnectedColumns.get(sqlKey)?.let {
+            specialConnectedColumns[sqlKey]?.let {
                 throw UnsupportedOperationException("Can't save (yet) entries, that have special connected columns")
             }
             when (sqlKey) {
