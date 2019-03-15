@@ -107,8 +107,9 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
         return this@ComplexOrmQueryBuilder
     }
 
-    inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T>) = alreadyLoaded(T::class, entries)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T>): ComplexOrmQueryBuilder {
+    inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T>?) = alreadyLoaded(T::class, entries)
+    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T>?): ComplexOrmQueryBuilder {
+        entries ?: return this
         existingEntries[table.java.canonicalName!!] = entries
             .associateTo(mutableMapOf()) { it.id!! to it }
         return this@ComplexOrmQueryBuilder
