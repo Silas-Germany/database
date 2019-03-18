@@ -171,9 +171,16 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
 
     private fun save(table: String, contentValues: ContentValues): Int {
-        var changedId = database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_IGNORE).toInt()
+        var changedId = try {
+            database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_FAIL).toInt()
+        } catch (e: Exception) {
+            contentValues.getAsInteger("id")
+                    ?: throw IllegalArgumentException("Couldn't insert values $contentValues in $table", e)
+            -1
+        }
         if (changedId == -1) {
-            changedId = contentValues.getAsInteger("id") ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
+            changedId = contentValues.getAsInteger("id")
+                    ?: throw java.lang.IllegalArgumentException("Couldn't insert values $contentValues in $table")
             val changed = database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
             if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table")
         }
