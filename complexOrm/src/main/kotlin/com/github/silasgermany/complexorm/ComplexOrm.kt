@@ -1,6 +1,5 @@
 package com.github.silasgermany.complexorm
 
-import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
@@ -38,8 +37,8 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: Int, value: R?) =
             complexOrmWriter.saveOneColumn(T::class, column, id, value)
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) =
-            complexOrmWriter.changeId(table, oldId, newId, additionalValues)
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int) =
+            complexOrmWriter.changeId(table, oldId, newId)
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() =
             complexOrmInitializer.createTableIfNotExists<T>()

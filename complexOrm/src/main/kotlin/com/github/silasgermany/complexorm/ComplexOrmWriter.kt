@@ -207,23 +207,22 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         save(table.tableName, contentValues)
     }
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int, additionalValues: ContentValues? = null) {
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int) {
+        if (oldId == newId) return
         database.beginTransaction()
         try {
             val tableClass = table.java.canonicalName
             val tableName = table.tableName
-            (additionalValues ?: ContentValues()).also {
-                if (oldId != newId) it.put(ComplexOrmTable::id.name.toSql(), newId)
-                try {
-                    System.out.println("REV79LOG: $tableName: ${it.valueSet()} WHERE id = $oldId")
-                    database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
-                } catch (e: Exception) {
-                    if (!e.toString().contains("SQLiteConstraintException")) throw e
-                    database.delete(tableName, "id = $newId", null)
-                    database.updateWithOnConflict(tableName, it, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
-                }
+            val values = ContentValues()
+            values.put(ComplexOrmTable::id.name.toSql(), newId)
+            try {
+                System.out.println("REV79LOG: $tableName: ${values.valueSet()} WHERE id = $oldId")
+                database.updateWithOnConflict(tableName, values, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            } catch (e: Exception) {
+                if (!e.toString().contains("SQLiteConstraintException")) throw e
+                database.delete(tableName, "id = $newId", null)
+                database.updateWithOnConflict(tableName, values, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
             }
-            if (oldId == newId) return
             complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
                 connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTable.key).first
