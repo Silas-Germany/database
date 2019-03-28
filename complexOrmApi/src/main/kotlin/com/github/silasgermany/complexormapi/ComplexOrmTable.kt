@@ -34,6 +34,9 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
         }
     }
 
+    override fun equals(other: Any?) = id?.let { it == (other as? ComplexOrmTable?)?.id } ?: false
+    override fun hashCode() = id ?: super.hashCode()
+
     companion object {
         val default get() = mutableMapOf<String, Any?>("id" to null).run {
             withDefault {
