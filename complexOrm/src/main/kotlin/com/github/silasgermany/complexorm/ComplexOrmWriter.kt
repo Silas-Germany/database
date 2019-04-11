@@ -217,11 +217,15 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             values.put(ComplexOrmTable::id.name.toSql(), newId)
             try {
                 System.out.println("REV79LOG: $tableName: ${values.valueSet()} WHERE id = $oldId")
-                database.updateWithOnConflict(tableName, values, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
+                        null, SQLiteDatabase.CONFLICT_IGNORE)
+                if (feedback == -1) return
             } catch (e: Exception) {
                 if (!e.toString().contains("SQLiteConstraintException")) throw e
                 database.delete(tableName, "id = $newId", null)
-                database.updateWithOnConflict(tableName, values, "id = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
+                        null, SQLiteDatabase.CONFLICT_IGNORE)
+                if (feedback == -1) return
             }
             complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
                 connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
