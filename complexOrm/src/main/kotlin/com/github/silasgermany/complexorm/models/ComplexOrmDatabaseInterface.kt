@@ -27,6 +27,17 @@ interface ComplexOrmDatabaseInterface {
             }
     }
 
+    fun queryAny(sql: String, f: (Cursor) -> Boolean): Boolean {
+        return rawQuery(sql, null)!!
+            .let { cursor ->
+                (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
+                    ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
+            }.use {
+                it.moveToFirst()
+                (0 until it.count).any { _ -> f(it).apply { it.moveToNext() } }
+            }
+    }
+
     fun <T>queryMap(sql: String, f: (Cursor) -> T) =
         rawQuery(sql, null)!!
             .let { cursor ->
