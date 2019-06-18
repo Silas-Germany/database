@@ -60,7 +60,8 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     val allTables = tables.values.toList()
     val allTableNames = tables.keys.toList()
 
-    val KClass<out ComplexOrmTable>.name get() = java.canonicalName
+    @Suppress("MemberVisibilityCanBePrivate")
+    val KClass<out ComplexOrmTable>.name: String get() = java.canonicalName!!
 
     fun getNormalColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.normalColumns[table.name]?.keys?.toList() ?: emptyList()
@@ -70,12 +71,13 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
         complexOrmTableInfo.connectedColumns[table.name]?.keys?.map { "${it}_id" } ?: emptyList()
     fun getJoinColumnNames(table: KClass<out ComplexOrmTable>) =
             complexOrmTableInfo.joinColumns[table.name]?.keys?.toList() ?: emptyList()
+    @Suppress("MemberVisibilityCanBePrivate")
     fun getJoinTableNames(table: KClass<out ComplexOrmTable>): List<String> {
         val tableName = table.tableName
         return getJoinTableNames(table).map { "${tableName}_$it" }
     }
 
-    fun getRootTableClass(tableName: String) =
+    fun getRootTableClass(tableName: String): KClass<out ComplexOrmTable> =
         complexOrmSchema.tables.getValue(tableName.toSql())
 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =

@@ -1,4 +1,4 @@
-apply plugin: 'com.android.library'
+apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
@@ -12,20 +12,17 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            debuggable true
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
 }
 
 dependencies {
-    // default
+    // Default
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    // local-time
-    implementation "com.jakewharton.threetenabp:threetenabp:1.2.0"
+    // Local-time
+    implementation 'net.danlew:android.joda:2.10.1.2'
     // ORM annotations
-    implementation project(':complexOrmApi')
+    implementation project(":complexOrmApi")
 }

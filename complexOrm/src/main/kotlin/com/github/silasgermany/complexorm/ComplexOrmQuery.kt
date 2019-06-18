@@ -7,8 +7,8 @@ import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import org.threeten.bp.LocalDate
-import org.threeten.bp.format.DateTimeFormatter
+import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -202,7 +202,10 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
             ComplexOrmTypes.Date -> Date(getLong(index))
-            ComplexOrmTypes.LocalDate -> LocalDate.parse(getString(index), DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            ComplexOrmTypes.LocalDate -> LocalDate.parse(
+                getString(index),
+                DateTimeFormat.forPattern("yyyy-MM-dd")
+            )
         }
     }
 }

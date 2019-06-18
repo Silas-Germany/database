@@ -6,30 +6,35 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
+open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
                              private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
+    @Suppress("unused")
     private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<Int, ComplexOrmTable>>()
 
+    @Suppress("unused")
     private inline fun <reified T : ComplexOrmTable> specialWhere(
         selection: String,
         vararg selectionArguments: Pair<KProperty1<T, Any?>, Any?>
     ): ComplexOrmQueryBuilder = where(T::class, selectionArguments[0].first, selection, *selectionArguments)
 
+    @Suppress("unused")
     inline fun <reified T : ComplexOrmTable> specialWhere(
         column: KProperty1<T, Any?>, selection: String,
         vararg selectionArguments: Any?
-    ): ComplexOrmQueryBuilder = where(T::class, column, selection, *selectionArguments)
+    ) = where(T::class, column, selection, *selectionArguments)
 
-    inline fun <reified T : ComplexOrmTable> where(column: KProperty1<T, Any?>, equals: Any?): ComplexOrmQueryBuilder =
-        where(T::class, column, null, equals)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.where(
+    @Suppress("unused")
+    inline fun <reified T : ComplexOrmTable> where(column: KProperty1<T, Any?>, equals: Any?) =
+        if (equals is Sequence<*>) where(T::class, column, null, equals.toList())
+        else where(T::class, column, null, equals)
+    open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.where(
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
@@ -107,8 +112,10 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
         return this@ComplexOrmQueryBuilder
     }
 
+    @Suppress("unused")
     inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Collection<T?>?) = alreadyLoaded(T::class, entries)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T?>?): ComplexOrmQueryBuilder {
+    inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Sequence<T?>?) = alreadyLoaded(T::class, entries?.toList())
+    open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T?>?): ComplexOrmQueryBuilder {
         entries ?: return this
         existingEntries[table.java.canonicalName!!] = entries
                 .filterNotNull()
@@ -118,7 +125,9 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
 
     inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
 
-    fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
+    inline fun <reified T : ComplexOrmTable> getSequence(): Sequence<T> = get(T::class).asSequence()
+
+    open fun <T : ComplexOrmTable> get(table: KClass<T>): List<T> {
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
         return complexOrmReader.read(table, readTableInfo)
     }
@@ -133,6 +142,6 @@ class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: 
         this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = $id"
         else "${restrictions[tableClassName]} AND $$.id = $id"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
-        return complexOrmReader.read(table, readTableInfo).getOrNull(0)
+        return complexOrmReader.read(table, readTableInfo).firstOrNull()
     }
 }

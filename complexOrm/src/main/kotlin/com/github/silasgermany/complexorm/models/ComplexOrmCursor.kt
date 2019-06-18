@@ -23,108 +23,87 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
 
     override fun moveToFirst(): Boolean {
         cursorPosition = 0
-        val result = count > 0
-        return result
+        return count > 0
     }
 
     override fun moveToPosition(position: Int): Boolean {
-        val result = takeIf { position in 0..(count - 1) }?.apply { cursorPosition = position } != null
-        return result
+        return takeIf { position in 0 until count }?.apply { cursorPosition = position } != null
     }
 
     override fun move(offset: Int): Boolean {
-        val result = moveToPosition(cursorPosition + offset)
-        return result
+        return moveToPosition(cursorPosition + offset)
     }
 
     override fun moveToPrevious(): Boolean {
-        val result = takeIf { cursorPosition > 0 }?.apply { cursorPosition-- } != null
-        return result
+        return takeIf { cursorPosition > 0 }?.apply { cursorPosition-- } != null
     }
 
     override fun moveToNext(): Boolean {
-        val result = takeIf { cursorPosition < count }?.apply { cursorPosition++ } != null
-        return result
+        return takeIf { cursorPosition < count }?.apply { cursorPosition++ } != null
     }
 
     override fun moveToLast(): Boolean {
-        val result = takeIf { count > 0 }?.apply { cursorPosition = count - 1 } != null
-        return result
+        return takeIf { count > 0 }?.apply { cursorPosition = count - 1 } != null
     }
 
     override fun isBeforeFirst(): Boolean {
-        val result = cursorPosition < 0
-        return result
+        return cursorPosition < 0
     }
 
     override fun isFirst(): Boolean {
-        val result = cursorPosition == 0
-                return result
+        return cursorPosition == 0
     }
 
     override fun isLast(): Boolean {
-        val result = cursorPosition == count - 1
-                return result
+        return cursorPosition == count - 1
     }
 
     override fun isAfterLast(): Boolean {
-        val result = cursorPosition >= count
-                return result
+        return cursorPosition >= count
     }
 
     override fun getPosition(): Int {
-        val result = cursorPosition
-                return result
+        return cursorPosition
     }
 
     override fun getCount(): Int {
-        val result = count
-                return result
+        return count
     }
 
     override fun getType(columnIndex: Int): Int {
-        val result = window.getType(cursorPosition, columnIndex)
-                return result
+        return window.getType(cursorPosition, columnIndex)
     }
 
     override fun isNull(columnIndex: Int): Boolean {
-        val result = window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
-                return result
+        return window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
     }
 
     override fun getShort(columnIndex: Int): Short {
-        val result = window.getShort(cursorPosition, columnIndex)
-                return result
+        return window.getShort(cursorPosition, columnIndex)
     }
 
     override fun getInt(columnIndex: Int): Int {
-        val result = window.getInt(cursorPosition, columnIndex)
-                return result
+        return window.getInt(cursorPosition, columnIndex)
     }
 
     override fun getLong(columnIndex: Int): Long {
-        val result = window.getLong(cursorPosition, columnIndex)
-                return result
+        return window.getLong(cursorPosition, columnIndex)
     }
 
     override fun getFloat(columnIndex: Int): Float {
-        val result = window.getFloat(cursorPosition, columnIndex)
-                return result
+        return window.getFloat(cursorPosition, columnIndex)
     }
 
     override fun getDouble(columnIndex: Int): Double {
-        val result = window.getDouble(cursorPosition, columnIndex)
-                return result
+        return window.getDouble(cursorPosition, columnIndex)
     }
 
     override fun getString(columnIndex: Int): String {
-        val result = window.getString(cursorPosition, columnIndex)
-                return result
+        return window.getString(cursorPosition, columnIndex)
     }
 
     override fun getBlob(columnIndex: Int): ByteArray {
-        val result = window.getBlob(cursorPosition, columnIndex)
-                return result
+        return window.getBlob(cursorPosition, columnIndex)
     }
 
     override fun copyStringToBuffer(columnIndex: Int, buffer: CharArrayBuffer?) {
@@ -132,29 +111,24 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
             }
 
     override fun getColumnCount(): Int {
-        val result = columns?.size ?: throw IllegalAccessException("Cursor doesn't have column info activated")
-                return result
+        return columns?.size ?: throw IllegalAccessException("Cursor doesn't have column info activated")
     }
 
     override fun getColumnName(columnIndex: Int): String {
-        val result = columns?.get(columnIndex) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
-                return result
+        return columns?.get(columnIndex) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
     }
 
     override fun getColumnIndex(columnName: String?): Int {
-        val result = columns?.indexOf(columnName) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
-                return result
+        return columns?.indexOf(columnName) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
     }
 
     override fun getColumnNames(): Array<String> {
-        val result = columns ?: throw IllegalAccessException("Cursor doesn't have column info activated")
-                return result
+        return columns ?: throw IllegalAccessException("Cursor doesn't have column info activated")
     }
 
     override fun getColumnIndexOrThrow(columnName: String?): Int {
-        val result = columns?.indexOf(columnName).takeUnless { it == -1 }
+        return columns?.indexOf(columnName).takeUnless { it == -1 }
             ?: throw IllegalAccessException("Couldn't find column $columnName in $columns")
-                return result
     }
 
     override fun close() {
@@ -163,8 +137,7 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
             }
 
     override fun isClosed(): Boolean {
-        val result = closed
-                return result
+        return closed
     }
 
     override fun registerContentObserver(observer: ContentObserver?) {

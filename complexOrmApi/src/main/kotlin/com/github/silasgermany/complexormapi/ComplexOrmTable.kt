@@ -19,6 +19,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
         }
     }
 
+    @Suppress("unused")
     fun showRecursive(): String {
         return map.toList().joinToString(prefix = "${this.javaClass.simpleName}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
@@ -44,7 +45,9 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
             }
         }
         fun init(id: Int?) = default.also { it["id"] = id }
+        @Suppress("unused")
         inline fun <reified T: ComplexOrmTable>create(id: Int) = T::class.java.getConstructor(Map::class.java).newInstance(init(id)) as T
+        @Suppress("unused")
         inline fun <reified T: ComplexOrmTable>T.cloneWithoutId(vararg values: Pair<String, Any?>): T {
             val newMap = default.apply {
                 putAll(map)

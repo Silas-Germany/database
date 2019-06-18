@@ -37,7 +37,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$sdk_version"
     // local-time
-    implementation "com.jakewharton.threetenabp:threetenabp:1.1.1"
+    implementation "com.jakewharton.threetenabp:threetenabp:1.2.1"
 
     // ORM modules
     implementation project(':complexOrmApi')
@@ -48,5 +48,5 @@ dependencies {
     kaptTest project(":complexOrmProcessor")
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
-    testImplementation 'org.robolectric:robolectric:3.0'
+    testImplementation 'org.robolectric:robolectric:4.3'
 }

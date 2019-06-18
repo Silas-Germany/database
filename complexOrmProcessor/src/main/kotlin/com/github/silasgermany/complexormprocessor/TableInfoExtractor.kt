@@ -116,8 +116,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
     }
 
     private fun isNullable(element: Element): Boolean {
-        val typeName = element.asType().toString().removePrefix("()")
-        return when (typeName) {
+        return when (val typeName = element.asType().toString().removePrefix("()")) {
             "boolean", "int", "long", "float" -> false
             else -> {
                 return when {
@@ -134,15 +133,14 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
     }
 
     private fun getInternComplexOrmTypes(type: TypeMirror): InternComplexOrmTypes? {
-        val typeName = type.toString().removePrefix("()")
-        return when (typeName) {
+        return when (val typeName = type.toString().removePrefix("()")) {
             "boolean", "java.lang.Boolean" -> InternComplexOrmTypes.Boolean
             "int", "java.lang.Integer" -> InternComplexOrmTypes.Int
             "long", "java.lang.Long" -> InternComplexOrmTypes.Long
             "float", "java.lang.Float" -> InternComplexOrmTypes.Float
             "java.lang.String" -> InternComplexOrmTypes.String
             "java.util.Date" -> InternComplexOrmTypes.Date
-            "org.threeten.bp.LocalDate" -> InternComplexOrmTypes.LocalDate
+            "org.joda.time.LocalDate" -> InternComplexOrmTypes.LocalDate
             "byte[]" -> InternComplexOrmTypes.ByteArray
             else -> {
                 return when {

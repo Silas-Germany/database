@@ -18,6 +18,7 @@ class ReadTableInfo constructor(
     var missingEntries: Collection<ComplexOrmTable>? = null
     var connectedColumn: String? = null
 
+    @Suppress("MemberVisibilityCanBePrivate")
     val cachedComplexOrmTableInfo = mutableMapOf<String, MutableMap<String, MutableMap<String, String>>>()
 
     private fun <T, K> MutableMap<T, MutableSet<K>>.init(key: T) = getOrPut(key) { mutableSetOf() }
@@ -37,14 +38,6 @@ class ReadTableInfo constructor(
         (table.map[specialColumnValue ?: "id"] as Int?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
     fun isMissingRequest(tableClassName: String) = missingEntries?.any { it.javaClass.canonicalName == tableClassName } == true
-    fun print() {
-        System.out.println("Other values(restrictions, ${restrictions.size}): $restrictions")
-        System.out.println("Other values(alreadyLoaded, ${alreadyLoaded.flatMap { it.value.toList() }.size}): $alreadyLoaded")
-        System.out.println("Other values(givenTables, ${givenTables.size}): $givenTables")
-        System.out.println("Other values(nextRequests, ${nextRequests.flatMap { it.value }.size}): $nextRequests")
-        System.out.println("Other values(missingEntries, ${missingEntries?.size}): $missingEntries")
-        System.out.println("Other values(connectedColumn): $connectedColumn")
-    }
 
     private fun <T, V> MutableMap<T, V>.init(key: T, value: V) = getOrPut(key) { value }
     private fun <T, K, V> MutableMap<T, MutableMap<K, V>>.init(key: T, value: Map<K, V>) = getOrPut(key) { value.toMutableMap() }

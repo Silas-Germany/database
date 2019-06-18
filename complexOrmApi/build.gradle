@@ -1,9 +1,8 @@
-apply plugin: 'java-library'
+apply plugin: "java-library"
 apply plugin: "kotlin"
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    // default
+    // Default
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 

@@ -27,6 +27,7 @@ interface ComplexOrmDatabaseInterface {
             }
     }
 
+    @Suppress("unused")
     fun queryAny(sql: String, f: (Cursor) -> Boolean): Boolean {
         return rawQuery(sql, null)!!
             .let { cursor ->

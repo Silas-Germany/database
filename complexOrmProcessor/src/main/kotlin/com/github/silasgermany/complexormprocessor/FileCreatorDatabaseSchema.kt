@@ -50,9 +50,9 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                     tableInfo.columns.mapNotNull { column ->
                         if (!writtenColumns.add(column.idName)) return@mapNotNull null
                         var columnExtra = ""
-                        // check whether nullable
+                        // Check whether nullable
                         if (!column.columnType.nullable) columnExtra += " NOT NULL"
-                        // check annotations
+                        // Check annotations
                         column.getAnnotationValue(ComplexOrmDefault::class)?.let {
                             columnExtra += defaultValue(column.columnType.type, "$it")
                         }
@@ -62,7 +62,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         column.getAnnotationValue(ComplexOrmUnique::class)?.let {
                             columnExtra += " UNIQUE"
                         }
-                        // get type
+                        // Get type
                         val complexOrmType = when (column.columnType.type) {
                             InternComplexOrmTypes.LocalDate,
                             InternComplexOrmTypes.String -> "TEXT"

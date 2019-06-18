@@ -6,8 +6,7 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import org.threeten.bp.LocalDate
-import org.threeten.bp.format.DateTimeFormatter
+import org.joda.time.LocalDate
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -27,7 +26,9 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(javaClass.canonicalName!!).first
+    @Suppress("MemberVisibilityCanBePrivate")
     val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
 
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
@@ -62,7 +63,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
-                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toString("yyyy-MM-dd"))
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     else -> {
                         throw IllegalStateException("Normal table shouldn't have ComplexOrmTable inside")
@@ -101,7 +102,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         }
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
-            joinColumns.get(sqlKey)?.let { joinTable ->
+            joinColumns[sqlKey]?.let { joinTable ->
                 try {
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(joinTable).first
                     delete("${tableName}_$sqlKey", "${tableName}_id", table.id)
@@ -124,8 +125,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                 try {
                     val (reverseJoinTableDataFirst, reverseJoinTableDataSecond) = reverseJoinTableData.split(';').let { it[0] to it[1] }
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableDataFirst).first
-                    val columnName = reverseJoinTableDataSecond
-                    delete("${joinTableName}_$columnName", "${tableName}_id", table.id)
+                    delete("${joinTableName}_$reverseJoinTableDataSecond", "${tableName}_id", table.id)
                     val innerContentValues = ContentValues()
                     innerContentValues.put("${tableName}_id", table.id)
                     (value as List<*>).forEach { joinTableEntry ->
@@ -135,7 +135,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                             write(joinTableEntry)
                         }
                         innerContentValues.put("${joinTableName}_id", joinTableEntry.id)
-                        save("${joinTableName}_$columnName", innerContentValues)
+                        save("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues)
                     }
                 } catch (e: Exception) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
