@@ -4,10 +4,11 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.json.JSONObject
 import java.io.File
+import java.util.*
 
 class ReadTableInfo constructor(
         val restrictions: Map<String, String>,
-        private val alreadyLoaded: MutableMap<String, MutableMap<Int, ComplexOrmTable>>,
+        private val alreadyLoaded: MutableMap<String, MutableMap<UUID, ComplexOrmTable>>,
         private val complexOrmTableInfo: ComplexOrmTableInfoInterface
 ) {
     var readIndex = 0
@@ -33,9 +34,9 @@ class ReadTableInfo constructor(
     fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest(tableClassName)
     fun alreadyLoading(tableClassName: String) = tableClassName in loadingTables
     fun has(tableClassName: String) = alreadyLoaded.containsKey(tableClassName)
-    fun getTable(tableClassName: String, id: Int?) = alreadyLoaded[tableClassName]?.get(id)
+    fun getTable(tableClassName: String, id: UUID?) = alreadyLoaded[tableClassName]?.get(id)
     fun setTable(tableClassName: String, table: ComplexOrmTable, specialColumnValue: String? = null) {
-        (table.map[specialColumnValue ?: "id"] as Int?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
+        (table.map[specialColumnValue ?: "id"] as UUID?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
     fun isMissingRequest(tableClassName: String) = missingEntries?.any { it.javaClass.canonicalName == tableClassName } == true
 

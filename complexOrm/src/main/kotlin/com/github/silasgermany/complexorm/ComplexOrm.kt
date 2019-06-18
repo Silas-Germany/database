@@ -8,6 +8,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import java.io.File
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -31,13 +32,13 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun <T : ComplexOrmTable> read(table: KClass<T>, readTableInfo: ReadTableInfo) =
             complexOrmReader.read(table, readTableInfo)
 
-    inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: Int) =
+    inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: UUID) =
             complexOrmReader.complexOrmQuery.getOneColumn(T::class, column, id, R::class)
 
-    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: Int, value: R?) =
+    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: UUID, value: R?) =
             complexOrmWriter.saveOneColumn(T::class, column, id, value)
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: Int, newId: Int) =
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: UUID, newId: UUID) =
             complexOrmWriter.changeId(table, oldId, newId)
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() =

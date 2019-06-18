@@ -42,6 +42,6 @@ interface AllTables {
     open class SpecialTable(initMap: MutableMap<String, Any?>): BaseTable(initMap) {
         open val value: String by initMap
         open val noValue: String = ""
-        open val getValue: () -> String by initMap
+        //open val getValue: () -> String by initMap
     }
 }

@@ -141,6 +141,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             "java.lang.String" -> InternComplexOrmTypes.String
             "java.util.Date" -> InternComplexOrmTypes.Date
             "org.joda.time.LocalDate" -> InternComplexOrmTypes.LocalDate
+            "java.util.UUID" -> InternComplexOrmTypes.Uuid
             "byte[]" -> InternComplexOrmTypes.ByteArray
             else -> {
                 return when {

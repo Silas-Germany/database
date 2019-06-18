@@ -46,7 +46,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val createTableCommands = rootTablesList.map { (_, tableInfo) ->
             val writtenColumns = mutableSetOf("id")
             val foreignKeys = mutableListOf<String>()
-            val columns = arrayOf("'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT") +
+            val columns = arrayOf("'id' BLOB NOT NULL PRIMARY KEY") +
                     tableInfo.columns.mapNotNull { column ->
                         if (!writtenColumns.add(column.idName)) return@mapNotNull null
                         var columnExtra = ""
@@ -71,6 +71,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             InternComplexOrmTypes.Long,
                             InternComplexOrmTypes.Int -> "INTEGER"
                             InternComplexOrmTypes.Float -> "REAL"
+                            InternComplexOrmTypes.Uuid -> "BLOB"
                             InternComplexOrmTypes.ByteArray -> "BLOB"
                             InternComplexOrmTypes.ComplexOrmTables -> {
                                 relatedTables.add(createRelatedTableCommand(tableInfo.tableName!!, column))
@@ -108,6 +109,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             }
             InternComplexOrmTypes.Date,
             InternComplexOrmTypes.LocalDate,
+            InternComplexOrmTypes.Uuid,
             InternComplexOrmTypes.ByteArray,
             InternComplexOrmTypes.ComplexOrmTables,
             InternComplexOrmTypes.ComplexOrmTable -> {

@@ -8,6 +8,7 @@ enum class InternComplexOrmTypes {
     Float,
     Date,
     LocalDate,
+    Uuid,
     ByteArray,
     ComplexOrmTable,
     ComplexOrmTables

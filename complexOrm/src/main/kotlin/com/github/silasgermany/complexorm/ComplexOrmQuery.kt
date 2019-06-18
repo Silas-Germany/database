@@ -16,9 +16,15 @@ import kotlin.reflect.KProperty1
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
+    private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 
-    fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: Int, returnClass: KClass<V>): V? {
-        return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = $id") {
+    private val String.asUuid: UUID get() = UUID.fromString(replace(
+        "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
+        "$1-$2-$3-$4-$5"
+    ))
+
+    fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: UUID, returnClass: KClass<V>): V? {
+        return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
             @Suppress("UNCHECKED_CAST")
             if (it.isNull(0)) null
             else when (returnClass) {
@@ -38,11 +44,11 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             tableClassName: String,
             readTableInfo: ReadTableInfo,
             where: String? = null
-    ): List<Pair<Int?, ComplexOrmTable>> {
+    ): List<Pair<UUID?, ComplexOrmTable>> {
         val requestInfo = RequestInfo(readTableInfo.getBasicTableInfoFirstValue(tableClassName), tableClassName, where, readTableInfo)
         requestInfo.addData(tableClassName)
 
-        val result: MutableList<Pair<Int?, ComplexOrmTable>> = mutableListOf()
+        val result: MutableList<Pair<UUID?, ComplexOrmTable>> = mutableListOf()
         database.queryForEach(requestInfo.query) {
             readTableInfo.readIndex = 0
             val (connectedId, databaseEntry) = readColumns(tableClassName, it, readTableInfo, readTableInfo.connectedColumn)
@@ -64,13 +70,13 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         readTableInfo.getConnectedColumnsValue(tableClassName).forEach { (connectedColumnName, connectedTableClassName) ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
             if (readTableInfo.alreadyGiven(connectedTableClassName)) {
-                columns.add("\"$tableName\".\"${connectedColumnName}_id\"")
+                columns.add("hex(\"$tableName\".\"${connectedColumnName}_id\")")
                 return@forEach
             }
             val connectedTableName = readTableInfo.getBasicTableInfoFirstValue(connectedTableClassName)
             val newConnectedTableName = "$prefix$connectedColumnName"
 
-            columns.add("\"$newConnectedTableName\".\"id\"")
+            columns.add("hex(\"$newConnectedTableName\".\"id\")")
 
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"id\"=\"$tableName\".\"${connectedColumnName}_id\""
@@ -87,13 +93,13 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             val (connectedTableClassName, connectedTableColumn) = connectedTableInfo.split(';').let { it[0] to it[1] }
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
             if (readTableInfo.alreadyGiven(connectedTableClassName)) {
-                columns.add("\"$tableName\".\"${connectedColumnName}_id\"")
+                columns.add("hex(\"$tableName\".\"${connectedColumnName}_id\")")
                 return@forEach
             }
             val connectedTableName = readTableInfo.getBasicTableInfoFirstValue(connectedTableClassName)
             val newConnectedTableName = "$prefix$connectedColumnName"
 
-            columns.add("\"$newConnectedTableName\".\"id\"")
+            columns.add("hex(\"$newConnectedTableName\".\"id\")")
 
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"$connectedTableColumn\"=\"$tableName\".\"${connectedColumnName}_id\""
@@ -114,11 +120,11 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                     readTableInfo.has(connectedColumnName)
 
     private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo,
-                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<Int?, ComplexOrmTable?> {
-        val id = cursor.getValue(readTableInfo.readIndex++, "Int") as Int?
+                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<UUID?, ComplexOrmTable?> {
+        val id = (cursor.getValue(readTableInfo.readIndex++, "String") as String?)?.asUuid
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Int") as Int }
+            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String }?.asUuid
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -135,7 +141,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             databaseMap[columnName] = cursor.getValue(readTableInfo.readIndex++, it.value)
         }
 
-        val handleConnectedColumns: (String, String, String?) -> Pair<Int?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
+        val handleConnectedColumns: (String, String, String?) -> Pair<UUID?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@handleConnectedColumns null
             val columnName = readTableInfo.getColumnNamesValue(tableClassName).getValue(connectedColumnName)
             val specialColumnName = specialConnectedColumnName?.let {
@@ -148,7 +154,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Int") as Int }
+                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String }?.asUuid
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable // (Not sure, why it has to return here)
                 }
             } else databaseMap[columnName] = null
@@ -165,7 +171,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Int") as Int? }
+        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String? }?.asUuid
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
@@ -205,6 +211,12 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.LocalDate -> LocalDate.parse(
                 getString(index),
                 DateTimeFormat.forPattern("yyyy-MM-dd")
+            )
+            ComplexOrmTypes.Uuid -> UUID.fromString(
+                getString(index).replace(
+                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
+                    "\\L$1-$2-$3-$4-$5"
+                )
             )
         }
     }

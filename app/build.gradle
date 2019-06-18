@@ -42,7 +42,7 @@ dependencies {
     // ORM modules
     implementation project(':complexOrmApi')
     implementation project(path: ':complexOrm')
-    //kapt project(":complexOrmProcessor")
+    kapt project(":complexOrmProcessor")
 
     // testing
     kaptTest project(":complexOrmProcessor")

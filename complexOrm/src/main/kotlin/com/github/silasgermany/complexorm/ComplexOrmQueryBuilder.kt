@@ -3,6 +3,7 @@ package com.github.silasgermany.complexorm
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -16,7 +17,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
 
     private val restrictions = mutableMapOf<String, String>()
-    private val existingEntries = mutableMapOf<String, MutableMap<Int, ComplexOrmTable>>()
+    private val existingEntries = mutableMapOf<String, MutableMap<UUID, ComplexOrmTable>>()
 
     @Suppress("unused")
     private inline fun <reified T : ComplexOrmTable> specialWhere(
@@ -135,8 +136,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     override fun toString() = restrictions.values
             .joinToString(" AND ").replace("$$.", "")
 
-    inline fun <reified T : ComplexOrmTable> get(id: Int?): T? = get(T::class, id)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: Int?): T? {
+    inline fun <reified T : ComplexOrmTable> get(id: UUID?): T? = get(T::class, id)
+    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: UUID?): T? {
         id ?: return null
         val tableClassName = table.java.canonicalName!!
         this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = $id"
