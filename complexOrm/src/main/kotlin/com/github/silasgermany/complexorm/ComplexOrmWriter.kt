@@ -30,7 +30,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         try {
             database.beginTransaction()
             return write(table, writeDeep)
-                    .apply { database.setTransactionSuccessful() }
+                .apply { database.setTransactionSuccessful() }
         } finally {
             database.endTransaction()
         }
@@ -193,14 +193,11 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_FAIL).toInt()
             changed = true
         } catch (e: Exception) {
-            if (contentValues.containsKey("id")) {
+            if (changedId == null) {
                 throw IllegalArgumentException("Couldn't insert values $contentValues in $table", e)
             }
         }
         if (!changed) {
-            if (contentValues.containsKey("id")) {
-                throw IllegalArgumentException("Couldn't insert values $contentValues in $table")
-            }
             database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 .let { if (it != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table") }
         }
