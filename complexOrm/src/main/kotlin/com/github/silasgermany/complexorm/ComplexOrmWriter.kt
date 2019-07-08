@@ -179,7 +179,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     private fun delete(table: String, column: String, id: UUID?) {
         id ?: return
-        database.delete(table, "hex($column) = ${id.asSql}", null)
+        database.delete(table, "$column = ${id.asSql}", null)
     }
 
     private fun save(table: String, contentValues: ContentValues): UUID? {
@@ -198,7 +198,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             }
         }
         if (!changed) {
-            database.updateWithOnConflict(table, contentValues, "id = $changedId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+            database.updateWithOnConflict(table, contentValues, "id = ${changedId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 .let { if (it != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table") }
         }
         return changedId
@@ -206,7 +206,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     private fun update(table: String, contentValues: ContentValues, id: UUID?) {
         id ?: return
-        val changed = database.updateWithOnConflict(table, contentValues, "id = $id", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+        val changed = database.updateWithOnConflict(table, contentValues, "id = ${id.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
         if (changed != 1) throw java.lang.IllegalArgumentException("Couldn't update values $contentValues for $table (ID: $id)")
     }
 
@@ -250,9 +250,9 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${connectedColumn.key}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict(connectedTableName, contentValues,
-                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                            "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
             }
             complexOrmTableInfo.joinColumns.forEach { connectedTable ->
@@ -260,9 +260,9 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${tableName}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: ${tableName}_${connectedColumn.key}: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    System.out.println("REV79LOG: ${tableName}_${connectedColumn.key}: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
-                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                            "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
             }
             complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
@@ -272,9 +272,9 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${tableName}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: ${connectedTableName}_$connectedColumn: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    System.out.println("REV79LOG: ${connectedTableName}_$connectedColumn: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
-                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                            "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
             }
             complexOrmTableInfo.reverseConnectedColumns.forEach { connectedTable ->
@@ -284,9 +284,9 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${connectedColumn}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = $oldId")
+                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict(connectedTableName, contentValues,
-                            "$idColumnName = $oldId", null, SQLiteDatabase.CONFLICT_ROLLBACK)
+                            "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
             }
             database.setTransactionSuccessful()

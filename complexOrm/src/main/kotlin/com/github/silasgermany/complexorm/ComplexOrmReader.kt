@@ -5,10 +5,13 @@ import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import java.io.File
+import java.util.*
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
                        complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+
+    private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 
     val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 
@@ -53,7 +56,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             while (readTableInfo.nextRequests.isNotEmpty()) {
                 val requestTable = readTableInfo.nextRequests.keys.first()
                 val requestEntries = readTableInfo.nextRequests.getValue(requestTable)
-                val ids = requestEntries.map { it.id!! }.toSet().joinToString(",")
+                val ids = requestEntries.map { it.id!!.asSql }.toSet().joinToString(",")
                 val requestTableName = readTableInfo.getTableName(requestTable)
 
                 readTableInfo.getJoinColumnsValue(requestTable).forEach { (connectedColumn2, connectedTable) ->

@@ -48,4 +48,7 @@ interface ComplexOrmDatabaseInterface {
                 it.moveToFirst()
                 (0 until it.count).map { _ -> f(it).apply { it.moveToNext() } }
             }
+
+    fun getVersion(): Int
+    fun setVersion(value: Int)
 }

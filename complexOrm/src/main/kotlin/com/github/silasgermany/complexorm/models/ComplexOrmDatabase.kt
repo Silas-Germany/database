@@ -3,6 +3,7 @@ package com.github.silasgermany.complexorm.models
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 
 class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInterface {
     override fun beginTransaction() {
@@ -22,6 +23,7 @@ class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDataba
     }
 
     override fun updateWithOnConflict(table: String, values: ContentValues, whereClause: String, whereArgs: Array<String>?, conflictAlgorithm: Int): Int {
+        print("$table;${values.valueSet()};$whereArgs;$whereClause")
         return database.updateWithOnConflict(table, values, whereClause, whereArgs, conflictAlgorithm)
     }
 
@@ -37,4 +39,8 @@ class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDataba
         return database.rawQuery(sql, selectionArgs)
     }
 
+    override fun getVersion() = database.version
+    override fun setVersion(value: Int) {
+        database.version = value
+    }
 }

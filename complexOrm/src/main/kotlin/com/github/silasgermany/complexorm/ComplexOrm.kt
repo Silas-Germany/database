@@ -97,4 +97,8 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     }
 
     val query get() = ComplexOrmQueryBuilder(complexOrmReader, complexOrmTableInfo)
+
+    var version: Int
+    get() = complexOrmInitializer.version
+    set(value) { complexOrmInitializer.version = value }
 }

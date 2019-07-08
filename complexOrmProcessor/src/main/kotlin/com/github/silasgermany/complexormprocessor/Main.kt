@@ -20,8 +20,10 @@ class Main: AbstractProcessor() {
             }
             processor.process(roundEnv)
             true
-        } catch (e: Exception) {
-            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${e.message} at: ${e.stackTrace.joinToString()}")
+        } catch (e: Error) {
+            processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${e.stackTrace.map { "${it.fileName};${it.lineNumber}" }}")
+            //processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${e} at: ${e.stackTrace.joinToString()}")
+            //processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, "${e.message} at: ${e.stackTrace.joinToString()}")
             false
         }
     }

@@ -6,7 +6,7 @@ class RequestInfo(
         private val where: String?,
         val readTableInfo: ReadTableInfo
 ){
-    val columns = mutableListOf("hex(\"$tableName\".\"id\")")
+    val columns = mutableListOf("\"$tableName\".\"id\"")
     val tablesAndRestrictions = mutableListOf("\"$tableName\"")
 
     val query: String get() {

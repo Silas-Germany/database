@@ -10,6 +10,8 @@ import kotlin.reflect.KProperty1
 open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
                              private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
+    private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
+
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
@@ -140,8 +142,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: UUID?): T? {
         id ?: return null
         val tableClassName = table.java.canonicalName!!
-        this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = $id"
-        else "${restrictions[tableClassName]} AND $$.id = $id"
+        this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = ${id.asSql}"
+        else "${restrictions[tableClassName]} AND $$.id = ${id.asSql}"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
         return complexOrmReader.read(table, readTableInfo).firstOrNull()
     }

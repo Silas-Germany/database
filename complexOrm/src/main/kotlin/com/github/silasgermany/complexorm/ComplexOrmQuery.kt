@@ -19,11 +19,6 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 
-    private val String.asUuid: UUID get() = UUID.fromString(replace(
-        "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
-        "$1-$2-$3-$4-$5"
-    ))
-
     fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: UUID, returnClass: KClass<V>): V? {
         return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
             @Suppress("UNCHECKED_CAST")
@@ -66,9 +61,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         val tableName = previousColumn ?: readTableInfo.getBasicTableInfoFirstValue(tableClassName)
         val prefix = previousColumn?.plus('$') ?: ""
         readTableInfo.getNormalColumnsValue(tableClassName).forEach {
-            if (it.value == ComplexOrmTypes.Uuid.name) {
-                columns.add("(\"$tableName\".\"${it.key}\")")
-            } else columns.add("\"$tableName\".\"${it.key}\"")
+            columns.add("\"$tableName\".\"${it.key}\"")
         }
         readTableInfo.getConnectedColumnsValue(tableClassName).forEach { (connectedColumnName, connectedTableClassName) ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
@@ -124,10 +117,10 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private fun readColumns(tableClassName: String, cursor: Cursor, readTableInfo: ReadTableInfo,
                             connectedColumn: String?, specialConnectedColumn: String? = null): Pair<UUID?, ComplexOrmTable?> {
-        val id = (cursor.getValue(readTableInfo.readIndex++, "String") as String?)?.asUuid
+        val id = cursor.getValue(readTableInfo.readIndex++, "Uuid") as UUID?
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String }?.asUuid
+            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Uuid") as UUID }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -157,7 +150,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String }?.asUuid
+                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Uuid") as UUID }
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable // (Not sure, why it has to return here)
                 }
             } else databaseMap[columnName] = null
@@ -174,7 +167,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "String") as String? }?.asUuid
+        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "Uuid") as UUID? }
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
@@ -215,8 +208,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 getString(index),
                 DateTimeFormat.forPattern("yyyy-MM-dd")
             )
-            ComplexOrmTypes.Uuid -> ByteBuffer.wrap(getBlob(index))
-                .run { UUID(long, long) }
+            ComplexOrmTypes.Uuid -> ByteBuffer.wrap(getBlob(index)).run { UUID(long, long) }
         }
     }
 }

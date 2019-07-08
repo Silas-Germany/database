@@ -33,4 +33,9 @@ class ComplexOrmInitializer internal constructor(private val database: ComplexOr
     fun createAllTables() {
         complexOrmSchema.createTableCommands.values.forEach { database.execSQL(it) }
     }
+
+
+    var version: Int
+        get() = database.getVersion()
+        set(value) { database.setVersion(value) }
 }
