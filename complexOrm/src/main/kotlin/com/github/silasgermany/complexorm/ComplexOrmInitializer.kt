@@ -24,9 +24,10 @@ class ComplexOrmInitializer internal constructor(private val database: ComplexOr
             .getValue(complexOrmTableInfo.basicTableInfo.getValue(table.java.canonicalName).first))
     }
 
-    inline fun <reified T: ComplexOrmTable>replaceTable() {
-        dropTableIfExists<T>()
-        createTableIfNotExists<T>()
+    inline fun <reified T: ComplexOrmTable>replaceTable() = replaceTable(T::class)
+    fun <T: ComplexOrmTable>replaceTable(table: KClass<T>) {
+        dropTableIfExists(table)
+        createTableIfNotExists(table)
     }
 
     fun createAllTables() {

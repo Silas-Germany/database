@@ -20,7 +20,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         "x'${toString().replace("-", "")}'"
     }
     private val UUID?.asByteArray get() = this?.let { _ ->
-        ByteBuffer.allocate(16)
+        ByteBuffer.allocate(2 * Long.SIZE_BYTES)
             .putLong(mostSignificantBits)
             .putLong(leastSignificantBits)
             .array()
@@ -48,7 +48,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
                 (complexOrmTableInfo.normalColumns[tableClassName] ?: sortedMapOf()) +
-                mapOf("id" to "Int")
+                mapOf("id" to "Uuid")
         val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: sortedMapOf()) +
                 (complexOrmTableInfo.joinColumns[tableClassName] ?: sortedMapOf())
         val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: sortedMapOf()) +

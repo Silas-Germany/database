@@ -51,6 +51,8 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
             complexOrmInitializer.dropTableIfExists(table)
     inline fun <reified T: ComplexOrmTable>replaceTable() =
             complexOrmInitializer.replaceTable<T>()
+    fun <T: ComplexOrmTable>replaceTable(table: KClass<T>) =
+            complexOrmInitializer.replaceTable(table)
     fun createAllTables() =
             complexOrmInitializer.createAllTables()
 
@@ -86,6 +88,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun <T: ComplexOrmTable, R> fullColumnName(table: KClass<T>, column: KProperty1<T, R>): String =
             table.tableName + "." + columnName(table, column)
 
+    fun <T: ComplexOrmTable> tableName(table: KClass<T>): String = table.tableName
     inline fun <reified T: ComplexOrmTable, R> columnName(column: KProperty1<T, R>): String = columnName(T::class, column)
     fun <T: ComplexOrmTable, R> columnName(table: KClass<T>, column: KProperty1<T, R>): String {
         var columnName = column.name.toSql()

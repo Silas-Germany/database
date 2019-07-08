@@ -9,6 +9,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
+import java.nio.ByteBuffer
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -65,18 +66,20 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         val tableName = previousColumn ?: readTableInfo.getBasicTableInfoFirstValue(tableClassName)
         val prefix = previousColumn?.plus('$') ?: ""
         readTableInfo.getNormalColumnsValue(tableClassName).forEach {
-            columns.add("\"$tableName\".\"${it.key}\"")
+            if (it.value == ComplexOrmTypes.Uuid.name) {
+                columns.add("(\"$tableName\".\"${it.key}\")")
+            } else columns.add("\"$tableName\".\"${it.key}\"")
         }
         readTableInfo.getConnectedColumnsValue(tableClassName).forEach { (connectedColumnName, connectedTableClassName) ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
             if (readTableInfo.alreadyGiven(connectedTableClassName)) {
-                columns.add("hex(\"$tableName\".\"${connectedColumnName}_id\")")
+                columns.add("(\"$tableName\".\"${connectedColumnName}_id\")")
                 return@forEach
             }
             val connectedTableName = readTableInfo.getBasicTableInfoFirstValue(connectedTableClassName)
             val newConnectedTableName = "$prefix$connectedColumnName"
 
-            columns.add("hex(\"$newConnectedTableName\".\"id\")")
+            columns.add("(\"$newConnectedTableName\".\"id\")")
 
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"id\"=\"$tableName\".\"${connectedColumnName}_id\""
@@ -93,13 +96,13 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             val (connectedTableClassName, connectedTableColumn) = connectedTableInfo.split(';').let { it[0] to it[1] }
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
             if (readTableInfo.alreadyGiven(connectedTableClassName)) {
-                columns.add("hex(\"$tableName\".\"${connectedColumnName}_id\")")
+                columns.add("(\"$tableName\".\"${connectedColumnName}_id\")")
                 return@forEach
             }
             val connectedTableName = readTableInfo.getBasicTableInfoFirstValue(connectedTableClassName)
             val newConnectedTableName = "$prefix$connectedColumnName"
 
-            columns.add("hex(\"$newConnectedTableName\".\"id\")")
+            columns.add("(\"$newConnectedTableName\".\"id\")")
 
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"$connectedTableColumn\"=\"$tableName\".\"${connectedColumnName}_id\""
@@ -212,12 +215,8 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 getString(index),
                 DateTimeFormat.forPattern("yyyy-MM-dd")
             )
-            ComplexOrmTypes.Uuid -> UUID.fromString(
-                getString(index).replace(
-                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
-                    "\\L$1-$2-$3-$4-$5"
-                )
-            )
+            ComplexOrmTypes.Uuid -> ByteBuffer.wrap(getBlob(index))
+                .run { UUID(long, long) }
         }
     }
 }
