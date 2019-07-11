@@ -13,7 +13,7 @@ data class Column(
 
     fun getAnnotationValue(annotationClass: KClass<out Annotation>): Any? {
         val hasAnnotation = annotations.find {
-            "$it".removePrefix("@").startsWith(annotationClass.java.canonicalName)
+            "$it".removePrefix("@").startsWith(annotationClass.java.canonicalName + "(")
         }?.elementValues?.values
         return hasAnnotation?.let { it.firstOrNull()?.value ?: Unit }
     }
