@@ -16,7 +16,21 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     private val rootTablesList = rootTables.toList()
 
     fun createNames(): PropertySpec {
-        val tableNames = rootTablesList.joinToString(",") { "\n\"${it.second.tableName!!}\" to ${it.first}::class" }
+        val joinTables = mutableSetOf<String>()
+        val tableNames = (rootTablesList.map { tableInfo ->
+            val tableName = tableInfo.second.tableName!!
+            tableInfo.second.columns.forEach { column ->
+                column.getAnnotationValue(ComplexOrmIndex::class)?.let {
+                    val specialTableName = "index_${tableName}_$it"
+                    joinTables.add("\n\"$specialTableName\" to ${tableInfo.first}::class")
+                }
+                if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables) {
+                    val specialTableName = "${tableName}_${column.columnName}"
+                    joinTables.add("\n\"$specialTableName\" to ${tableInfo.first}::class")
+                }
+            }
+            "\n\"$tableName\" to ${tableInfo.first}::class"
+        } + joinTables).joinToString(",")
         return PropertySpec.builder("tables", tableClassMapType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("sortedMapOf($tableNames)")
@@ -24,10 +38,13 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     }
 
     fun createDropTables(): PropertySpec {
-        val joinTables = mutableListOf<String>()
+        val joinTables = mutableSetOf<String>()
         val dropTableCommands = (rootTablesList.map {
             val tableName = it.second.tableName!!
             it.second.columns.forEach { column ->
+                column.getAnnotationValue(ComplexOrmIndex::class)?.let {
+                    joinTables.add("index_${tableName}_$it")
+                }
                 if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables)
                     joinTables.add("${tableName}_${column.columnName}")
             }
@@ -47,6 +64,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             val writtenColumns = mutableSetOf("id")
             val foreignKeys = mutableListOf<String>()
             val uniqueColumns = mutableMapOf<Int, MutableList<String>>()
+            val indexColumns = mutableMapOf<Int, MutableList<String>>()
             val columns = arrayOf("'id' BLOB NOT NULL PRIMARY KEY") +
                     tableInfo.columns.mapNotNull { column ->
                         if (!writtenColumns.add(column.idName)) return@mapNotNull null
@@ -65,6 +83,9 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         column.getAnnotationValue(ComplexOrmUniqueIndex::class)?.let {
                             uniqueColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
+                        }
+                        column.getAnnotationValue(ComplexOrmIndex::class)?.let {
+                            indexColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
                         }
                         // Get type
                         val complexOrmType = when (column.columnType.type) {
@@ -94,6 +115,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
                     } + foreignKeys + uniqueColumns.values.map { it.joinToString(",", "UNIQUE(", ")") }
+            indexColumns.forEach { relatedTables.add(createIndexCommand(tableInfo.tableName!!, it.key, it.value)) }
             "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName!!}'(\n${columns.joinToString(",\n")}\n);\"\"\""
         } + relatedTables
         return PropertySpec.builder("createTableCommands", stringMapType)
@@ -145,6 +167,11 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                 "PRIMARY KEY ('${tableName}_id', '${referenceTableName}_id'), " +
                 "FOREIGN KEY ('${tableName}_id') REFERENCES '$tableName'(id), " +
                 "FOREIGN KEY ('${referenceTableName}_id') REFERENCES '$referenceTableName'(id));\"\"\""
+    }
+
+    private fun createIndexCommand(tableName: String, group: Int, columns: List<String>): String {
+        return "\n\"index_${tableName}_$group\" to \"\"\"CREATE INDEX IF NOT EXISTS 'index_${tableName}_$group' ON '$tableName'(" +
+                "${columns.joinToString(",")});\"\"\""
     }
 
     private val stringType get() = String::class.asTypeName()
