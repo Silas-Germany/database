@@ -46,6 +46,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val createTableCommands = rootTablesList.map { (_, tableInfo) ->
             val writtenColumns = mutableSetOf("id")
             val foreignKeys = mutableListOf<String>()
+            val uniqueColumns = mutableMapOf<Int, MutableList<String>>()
             val columns = arrayOf("'id' BLOB NOT NULL PRIMARY KEY") +
                     tableInfo.columns.mapNotNull { column ->
                         if (!writtenColumns.add(column.idName)) return@mapNotNull null
@@ -61,6 +62,9 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         column.getAnnotationValue(ComplexOrmUnique::class)?.let {
                             columnExtra += " UNIQUE"
+                        }
+                        column.getAnnotationValue(ComplexOrmUniqueIndex::class)?.let {
+                            uniqueColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
                         }
                         // Get type
                         val complexOrmType = when (column.columnType.type) {
@@ -89,8 +93,8 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             }
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
-                    } + foreignKeys
-            "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName!!}'(${columns.joinToString()});\"\"\""
+                    } + foreignKeys + uniqueColumns.values.map { it.joinToString(",", "UNIQUE(", ")") }
+            "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName!!}'(\n${columns.joinToString(",\n")}\n);\"\"\""
         } + relatedTables
         return PropertySpec.builder("createTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
@@ -118,7 +122,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             InternComplexOrmTypes.Float -> {
                 try {
                     defaultValue.toFloat().toString()
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw java.lang.IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
@@ -126,7 +130,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             InternComplexOrmTypes.Int -> {
                 try {
                     defaultValue.toLong().toString()
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw java.lang.IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }

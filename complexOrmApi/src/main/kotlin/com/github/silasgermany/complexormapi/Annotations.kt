@@ -35,6 +35,14 @@ annotation class ComplexOrmProperty(val extra: String)
 @Retention(AnnotationRetention.SOURCE)
 annotation class ComplexOrmUnique
 
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmIndex(val group: Int = 1)
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmUniqueIndex(val group: Int)
+
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)

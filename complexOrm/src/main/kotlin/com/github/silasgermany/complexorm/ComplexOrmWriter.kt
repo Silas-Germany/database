@@ -93,7 +93,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                         }
                         contentValues.put("${sqlKey.toSql()}_id", connectedEntry.id.toString())
                     } else contentValues.putNull("${sqlKey.toSql()}_id")
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
             }
@@ -109,7 +109,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         }
         try {
             save(tableName, contentValues)?.let { table.map["id"] = it }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             throw e//IllegalArgumentException("Couldn't save table entries: $table (${e.message})", e)
         }
         table.map.forEach { (key, value) ->
@@ -129,7 +129,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                         innerContentValues.put("${joinTableName}_id", joinTableEntry.id.asByteArray)
                         save("${tableName}_$sqlKey", innerContentValues)
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
@@ -149,7 +149,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                         innerContentValues.put("${joinTableName}_id", joinTableEntry.id.asByteArray)
                         save("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues)
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
                 }
             }
@@ -167,7 +167,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                         innerContentValues.put("${reverseConnectedTableDataSecond}_id", table.id.asByteArray)
                         update(connectedTableName, innerContentValues, joinTableEntry.id)
                     }
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
                 }
             }
@@ -192,7 +192,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             }
             database.insertWithOnConflict(table, "id", contentValues, SQLiteDatabase.CONFLICT_FAIL).toInt()
             changed = true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             if (changedId == null) {
                 throw IllegalArgumentException("Couldn't insert values $contentValues in $table", e)
             }
@@ -237,7 +237,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                 val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
                         null, SQLiteDatabase.CONFLICT_IGNORE)
                 if (feedback == -1) return
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 if (!e.toString().contains("SQLiteConstraintException")) throw e
                 database.delete(tableName, "id = $newId", null)
                 val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
