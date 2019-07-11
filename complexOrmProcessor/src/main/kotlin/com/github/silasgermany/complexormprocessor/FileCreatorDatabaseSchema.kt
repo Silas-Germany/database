@@ -21,7 +21,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             val tableName = tableInfo.second.tableName!!
             tableInfo.second.columns.forEach { column ->
                 column.getAnnotationValue(ComplexOrmIndex::class)?.let {
-                    val specialTableName = "index_${tableName}_$it"
+                    val specialTableName = "index_${tableName}_${it as? Int ?: 1}"
                     joinTables.add("\n\"$specialTableName\" to ${tableInfo.first}::class")
                 }
                 if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables) {
@@ -43,7 +43,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             val tableName = it.second.tableName!!
             it.second.columns.forEach { column ->
                 column.getAnnotationValue(ComplexOrmIndex::class)?.let {
-                    joinTables.add("index_${tableName}_$it")
+                    joinTables.add("index_${tableName}_${it as? Int ?: 1}")
                 }
                 if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables)
                     joinTables.add("${tableName}_${column.columnName}")
@@ -85,7 +85,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             uniqueColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
                         }
                         column.getAnnotationValue(ComplexOrmIndex::class)?.let {
-                            indexColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
+                            indexColumns.getOrPut(it as? Int ?: 1) { mutableListOf() }.add(column.idName)
                         }
                         // Get type
                         val complexOrmType = when (column.columnType.type) {

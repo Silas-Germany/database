@@ -12,8 +12,9 @@ data class Column(
     val idName = columnName + if (columnType.type == InternComplexOrmTypes.ComplexOrmTable) "_id" else ""
 
     fun getAnnotationValue(annotationClass: KClass<out Annotation>): Any? {
+        val annotationName = annotationClass.java.canonicalName
         val hasAnnotation = annotations.find {
-            "$it".removePrefix("@").startsWith(annotationClass.java.canonicalName + "(")
+            "${it.annotationType}" == annotationName
         }?.elementValues?.values
         return hasAnnotation?.let { it.firstOrNull()?.value ?: Unit }
     }
