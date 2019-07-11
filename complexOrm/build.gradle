@@ -16,11 +16,15 @@ android {
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     // Default
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     // Local-time
     implementation 'net.danlew:android.joda:2.10.1.2'
     // ORM annotations
