@@ -26,6 +26,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             .array()
     }
 
+    fun execSQL(sql: String) = database.execSQL(sql)
+
     fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         try {
             database.beginTransaction()

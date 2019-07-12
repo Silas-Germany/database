@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
@@ -101,4 +102,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     var version: Int
     get() = complexOrmInitializer.version
     set(value) { complexOrmInitializer.version = value }
+    fun queryForEach(sql: String, f: (Cursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (Cursor) -> T) = complexOrmReader.queryMap(sql, f)
+    fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
 }

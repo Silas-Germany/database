@@ -41,6 +41,10 @@ annotation class ComplexOrmIndex(val group: Int = 1)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
+annotation class ComplexOrmDeleteCascade
+
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.SOURCE)
 annotation class ComplexOrmUniqueIndex(val group: Int)
 
 

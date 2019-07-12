@@ -62,7 +62,6 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val relatedTables = mutableListOf<String>()
         val createTableCommands = rootTablesList.map { (_, tableInfo) ->
             val writtenColumns = mutableSetOf("id")
-            val foreignKeys = mutableListOf<String>()
             val uniqueColumns = mutableMapOf<Int, MutableList<String>>()
             val indexColumns = mutableMapOf<Int, MutableList<String>>()
             val columns = arrayOf("'id' BLOB NOT NULL PRIMARY KEY") +
@@ -109,12 +108,15 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                                     referenceTable.columns
                                             .find { specialConnectedColumn in arrayOf(it.columnName, it.name, it.idName) }!!.idName
                                 } else "id"
-                                foreignKeys.add("FOREIGN KEY ('${column.idName}') REFERENCES '${referenceTable.tableName!!}'($connectedColumn)")
-                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra"
+                                val onDelete = " ON DELETE " + if (!column.columnType.nullable || column.getAnnotationValue(ComplexOrmDeleteCascade::class) != null) {
+                                    "CASCADE"
+                                }
+                                else "SET NULL"
+                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra REFERENCES '${referenceTable.tableName!!}'($connectedColumn) $onDelete"
                             }
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
-                    } + foreignKeys + uniqueColumns.values.map { it.joinToString(",", "UNIQUE(", ")") }
+                    } + uniqueColumns.values.map { it.joinToString(",", "UNIQUE(", ")") }
             indexColumns.forEach { relatedTables.add(createIndexCommand(tableInfo.tableName!!, it.key, it.value)) }
             "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName!!}'(\n${columns.joinToString(",\n")}\n);\"\"\""
         } + relatedTables

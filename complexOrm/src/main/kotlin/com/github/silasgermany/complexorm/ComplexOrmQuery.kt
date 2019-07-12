@@ -19,6 +19,9 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 
+    fun queryForEach(sql: String, f: (Cursor) -> Unit) = database.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (Cursor) -> T) = database.queryMap(sql, f)
+
     fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: UUID, returnClass: KClass<V>): V? {
         return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
             @Suppress("UNCHECKED_CAST")

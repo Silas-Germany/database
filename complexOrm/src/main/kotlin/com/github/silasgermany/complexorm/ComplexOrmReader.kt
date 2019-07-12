@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import android.database.Cursor
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
@@ -22,6 +23,9 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             it.delete()
         }
     }
+
+    fun queryForEach(sql: String, f: (Cursor) -> Unit) = complexOrmQuery.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (Cursor) -> T) = complexOrmQuery.queryMap(sql, f)
 
     inline fun <reified T : ComplexOrmTable> read(
             readTableInfo: ReadTableInfo
