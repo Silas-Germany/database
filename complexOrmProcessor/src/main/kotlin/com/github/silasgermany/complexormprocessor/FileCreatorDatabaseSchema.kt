@@ -75,7 +75,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             columnExtra += defaultValue(column.columnType.type, "$it")
                         }
                         column.getAnnotationValue(ComplexOrmProperty::class)?.let {
-                            columnExtra += " $it".replace(column.name, column.columnName)
+                            columnExtra += " $it".replace(column.name, "'${column.columnName}'")
                         }
                         column.getAnnotationValue(ComplexOrmUnique::class)?.let {
                             columnExtra += " UNIQUE"
@@ -108,17 +108,20 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                                     referenceTable.columns
                                             .find { specialConnectedColumn in arrayOf(it.columnName, it.name, it.idName) }!!.idName
                                 } else "id"
-                                val onDelete = " ON DELETE " + if (!column.columnType.nullable || column.getAnnotationValue(ComplexOrmDeleteCascade::class) != null) {
-                                    "CASCADE"
+                                val onDelete = when {
+                                    column.getAnnotationValue(ComplexOrmDeleteRestrict::class) != null -> "RESTRICT"
+                                    column.getAnnotationValue(ComplexOrmDeleteCascade::class) != null ||
+                                            !column.columnType.nullable -> "CASCADE"
+                                    else -> "SET NULL"
                                 }
-                                else "SET NULL"
-                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra REFERENCES '${referenceTable.tableName!!}'($connectedColumn) $onDelete"
+                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra " +
+                                        "REFERENCES '${referenceTable.tableName!!}'('$connectedColumn') ON DELETE $onDelete"
                             }
                         }
                         "'${column.columnName}' $complexOrmType$columnExtra"
                     } + uniqueColumns.values.map { it.joinToString(",", "UNIQUE(", ")") }
             indexColumns.forEach { relatedTables.add(createIndexCommand(tableInfo.tableName!!, it.key, it.value)) }
-            "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableInfo.tableName!!}'(\n${columns.joinToString(",\n")}\n);\"\"\""
+            "\n\"${tableInfo.tableName!!}\" to \"\"\"CREATE TABLE '${tableInfo.tableName!!}'(\n${columns.joinToString(",\n")}\n);\"\"\""
         } + relatedTables
         return PropertySpec.builder("createTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
