@@ -296,4 +296,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             database.endTransaction()
         }
     }
+    fun beginTransaction() = database.beginTransaction()
+    fun setTransactionSuccessful() = database.setTransactionSuccessful()
+    fun endTransaction() = database.endTransaction()
 }

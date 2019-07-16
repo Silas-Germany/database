@@ -75,13 +75,13 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             columnExtra += defaultValue(column.columnType.type, "$it")
                         }
                         column.getAnnotationValue(ComplexOrmProperty::class)?.let {
-                            columnExtra += " $it".replace(column.name, "'${column.columnName}'")
+                            columnExtra += " $it".replace(column.name, "'${tableInfo.tableName}'.'${column.columnName}'")
                         }
                         column.getAnnotationValue(ComplexOrmUnique::class)?.let {
                             columnExtra += " UNIQUE"
                         }
                         column.getAnnotationValue(ComplexOrmUniqueIndex::class)?.let {
-                            uniqueColumns.getOrPut(it as Int) { mutableListOf() }.add(column.idName)
+                            uniqueColumns.getOrPut(it as? Int ?: 1) { mutableListOf() }.add("'${column.idName}'")
                         }
                         column.getAnnotationValue(ComplexOrmIndex::class)?.let {
                             indexColumns.getOrPut(it as? Int ?: 1) { mutableListOf() }.add(column.idName)
@@ -166,16 +166,14 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
 
     private fun createRelatedTableCommand(tableName: String, column: Column): String {
         val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName!!
-        return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE IF NOT EXISTS '${tableName}_${column.columnName}'(" +
-                "'${tableName}_id' INTEGER NOT NULL, " +
-                "'${referenceTableName}_id' INTEGER NOT NULL, " +
-                "PRIMARY KEY ('${tableName}_id', '${referenceTableName}_id'), " +
-                "FOREIGN KEY ('${tableName}_id') REFERENCES '$tableName'(id), " +
-                "FOREIGN KEY ('${referenceTableName}_id') REFERENCES '$referenceTableName'(id));\"\"\""
+        return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE '${tableName}_${column.columnName}'(\n" +
+                "'${tableName}_id' INTEGER NOT NULL REFERENCES '$tableName'(id) ON DELETE CASCADE,\n" +
+                "'${referenceTableName}_id' INTEGER NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
+                "PRIMARY KEY ('${tableName}_id','${referenceTableName}_id'));\"\"\""
     }
 
     private fun createIndexCommand(tableName: String, group: Int, columns: List<String>): String {
-        return "\n\"index_${tableName}_$group\" to \"\"\"CREATE INDEX IF NOT EXISTS 'index_${tableName}_$group' ON '$tableName'(" +
+        return "\n\"index_${tableName}_$group\" to \"\"\"CREATE INDEX 'index_${tableName}_$group' ON '$tableName'(" +
                 "${columns.joinToString(",")});\"\"\""
     }
 

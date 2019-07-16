@@ -44,7 +44,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
         var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
         val rootTableName = basicTableInfo.getValue(table.java.canonicalName!!).second
         if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
-        else if (normalColumns[rootTableName]?.contains(columnName) != true)
+        else if (columnName != "id" && normalColumns[rootTableName]?.contains(columnName) != true)
             throw IllegalArgumentException("Can't create restriction for join columns (column $columnName from ${table.java.canonicalName}). " +
                     "Please restrict the target table instead")
         var where = (selection?.let { "($it)" } ?: "??=?")
@@ -63,6 +63,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                 }
                 is Int, is Long -> "$whereArgument"
                 is Enum<*> -> "${whereArgument.ordinal}"
+                is UUID -> whereArgument.asSql
                 is Collection<*> -> {
                     if (whereArgument.any { it == null }) {
                         where = when {
@@ -70,6 +71,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                                 where.replace("??", "COALESCE(??, 'NULL')")
                             whereArgument.any { it is Enum<*> || it is Int || it is Long || it is ComplexOrmTable } ->
                                 where.replace("??", "COALESCE(??, -1)")
+                            whereArgument.any { it is UUID } ->
+                                where.replace("??", "COALESCE(??, x'')")
                             !whereArgument.any { it != null } ->
                                 where
                                         .replace("!=?", " IS NOT ?")
@@ -89,6 +92,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                             whereArgument.joinToString { it?.toString() ?: "-1" }
                         whereArgument.any { it is String } ->
                             whereArgument.joinToString { it?.run { "'$this'" } ?: "'NULL'" }
+                        whereArgument.any { it is UUID } ->
+                            whereArgument.joinToString { it?.let { (it as UUID).asSql } ?: "x''" }
                         !whereArgument.any { it != null } -> "NULL"
                         whereArgument.any { it is ComplexOrmTable } ->
                             whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.toString() ?: "-1" }

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.github.silasgermany.complexormapi
 
 @Target(AnnotationTarget.CLASS)
@@ -7,28 +9,23 @@ annotation class ComplexOrmAllTables
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-@Suppress("UNUSED")
 annotation class ComplexOrmReverseJoinColumn(val connectedColumn: String)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-@Suppress("UNUSED")
 annotation class ComplexOrmReverseConnectedColumn(val connectedColumn: String = "")
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-@Suppress("UNUSED")
 annotation class ComplexOrmSpecialConnectedColumn(val connectedColumn: String)
 
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-@Suppress("UNUSED")
 annotation class ComplexOrmDefault(val value: String)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-@Suppress("UNUSED")
 annotation class ComplexOrmProperty(val extra: String)
 
 @Target(AnnotationTarget.PROPERTY)
@@ -49,7 +46,7 @@ annotation class ComplexOrmDeleteRestrict
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class ComplexOrmUniqueIndex(val group: Int)
+annotation class ComplexOrmUniqueIndex(val group: Int = 1)
 
 
 @Target(AnnotationTarget.PROPERTY)

@@ -105,4 +105,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun queryForEach(sql: String, f: (Cursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (Cursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
+    fun beginTransaction() = complexOrmWriter.beginTransaction()
+    fun setTransactionSuccessful() = complexOrmWriter.setTransactionSuccessful()
+    fun endTransaction() = complexOrmWriter.endTransaction()
 }
