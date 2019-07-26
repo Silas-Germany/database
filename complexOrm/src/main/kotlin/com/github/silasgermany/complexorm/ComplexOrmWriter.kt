@@ -39,15 +39,15 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(javaClass.canonicalName!!).first
+    val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(javaClass.canonicalName!!.replace("$", ".")).first
     @Suppress("MemberVisibilityCanBePrivate")
-    val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
+    val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!.replace("$", ".")).first
 
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
         val tableName = table.tableName
-        val tableClassName = table.javaClass.canonicalName
-        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!).second
+        val tableClassName: String = table.javaClass.canonicalName!!.replace("$", ".")
+        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!.replace("$", ".")).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
                 (complexOrmTableInfo.normalColumns[tableClassName] ?: sortedMapOf()) +
                 mapOf("id" to "Uuid")
@@ -75,7 +75,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
                     ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
-                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Date).time)
+                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, ((value as Date).time / 1000).toInt())
                     ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toString("yyyy-MM-dd"))
                     ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as UUID).asByteArray)
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
@@ -294,6 +294,16 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             database.setTransactionSuccessful()
         } finally {
             database.endTransaction()
+        }
+    }
+    inline fun <T>doInTransaction(f: () -> T, errorHandling: (Throwable) -> Unit) {
+        beginTransaction()
+        try {
+            f().also { setTransactionSuccessful() }
+        } catch (e: Throwable) {
+            errorHandling(e)
+        } finally {
+            endTransaction()
         }
     }
     fun beginTransaction() = database.beginTransaction()

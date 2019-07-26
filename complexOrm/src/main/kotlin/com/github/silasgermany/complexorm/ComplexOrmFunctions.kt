@@ -6,6 +6,6 @@ import kotlin.reflect.KClass
 
 internal fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
 
-val <T: ComplexOrmTable> KClass<T>.tableName: String get() = java.simpleName.toSql()
+internal val <T: ComplexOrmTable> KClass<T>.tableName: String get() = java.simpleName.toSql()
 
 internal val String.asType get() = ComplexOrmTypes.values().find { it.name == this }!!

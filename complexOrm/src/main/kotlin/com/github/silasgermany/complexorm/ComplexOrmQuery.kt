@@ -80,7 +80,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             var where = "LEFT JOIN \"$connectedTableName\" AS \"$newConnectedTableName\" " +
                     "ON \"$newConnectedTableName\".\"id\"=\"$tableName\".\"${connectedColumnName}_id\""
             readTableInfo.restrictions[connectedTableClassName]?.let {
-                where = where.removePrefix("LEFT ") + " AND ${it.replace("$$", newConnectedTableName)}"
+                where = where.removePrefix("LEFT ") + " AND ${it.replace("$$", "\"$newConnectedTableName\"")}"
             }
             tablesAndRestrictions.add(where)
 
@@ -206,7 +206,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.Float -> getFloat(index)
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
-            ComplexOrmTypes.Date -> Date(getLong(index))
+            ComplexOrmTypes.Date -> Date(getInt(index) * 1000L)
             ComplexOrmTypes.LocalDate -> LocalDate.parse(
                 getString(index),
                 DateTimeFormat.forPattern("yyyy-MM-dd")

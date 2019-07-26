@@ -86,6 +86,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         val annotations = mutableMapOf<String, List<AnnotationMirror>>()
             .withDefault { emptyList() }
         element.enclosedElements.forEach { value ->
+            if (value.kind.isClass) return@forEach
             if ("${value.simpleName}".endsWith("\$delegate") && "${value.asType()}" == "java.util.Map") {
                 isColumn.add("${value.simpleName}".removeSuffix("\$delegate"))
             } else if ("${value.simpleName}".endsWith("\$annotations")) {
@@ -126,7 +127,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
                         true
                     }
                     element.getAnnotation(NotNull::class.java) != null -> false
-                    else -> throw IllegalStateException("Should have annotation, whether value nullable or not")
+                    else -> throw IllegalStateException("Should have annotation, whether value nullable or not: $element")
                 }
             }
         }

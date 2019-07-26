@@ -36,7 +36,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             readTableInfo: ReadTableInfo
     ): List<T> {
         if (cacheDir != null) readTableInfo.initFromCache(File(cacheDir, "complex_orm_$table"))
-        val result = complexOrmQuery.query(table.java.canonicalName!!, readTableInfo).map { it.second }
+        val result = complexOrmQuery.query(table.java.canonicalName!!.replace("$", ".").replace("$", "."), readTableInfo).map { it.second }
 
         while (readTableInfo.notAlreadyLoaded.isNotEmpty() || readTableInfo.nextRequests.isNotEmpty()) {
             while (readTableInfo.notAlreadyLoaded.isNotEmpty()) {

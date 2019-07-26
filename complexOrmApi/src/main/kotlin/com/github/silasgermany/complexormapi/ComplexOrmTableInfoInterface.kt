@@ -3,13 +3,13 @@ package com.github.silasgermany.complexormapi
 import java.util.*
 
 interface ComplexOrmTableInfoInterface {
-    val normalColumns: SortedMap<String, Map<String, String>>
-    val connectedColumns: SortedMap<String, Map<String, String>>
-    val joinColumns: SortedMap<String, Map<String, String>>
-    val reverseJoinColumns: SortedMap<String, Map<String, String>>
-    val reverseConnectedColumns: SortedMap<String, Map<String, String>>
-    val specialConnectedColumns: SortedMap<String, Map<String, String>>
-    val tableConstructors: SortedMap<String, (Map<String, Any?>) -> ComplexOrmTable>
-    val basicTableInfo: SortedMap<String, Pair<String, String>>
-    val columnNames: SortedMap<String, Map<String, String>>
+    val normalColumns: Map<String, Map<String, String>>
+    val connectedColumns: Map<String, Map<String, String>>
+    val joinColumns: Map<String, Map<String, String>>
+    val reverseJoinColumns: Map<String, Map<String, String>>
+    val reverseConnectedColumns: Map<String, Map<String, String>>
+    val specialConnectedColumns: Map<String, Map<String, String>>
+    val tableConstructors: Map<String, (Map<String, Any?>) -> ComplexOrmTable>
+    val basicTableInfo: Map<String, Pair<String, String>>
+    val columnNames: Map<String, Map<String, String>>
 }

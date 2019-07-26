@@ -65,7 +65,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     val allTableNames = tables.keys.toList()
 
     @Suppress("MemberVisibilityCanBePrivate")
-    val KClass<out ComplexOrmTable>.name: String get() = java.canonicalName!!
+    val KClass<out ComplexOrmTable>.name: String get() = java.canonicalName!!.replace("$", ".")
 
     fun getNormalColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.normalColumns[table.name]?.keys?.toList() ?: emptyList()
@@ -85,7 +85,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
         complexOrmSchema.tables.getValue(tableName.toSql())
 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =
-        T::class.tableName + "." + columnName(T::class, column)
+        fullColumnName(T::class, column)
     fun <T: ComplexOrmTable, R> fullColumnName(table: KClass<T>, column: KProperty1<T, R>): String =
             table.tableName + "." + columnName(table, column)
 
@@ -93,7 +93,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     inline fun <reified T: ComplexOrmTable, R> columnName(column: KProperty1<T, R>): String = columnName(T::class, column)
     fun <T: ComplexOrmTable, R> columnName(table: KClass<T>, column: KProperty1<T, R>): String {
         var columnName = column.name.toSql()
-        if (complexOrmTableInfo.connectedColumns[table.java.canonicalName!!]?.contains(columnName) == true) columnName += "_id"
+        if (complexOrmTableInfo.connectedColumns[table.java.canonicalName!!.replace("$", ".")]?.contains(columnName) == true) columnName += "_id"
         return columnName
     }
 
@@ -105,7 +105,6 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     fun queryForEach(sql: String, f: (Cursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (Cursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
-    fun beginTransaction() = complexOrmWriter.beginTransaction()
-    fun setTransactionSuccessful() = complexOrmWriter.setTransactionSuccessful()
-    fun endTransaction() = complexOrmWriter.endTransaction()
+    inline fun <T>doInTransaction(f: () -> T, errorHandling: (Throwable) -> Unit = { throw it })
+            = complexOrmWriter.doInTransaction(f, errorHandling)
 }

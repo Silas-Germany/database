@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import android.util.Log
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
@@ -16,7 +17,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
     @Suppress("unused")
-    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!).first
+    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!.replace("$", ".")).first
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<UUID, ComplexOrmTable>>()
@@ -34,6 +35,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     ) = where(T::class, column, selection, *selectionArguments)
 
     @Suppress("unused")
+    inline fun <reified T : ComplexOrmTable> whereNotNull(column: KProperty1<T, Any?>) =
+        where(T::class, column, "??!=?", null)
     inline fun <reified T : ComplexOrmTable> where(column: KProperty1<T, Any?>, equals: Any?) =
         if (equals is Sequence<*>) where(T::class, column, null, equals.toList())
         else where(T::class, column, null, equals)
@@ -42,7 +45,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
         selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
         var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
-        val rootTableName = basicTableInfo.getValue(table.java.canonicalName!!).second
+        val rootTableName = basicTableInfo.getValue(table.java.canonicalName!!.replace("$", ".")).second
         if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
         else if (columnName != "id" && normalColumns[rootTableName]?.contains(columnName) != true)
             throw IllegalArgumentException("Can't create restriction for join columns (column $columnName from ${table.java.canonicalName}). " +
@@ -115,8 +118,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                     .replace("??", "$$.\"$columnName\"")
                     .replaceFirst("?", transformedWhereArgument)
         }
-        restrictions[table.java.canonicalName!!] = if (table.java.canonicalName !in restrictions) where
-        else "${restrictions[table.java.canonicalName!!]} AND $where"
+        restrictions[table.java.canonicalName!!.replace("$", ".")] = if (table.java.canonicalName!!.replace("$", ".") !in restrictions) where
+        else "${restrictions[table.java.canonicalName!!.replace("$", ".")]} AND $where"
         return this@ComplexOrmQueryBuilder
     }
 
@@ -125,13 +128,13 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     inline fun <reified T : ComplexOrmTable> alreadyLoaded(entries: Sequence<T?>?) = alreadyLoaded(T::class, entries?.toList())
     open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T?>?): ComplexOrmQueryBuilder {
         entries ?: return this
-        existingEntries[table.java.canonicalName!!] = entries
+        existingEntries[table.java.canonicalName!!.replace("$", ".")] = entries
                 .filterNotNull()
                 .associateTo(mutableMapOf()) { it.id!! to it }
         return this@ComplexOrmQueryBuilder
     }
 
-    inline fun <reified T : ComplexOrmTable> get(): List<T> = get(T::class)
+    inline fun <reified T : ComplexOrmTable> get() = get(T::class)
 
     inline fun <reified T : ComplexOrmTable> getSequence(): Sequence<T> = get(T::class).asSequence()
 
@@ -143,13 +146,20 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     override fun toString() = restrictions.values
             .joinToString(" AND ").replace("$$.", "")
 
+    fun addRestriction(table: KClass<out ComplexOrmTable>, restriction: String): ComplexOrmQueryBuilder {
+        restrictions[table.java.canonicalName!!.replace("$", ".")] = if (table.java.canonicalName !in restrictions) restriction
+        else "${restrictions[table.java.canonicalName!!.replace("$", ".")]} AND $restriction"
+        return this
+    }
+
     inline fun <reified T : ComplexOrmTable> get(id: UUID?): T? = get(T::class, id)
     fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: UUID?): T? {
         id ?: return null
-        val tableClassName = table.java.canonicalName!!
+        val tableClassName = table.java.canonicalName!!.replace("$", ".")
         this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = ${id.asSql}"
         else "${restrictions[tableClassName]} AND $$.id = ${id.asSql}"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
+        Log.e("REV79", "$restrictions")
         return complexOrmReader.read(table, readTableInfo).firstOrNull()
     }
 }

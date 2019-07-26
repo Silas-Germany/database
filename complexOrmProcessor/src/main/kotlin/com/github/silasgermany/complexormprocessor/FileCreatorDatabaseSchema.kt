@@ -169,7 +169,8 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE '${tableName}_${column.columnName}'(\n" +
                 "'${tableName}_id' INTEGER NOT NULL REFERENCES '$tableName'(id) ON DELETE CASCADE,\n" +
                 "'${referenceTableName}_id' INTEGER NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
-                "PRIMARY KEY ('${tableName}_id','${referenceTableName}_id'));\"\"\""
+                "PRIMARY KEY ('${tableName}_id','${referenceTableName}_id')\n" +
+                ");\"\"\""
     }
 
     private fun createIndexCommand(tableName: String, group: Int, columns: List<String>): String {
