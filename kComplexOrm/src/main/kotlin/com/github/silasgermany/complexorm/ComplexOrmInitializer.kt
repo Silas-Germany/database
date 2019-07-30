@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
 class ComplexOrmInitializer internal constructor(private val database: ComplexOrmDatabaseInterface,
-                            private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface, private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                                                 private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface, private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() = createTableIfNotExists(T::class)
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) {

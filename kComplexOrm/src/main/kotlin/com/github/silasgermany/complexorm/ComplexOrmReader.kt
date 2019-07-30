@@ -10,7 +10,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
-                       complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                                            complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 

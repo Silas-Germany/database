@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
-                             private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                                                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 

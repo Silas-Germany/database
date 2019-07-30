@@ -40,12 +40,12 @@ dependencies {
     implementation "com.jakewharton.threetenabp:threetenabp:1.2.1"
 
     // ORM modules
-    implementation project(':complexOrmApi')
-    implementation project(path: ':complexOrm')
-    kapt project(":complexOrmProcessor")
+    implementation files("../kComplexOrmApi/build/libs/kComplexOrm-jvm-1.0.jar")
+    implementation project(path: ':kComplexOrm')
+    //kapt project(":complexOrmProcessor")
 
     // testing
-    kaptTest project(":complexOrmProcessor")
+    //kaptTest project(":complexOrmProcessor")
     testImplementation 'junit:junit:4.12'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testImplementation 'org.robolectric:robolectric:4.3'

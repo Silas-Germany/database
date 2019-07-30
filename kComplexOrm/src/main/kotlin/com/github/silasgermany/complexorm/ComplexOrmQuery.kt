@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
-                      private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                                           private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val UUID.asSql get() = "x'${toString().replace("-", "")}'"
 

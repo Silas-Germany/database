@@ -1,16 +1,30 @@
 plugins {
     id 'org.jetbrains.kotlin.multiplatform' version '1.3.41'
 }
-repositories {
-    mavenCentral()
-}
-group 'com.example'
+apply plugin: "com.android.library"
+apply plugin: 'kotlin-android-extensions'
+
 version '1.0'
 
-apply plugin: 'maven-publish'
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+    sourceSets { main.java.srcDir("src/main/kotlin") }
+}
 
 kotlin {
-    jvm()
+    android('android')
     sourceSets {
         commonMain {
             dependencies {
@@ -23,12 +37,14 @@ kotlin {
                 implementation kotlin('test-annotations-common')
             }
         }
-        jvmMain {
+        androidMain {
             dependencies {
-                implementation kotlin('stdlib-jdk8')
+                implementation kotlin('stdlib')
+                implementation "com.soywiz.korlibs.klock:klock-jvm:1.5.0"
+                implementation files("../kComplexOrmApi/build/libs/kComplexOrm-jvm-1.0.jar")
             }
         }
-        jvmTest {
+        androidTest {
             dependencies {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')

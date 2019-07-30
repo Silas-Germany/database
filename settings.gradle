@@ -1,1 +1,1 @@
-include ':app', ':complexOrm', ':complexOrmProcessor', ':complexOrmApi'
+include ':kComplexOrm'

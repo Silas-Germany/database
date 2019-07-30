@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 class ComplexOrmWriter internal constructor(private val database: ComplexOrmDatabaseInterface,
-                       private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+                                            private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
     private val UUID?.asSql get() = this?.let { _ ->
