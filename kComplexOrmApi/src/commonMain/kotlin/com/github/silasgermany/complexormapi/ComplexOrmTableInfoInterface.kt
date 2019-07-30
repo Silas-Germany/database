@@ -1,7 +1,5 @@
 package com.github.silasgermany.complexormapi
 
-import java.util.*
-
 interface ComplexOrmTableInfoInterface {
     val normalColumns: Map<String, Map<String, String>>
     val connectedColumns: Map<String, Map<String, String>>
