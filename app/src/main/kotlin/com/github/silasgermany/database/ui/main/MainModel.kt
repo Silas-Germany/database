@@ -3,7 +3,7 @@ package com.github.silasgermany.database.ui.main
 import com.github.silasgermany.complexormapi.ComplexOrmDefault
 import com.github.silasgermany.complexormapi.ComplexOrmReverseConnectedColumn
 import com.github.silasgermany.database.sql.AllTables
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 interface MainModel {
 

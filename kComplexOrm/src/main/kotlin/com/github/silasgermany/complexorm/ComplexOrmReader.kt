@@ -6,7 +6,7 @@ import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import java.io.File
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: File? = null,
@@ -36,7 +36,8 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             readTableInfo: ReadTableInfo
     ): List<T> {
         if (cacheDir != null) readTableInfo.initFromCache(File(cacheDir, "complex_orm_$table"))
-        val result = complexOrmQuery.query(table.java.canonicalName!!.replace("$", ".").replace("$", "."), readTableInfo).map { it.second }
+        val result = complexOrmQuery.query(table.java.name.replace("$", ".")
+            .replace("$", "."), readTableInfo).map { it.second }
 
         while (readTableInfo.notAlreadyLoaded.isNotEmpty() || readTableInfo.nextRequests.isNotEmpty()) {
             while (readTableInfo.notAlreadyLoaded.isNotEmpty()) {

@@ -3,7 +3,7 @@ package com.github.silasgermany.database.sql
 import com.github.silasgermany.complexormapi.ComplexOrmAllTables
 import com.github.silasgermany.complexormapi.ComplexOrmDefault
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 
 @Suppress("UNUSED")

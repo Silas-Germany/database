@@ -4,7 +4,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.json.JSONObject
 import java.io.File
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 class ReadTableInfo constructor(
         val restrictions: Map<String, String>,

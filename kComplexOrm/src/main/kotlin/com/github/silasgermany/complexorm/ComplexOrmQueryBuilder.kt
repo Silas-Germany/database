@@ -1,10 +1,9 @@
 package com.github.silasgermany.complexorm
 
-import android.util.Log
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -17,7 +16,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
     @Suppress("unused")
-    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!.replace("$", ".")).first
+    private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.name.replace("$", ".")).first
 
     private val restrictions = mutableMapOf<String, String>()
     private val existingEntries = mutableMapOf<String, MutableMap<UUID, ComplexOrmTable>>()
@@ -163,7 +162,6 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
         this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = ${id.asSql}"
         else "${restrictions[tableClassName]} AND $$.id = ${id.asSql}"
         val readTableInfo = ReadTableInfo(restrictions, existingEntries, complexOrmTableInfo)
-        Log.e("REV79", "$restrictions")
         return complexOrmReader.read(table, readTableInfo).firstOrNull()
     }
 }

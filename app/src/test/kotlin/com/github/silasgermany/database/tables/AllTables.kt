@@ -1,7 +1,7 @@
 package com.github.silasgermany.database.tables
 
 import com.github.silasgermany.complexormapi.*
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 
 @Suppress("UNUSED")

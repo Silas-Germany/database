@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmWildcard
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 import kotlin.reflect.KClass
 
 class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {

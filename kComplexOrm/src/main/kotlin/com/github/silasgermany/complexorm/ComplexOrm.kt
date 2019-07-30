@@ -9,7 +9,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import java.io.File
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -25,7 +25,8 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
 
 
     val complexOrmReader = ComplexOrmReader(database, cacheDir, complexOrmTableInfo)
-    val complexOrmInitializer = ComplexOrmInitializer(database, complexOrmSchema, complexOrmTableInfo)
+    val complexOrmInitializer =
+        ComplexOrmInitializer(database, complexOrmSchema, complexOrmTableInfo)
     val complexOrmWriter = ComplexOrmWriter(database, complexOrmTableInfo)
 
     inline fun <reified T : ComplexOrmTable> read(readTableInfo: ReadTableInfo) =
@@ -65,7 +66,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     val allTableNames = tables.keys.toList()
 
     @Suppress("MemberVisibilityCanBePrivate")
-    val KClass<out ComplexOrmTable>.name: String get() = java.canonicalName!!.replace("$", ".")
+    val KClass<out ComplexOrmTable>.name: String get() = java.name.replace("$", ".")
 
     fun getNormalColumnNames(table: KClass<out ComplexOrmTable>) =
         complexOrmTableInfo.normalColumns[table.name]?.keys?.toList() ?: emptyList()
@@ -87,13 +88,13 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: File? = null) 
     inline fun <reified T: ComplexOrmTable, R> fullColumnName(column: KProperty1<T, R>): String =
         fullColumnName(T::class, column)
     fun <T: ComplexOrmTable, R> fullColumnName(table: KClass<T>, column: KProperty1<T, R>): String =
-            table.tableName + "." + columnName(table, column)
+            table.tableName + "." + columnName(column)
 
     fun <T: ComplexOrmTable> tableName(table: KClass<T>): String = table.tableName
-    inline fun <reified T: ComplexOrmTable, R> columnName(column: KProperty1<T, R>): String = columnName(T::class, column)
-    fun <T: ComplexOrmTable, R> columnName(table: KClass<T>, column: KProperty1<T, R>): String {
+    fun <T: ComplexOrmTable, R> columnName(column: KProperty1<T, R>): String {
         var columnName = column.name.toSql()
-        if (complexOrmTableInfo.connectedColumns[table.java.canonicalName!!.replace("$", ".")]?.contains(columnName) == true) columnName += "_id"
+        if (complexOrmTableInfo.connectedColumns[javaClass.name.replace("$", ".")]
+                ?.contains(columnName) == true) columnName += "_id"
         return columnName
     }
 

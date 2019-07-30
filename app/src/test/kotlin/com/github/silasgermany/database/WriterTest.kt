@@ -7,7 +7,7 @@ import com.github.silasgermany.database.tables.AppliedTablesInterface
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 @RunWith(JUnit4::class)
 class WriterTest {

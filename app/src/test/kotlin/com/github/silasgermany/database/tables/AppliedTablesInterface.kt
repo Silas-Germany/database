@@ -1,6 +1,6 @@
 package com.github.silasgermany.database.tables
 
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 
 interface AppliedTablesInterface {
 

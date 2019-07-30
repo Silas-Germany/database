@@ -9,6 +9,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import com.soywiz.klock.DateTime
 import com.soywiz.klock.ISO8601
 import java.nio.ByteBuffer
+import com.github.silasgermany.complexormapi.UUID
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -22,8 +23,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
     private val UUID?.asByteArray get() = this?.let { _ ->
         ByteBuffer.allocate(2 * Long.SIZE_BYTES)
-            .putLong(mostSignificantBits)
-            .putLong(leastSignificantBits)
+            .putLong(getMostSignificantBits())
+            .putLong(getLeastSignificantBits())
             .array()
     }
 
@@ -40,28 +41,31 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(javaClass.canonicalName!!.replace("$", ".")).first
+    val ComplexOrmTable.tableName get() = complexOrmTableInfo.basicTableInfo
+        .getValue(javaClass.name.replace("$", ".")).first
     @Suppress("MemberVisibilityCanBePrivate")
-    val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(java.canonicalName!!.replace("$", ".")).first
+    val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo
+        .getValue(java.name.replace("$", ".")).first
 
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         val contentValues = ContentValues()
         val tableName = table.tableName
-        val tableClassName: String = table.javaClass.canonicalName!!.replace("$", ".")
-        val rootTableClass = complexOrmTableInfo.basicTableInfo.getValue(table.javaClass.canonicalName!!.replace("$", ".")).second
-        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.normalColumns[tableClassName] ?: sortedMapOf()) +
+        val tableClassName: String = table.javaClass.name.replace("$", ".")
+        val rootTableClass = complexOrmTableInfo.basicTableInfo.
+            getValue(table.javaClass.name.replace("$", ".")).second
+        val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.normalColumns[tableClassName] ?: mapOf()) +
                 mapOf("id" to "Uuid")
-        val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.joinColumns[tableClassName] ?: sortedMapOf())
-        val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.reverseJoinColumns[tableClassName] ?: sortedMapOf())
-        val connectedColumns = (complexOrmTableInfo.connectedColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.connectedColumns[tableClassName] ?: sortedMapOf())
-        val specialConnectedColumns = (complexOrmTableInfo.specialConnectedColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.specialConnectedColumns[tableClassName] ?: sortedMapOf())
-        val reverseConnectedColumns = (complexOrmTableInfo.reverseConnectedColumns[rootTableClass] ?: sortedMapOf()) +
-                (complexOrmTableInfo.reverseConnectedColumns[tableClassName] ?: sortedMapOf())
+        val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.joinColumns[tableClassName] ?: mapOf())
+        val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.reverseJoinColumns[tableClassName] ?: mapOf())
+        val connectedColumns = (complexOrmTableInfo.connectedColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.connectedColumns[tableClassName] ?: mapOf())
+        val specialConnectedColumns = (complexOrmTableInfo.specialConnectedColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.specialConnectedColumns[tableClassName] ?: mapOf())
+        val reverseConnectedColumns = (complexOrmTableInfo.reverseConnectedColumns[rootTableClass] ?: mapOf()) +
+                (complexOrmTableInfo.reverseConnectedColumns[tableClassName] ?: mapOf())
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
             var keyFound = false
@@ -70,7 +74,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                 if (value == null) {
                     if (sqlKey != "id") contentValues.putNull(sqlKey)
                 } else when (ComplexOrmTypes.values().find { it.name == type }
-                    ?: throw java.lang.IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
+                    ?: throw IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
                     ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
                     ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
                     ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
@@ -236,7 +240,6 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             val values = ContentValues()
             values.put(ComplexOrmTable::id.name.toSql(), newId.asByteArray)
             try {
-                System.out.println("REV79LOG: $tableName: ${values.valueSet()} WHERE id = $oldId")
                 val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
                         null, SQLiteDatabase.CONFLICT_IGNORE)
                 if (feedback == -1) return
@@ -253,7 +256,6 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${connectedColumn.key}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: $connectedTableName: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict(connectedTableName, contentValues,
                             "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
@@ -263,7 +265,6 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${tableName}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: ${tableName}_${connectedColumn.key}: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
                             "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }
@@ -275,7 +276,6 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val idColumnName = "${tableName}_id"
                     val contentValues = ContentValues()
                     contentValues.put(idColumnName, newId.asByteArray)
-                    System.out.println("REV79LOG: ${connectedTableName}_$connectedColumn: ${contentValues.valueSet()} WHERE $idColumnName = ${oldId.asSql}")
                     database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
                             "$idColumnName = ${oldId.asSql}", null, SQLiteDatabase.CONFLICT_ROLLBACK)
                 }

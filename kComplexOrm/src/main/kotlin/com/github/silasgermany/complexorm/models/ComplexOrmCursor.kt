@@ -2,6 +2,7 @@ package com.github.silasgermany.complexorm.models
 
 import android.content.ContentResolver
 import android.database.*
+import android.database.sqlite.SQLiteCursor
 import android.net.Uri
 import android.os.Bundle
 

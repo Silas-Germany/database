@@ -5,7 +5,8 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 
-class ComplexOrmDatabase(private val database: SQLiteDatabase): ComplexOrmDatabaseInterface {
+class ComplexOrmDatabase(private val database: SQLiteDatabase):
+    ComplexOrmDatabaseInterface {
     override fun beginTransaction() {
         return database.beginTransaction()
     }

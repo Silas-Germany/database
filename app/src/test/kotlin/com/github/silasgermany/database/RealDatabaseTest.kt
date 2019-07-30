@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
-import java.util.*
+import com.github.silasgermany.complexormapi.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
