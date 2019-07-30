@@ -7,8 +7,9 @@ import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import org.joda.time.LocalDate
-import org.joda.time.format.DateTimeFormat
+import com.soywiz.klock.DateTime
+import com.soywiz.klock.ISO8601
+import com.soywiz.klock.parse
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.reflect.KClass
@@ -207,10 +208,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
             ComplexOrmTypes.Date -> Date(getInt(index) * 1000L)
-            ComplexOrmTypes.LocalDate -> LocalDate.parse(
-                getString(index),
-                DateTimeFormat.forPattern("yyyy-MM-dd")
-            )
+            ComplexOrmTypes.DateTime -> ISO8601.DATE_CALENDAR_COMPLETE.parse(getString(index)).utc
             ComplexOrmTypes.Uuid -> ByteBuffer.wrap(getBlob(index)).run { UUID(long, long) }
         }
     }

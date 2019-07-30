@@ -34,6 +34,10 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
         vararg selectionArguments: Any?
     ) = where(T::class, column, selection, *selectionArguments)
 
+    // Has to come after the where commands
+    inline fun <reified T: ComplexOrmTable> orderBy(column: KProperty1<T, Any?>) =
+        specialWhere(column, "1) ORDER BY (LOWER(??)")
+
     @Suppress("unused")
     inline fun <reified T : ComplexOrmTable> whereNotNull(column: KProperty1<T, Any?>) =
         where(T::class, column, "??!=?", null)

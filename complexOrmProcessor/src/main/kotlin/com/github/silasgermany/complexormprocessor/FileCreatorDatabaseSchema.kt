@@ -88,7 +88,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                         }
                         // Get type
                         val complexOrmType = when (column.columnType.type) {
-                            InternComplexOrmTypes.LocalDate,
+                            InternComplexOrmTypes.DateTime,
                             InternComplexOrmTypes.String -> "TEXT"
                             InternComplexOrmTypes.Boolean,
                             InternComplexOrmTypes.Date,
@@ -139,7 +139,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                 else -> throw java.lang.IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
             }
             InternComplexOrmTypes.Date,
-            InternComplexOrmTypes.LocalDate,
+            InternComplexOrmTypes.DateTime,
             InternComplexOrmTypes.Uuid,
             InternComplexOrmTypes.ByteArray,
             InternComplexOrmTypes.ComplexOrmTables,

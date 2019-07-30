@@ -6,7 +6,8 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
-import org.joda.time.LocalDate
+import com.soywiz.klock.DateTime
+import com.soywiz.klock.ISO8601
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.reflect.KClass
@@ -76,7 +77,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(sqlKey, ((value as Date).time / 1000).toInt())
-                    ComplexOrmTypes.LocalDate -> contentValues.put(sqlKey, (value as LocalDate).toString("yyyy-MM-dd"))
+                    ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, (value as DateTime).toString(ISO8601.DATE_CALENDAR_COMPLETE))
                     ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as UUID).asByteArray)
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     else -> {
