@@ -7,7 +7,7 @@ dependencies {
     // Kotlin-poet
     implementation "com.squareup:kotlinpoet:1.3.0"
     // ORM annotations
-    implementation files("../kComplexOrmApi/build/libs/kComplexOrm-jvm-1.0.jar")
+    implementation files("../complexOrmApi/build/libs/kComplexOrm-jvm-1.0.jar")
     // Local-time
     implementation "com.soywiz.korlibs.klock:klock-jvm:1.5.0"
 }

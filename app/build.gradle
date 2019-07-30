@@ -40,8 +40,8 @@ dependencies {
     implementation "com.jakewharton.threetenabp:threetenabp:1.2.1"
 
     // ORM modules
-    implementation files("../kComplexOrmApi/build/libs/kComplexOrm-jvm-1.0.jar")
-    implementation project(path: ':kComplexOrm')
+    implementation files("../kComplexOrmApi/build/libs/complexOrm-jvm-1.0.jar")
+    implementation project(path: ':complexOrm')
     //kapt project(":complexOrmProcessor")
 
     // testing
