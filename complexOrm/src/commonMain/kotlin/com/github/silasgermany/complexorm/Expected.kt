@@ -68,11 +68,14 @@ expect class CommonContentValues() {
     fun valueSet(): Set<Map.Entry<String, Any?>>
 }
 expect class CommonFile(parent: String, child: String) {
+    fun getParentFile(): CommonFile
+
     constructor(parent: CommonFile, child: String)
 
     fun listFiles(): Array<CommonFile>
     fun delete(): Boolean
     fun exists(): Boolean
+    fun mkdir(): Boolean
 }
 expect fun CommonFile.commonReadText(): String
 expect fun CommonFile.commonWriteText(text: String)

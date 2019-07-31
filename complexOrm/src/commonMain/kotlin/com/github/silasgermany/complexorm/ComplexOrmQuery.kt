@@ -116,10 +116,10 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private fun readColumns(tableClassName: String, cursor: CommonCursor, readTableInfo: ReadTableInfo,
                             connectedColumn: String?, specialConnectedColumn: String? = null): Pair<CommonUUID?, ComplexOrmTable?> {
-        val id = cursor.getValue(readTableInfo.readIndex++, "UUID") as CommonUUID?
+        val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID?
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "UUID") as CommonUUID }
+            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -149,7 +149,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "UUID") as CommonUUID }
+                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID }
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable // (Not sure, why it has to return here)
                 }
             } else databaseMap[columnName] = null
@@ -166,7 +166,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, "UUID") as CommonUUID? }
+        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID? }
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
