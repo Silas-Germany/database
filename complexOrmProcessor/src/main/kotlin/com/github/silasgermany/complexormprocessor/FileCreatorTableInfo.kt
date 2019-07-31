@@ -8,7 +8,6 @@ import com.github.silasgermany.complexormprocessor.models.InternComplexOrmTypes
 import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.github.silasgermany.complexormapi.UUID
 
 class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>) {
 

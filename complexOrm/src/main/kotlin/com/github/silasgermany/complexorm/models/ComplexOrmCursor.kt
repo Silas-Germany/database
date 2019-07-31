@@ -2,11 +2,11 @@ package com.github.silasgermany.complexorm.models
 
 import android.content.ContentResolver
 import android.database.*
-import android.database.sqlite.SQLiteCursor
 import android.net.Uri
 import android.os.Bundle
+import com.github.silasgermany.complexorm.CommonCursor
 
-class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = true): Cursor {
+class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = false): CommonCursor {
 
     private var window = CursorWindow(null)
     private var cursorPosition = 0
@@ -76,7 +76,7 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = tr
     }
 
     override fun isNull(columnIndex: Int): Boolean {
-        return window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
+        return window.getType(cursorPosition, columnIndex) == CommonCursor.FIELD_TYPE_NULL
     }
 
     override fun getShort(columnIndex: Int): Short {

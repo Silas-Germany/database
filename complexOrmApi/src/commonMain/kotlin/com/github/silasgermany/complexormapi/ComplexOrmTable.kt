@@ -2,7 +2,7 @@ package com.github.silasgermany.complexormapi
 
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
-    open val id: UUID? by map
+    open val id: CommonUUID? by map
 
     override fun toString(): String {
         return map.toList().joinToString(prefix = "${this::class.simpleName!!}{", postfix = "}") { (key, value) ->
@@ -45,7 +45,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 throw NoSuchElementException("Key does not exist: $it in $this")
             }
         }
-        fun init(id: UUID?) = default.also { it["id"] = id }
+        fun init(id: CommonUUID?) = default.also { it["id"] = id }
         @Suppress("unused")
         inline fun <reified T: ComplexOrmTable>T.cloneWithoutId(vararg values: Pair<String, Any?>): T {
             val newMap = default.apply {

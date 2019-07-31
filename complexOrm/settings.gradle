@@ -1,4 +1,4 @@
-rootProject.name = 'kComplexOrm'
+rootProject.name = 'complexOrm'
 
 
 enableFeaturePreview('GRADLE_METADATA')

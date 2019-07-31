@@ -7,7 +7,6 @@ import com.github.silasgermany.complexormprocessor.models.TableInfo
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmWildcard
-import com.github.silasgermany.complexormapi.UUID
 import kotlin.reflect.KClass
 
 class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
@@ -179,9 +178,9 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     }
 
     private val stringType get() = String::class.asTypeName()
-    private val stringMapType get() = SortedMap::class.asClassName().parameterizedBy(stringType, stringType)
+    private val stringMapType get() = Map::class.asClassName().parameterizedBy(stringType, stringType)
 
     private val tableType get() = ComplexOrmTable::class.asTypeName().jvmWildcard()
     private val tableClassType get() = KClass::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(tableType))
-    private val tableClassMapType get() = SortedMap::class.asClassName().parameterizedBy(String::class.asTypeName(), tableClassType)
+    private val tableClassMapType get() = Map::class.asClassName().parameterizedBy(String::class.asTypeName(), tableClassType)
 }

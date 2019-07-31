@@ -82,7 +82,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
         val types = mutableMapOf<String, ColumnType>()
             .withDefault { columnName ->
                 throw IllegalArgumentException("Type of column $columnName in table ${element.simpleName} is not valid: " +
-                        "It has to be one of the following types: ${InternComplexOrmTypes.values().map { it.name }}") }
+                        "It has to be one of the following types: ${InternComplexOrmTypes.values().map { it.name }};$") }
         val annotations = mutableMapOf<String, List<AnnotationMirror>>()
             .withDefault { emptyList() }
         element.enclosedElements.forEach { value ->
@@ -118,7 +118,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
 
     private fun isNullable(element: Element): Boolean {
         return when (val typeName = element.asType().toString().removePrefix("()")) {
-            "boolean", "int", "long", "float" -> false
+            "boolean", "int", "long", "float", "double" -> false
             else -> {
                 return when {
                     element.getAnnotation(Nullable::class.java) != null -> {
@@ -140,9 +140,11 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             "long", "java.lang.Long" -> InternComplexOrmTypes.Long
             "float", "java.lang.Float" -> InternComplexOrmTypes.Float
             "java.lang.String" -> InternComplexOrmTypes.String
-            "java.util.Date" -> InternComplexOrmTypes.Date
+            "com.github.silasgermany.complexormapi.Day" -> InternComplexOrmTypes.Date
+            "double",
             "com.soywiz.klock.DateTime" -> InternComplexOrmTypes.DateTime
-            "java.util.UUID" -> InternComplexOrmTypes.Uuid
+            "java.util.UUID",
+            "com.github.silasgermany.complexormapi.CommonUUID" -> InternComplexOrmTypes.Uuid
             "byte[]" -> InternComplexOrmTypes.ByteArray
             else -> {
                 return when {
