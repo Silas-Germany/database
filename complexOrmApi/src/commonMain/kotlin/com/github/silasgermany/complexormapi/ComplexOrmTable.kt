@@ -53,7 +53,8 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 remove("id")
                 putAll(values)
             }
-            return T::class.constructors.first().call(newMap)
+            return null!!
+            //return T::class.constructors.first().call(newMap)
         }
     }
 }
