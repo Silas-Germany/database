@@ -85,9 +85,6 @@ expect class CommonJSONObject(json: String) {
     fun getJSONObject(name: String): CommonJSONObject
     fun getString(name: String): String
 }
-expect class CommonDate(date: Long) {
-    fun getTime(): Long
-}
 
 // Get generated classes
 expect val databaseSchema: ComplexOrmDatabaseSchemaInterface

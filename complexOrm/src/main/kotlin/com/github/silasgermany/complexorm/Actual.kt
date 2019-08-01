@@ -70,5 +70,4 @@ actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonJSONObject = JSONObject
-actual typealias CommonDate = Date
 

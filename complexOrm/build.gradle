@@ -26,6 +26,11 @@ android {
 
 kotlin {
     android('android')
+    iosX64("ios") {
+        binaries {
+            framework()
+        }
+    }
     sourceSets {
         commonMain {
             dependencies {
@@ -52,6 +57,10 @@ kotlin {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')
             }
+        }
+        iosMain {
+        }
+        iosTest {
         }
     }
 }
