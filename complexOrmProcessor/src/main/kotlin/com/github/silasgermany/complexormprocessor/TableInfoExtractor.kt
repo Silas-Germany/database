@@ -142,7 +142,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             "java.lang.String" -> InternComplexOrmTypes.String
             "com.github.silasgermany.complexormapi.Day" -> InternComplexOrmTypes.Date
             "double",
-            "com.soywiz.klock.DateTime" -> InternComplexOrmTypes.DateTime
+            "com.github.silasgermany.complexorm.DateTime" -> InternComplexOrmTypes.DateTime
             "java.util.UUID",
             "com.github.silasgermany.complexormapi.CommonUUID" -> InternComplexOrmTypes.Uuid
             "byte[]" -> InternComplexOrmTypes.ByteArray

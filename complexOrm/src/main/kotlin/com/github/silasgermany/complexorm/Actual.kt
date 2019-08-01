@@ -3,7 +3,6 @@ package com.github.silasgermany.complexorm
 import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.DatabaseErrorHandler
-import android.util.Base64
 import com.github.silasgermany.complexorm.models.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
@@ -12,14 +11,6 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import org.json.JSONObject
 import java.io.File
 import java.nio.ByteBuffer
-import java.security.MessageDigest
-import java.security.SecureRandom
-import java.util.Date
-import javax.crypto.BadPaddingException
-import javax.crypto.Cipher
-import javax.crypto.IllegalBlockSizeException
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 import kotlin.reflect.KClass
 
 // Get generated classes
@@ -71,3 +62,29 @@ actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonJSONObject = JSONObject
 
+// todo: Create
+
+actual class DateTime actual constructor(unixMillisLong: Long) {
+    actual val unixMillisLong: Long
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+
+    actual fun format(formatDate: Any): String {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    actual val yearInt: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    actual val year: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    actual val month1: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+}
+
+actual open class KMutableLiveData<T>actual constructor(): KLiveData<T>()
+actual open class KLiveData<T> {
+    actual var value: T?
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        set(value) {}
+}
+
+actual class DateFormat

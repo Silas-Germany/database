@@ -205,3 +205,28 @@ actual fun getCursor(
 ): CommonCursor {
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
+
+actual class DateTime actual constructor(unixMillisLong: Long) {
+    actual val unixMillisLong: Long
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+
+    actual fun format(formatDate: Any): String {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    actual val yearInt: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    actual val year: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    actual val month1: Int
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+}
+
+actual open class KMutableLiveData<T>actual constructor(): KLiveData<T>()
+actual open class KLiveData<T> {
+    actual var value: T?
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        set(value) {}
+}
+
+actual class DateFormat

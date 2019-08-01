@@ -4,7 +4,6 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexorm.models.RequestInfo
 import com.github.silasgermany.complexormapi.*
-import com.soywiz.klock.DateTime
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -203,7 +202,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
             ComplexOrmTypes.Date -> Day(getString(index))
-            ComplexOrmTypes.DateTime -> DateTime.fromUnix(getInt(index) * 1000L)
+            ComplexOrmTypes.DateTime -> DateTime(getInt(index) * 1000L)
             ComplexOrmTypes.Uuid -> getBlob(index).asCommonUUID
         }
     }

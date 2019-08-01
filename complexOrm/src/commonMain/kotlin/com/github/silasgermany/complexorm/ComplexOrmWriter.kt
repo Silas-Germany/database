@@ -2,7 +2,6 @@ package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.*
-import com.soywiz.klock.DateTime
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
