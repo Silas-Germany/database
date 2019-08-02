@@ -1,7 +1,7 @@
 package com.github.silasgermany.database
 
-import com.github.silasgermany.complexorm.ComplexOrmQuery
-import com.github.silasgermany.complexorm.models.ReadTableInfo
+import app.rev79.projects.utils.ComplexOrmQuery
+import app.rev79.projects.utils.models.ReadTableInfo
 import com.github.silasgermany.database.models.TestDatabase
 import com.github.silasgermany.database.tables.AllTables
 import org.junit.Test

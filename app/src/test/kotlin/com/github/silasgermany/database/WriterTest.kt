@@ -1,6 +1,6 @@
 package com.github.silasgermany.database
 
-import com.github.silasgermany.complexorm.ComplexOrmWriter
+import app.rev79.projects.utils.ComplexOrmWriter
 import com.github.silasgermany.database.models.TestDatabase
 import com.github.silasgermany.database.tables.AllTables
 import com.github.silasgermany.database.tables.AppliedTablesInterface

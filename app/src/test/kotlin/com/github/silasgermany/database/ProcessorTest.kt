@@ -13,12 +13,12 @@ import kotlin.test.*
 class ProcessorTest {
 
     private val complexOrmSchema by lazy {
-        Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
+        Class.forName("app.rev79.projects.utils.ComplexOrmDatabaseSchema")
             .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
     }
 
     private val complexOrmTables by lazy {
-        Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
+        Class.forName("app.rev79.projects.utils.ComplexOrmTableInfo")
             .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
     }
 

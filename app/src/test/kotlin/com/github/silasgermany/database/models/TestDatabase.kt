@@ -2,7 +2,7 @@ package com.github.silasgermany.database.models
 
 import android.content.ContentValues
 import android.database.Cursor
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import app.rev79.projects.utils.models.ComplexOrmDatabaseInterface
 
 class TestDatabase: ComplexOrmDatabaseInterface {
     override fun beginTransaction() {

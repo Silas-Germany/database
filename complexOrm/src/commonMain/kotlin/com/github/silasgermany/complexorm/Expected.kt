@@ -100,10 +100,6 @@ expect val ByteArray.asCommonUUID: CommonUUID
 // Factory
 expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
 
-expect open class KLiveData<T> {
-    var value: T?
-}
-expect open class KMutableLiveData<T>(): KLiveData<T>
 expect class DateFormat
 expect class DateTime(unixMillisLong: Long) {
     fun format(formatDate: Any): String

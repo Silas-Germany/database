@@ -65,6 +65,9 @@ actual typealias CommonJSONObject = JSONObject
 // todo: Create
 
 actual class DateTime actual constructor(unixMillisLong: Long) {
+    companion object {
+        fun now() = DateTime(0L)
+    }
     actual val unixMillisLong: Long
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
@@ -80,11 +83,5 @@ actual class DateTime actual constructor(unixMillisLong: Long) {
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 }
 
-actual open class KMutableLiveData<T>actual constructor(): KLiveData<T>()
-actual open class KLiveData<T> {
-    actual var value: T?
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        set(value) {}
-}
 
 actual class DateFormat

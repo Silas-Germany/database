@@ -39,7 +39,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             getValue(table.longName).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: mapOf()) +
                 (complexOrmTableInfo.normalColumns[tableClassName] ?: mapOf()) +
-                mapOf("id" to "CommonUUID")
+                mapOf("id" to ComplexOrmTypes.Uuid.name)
         val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: mapOf()) +
                 (complexOrmTableInfo.joinColumns[tableClassName] ?: mapOf())
         val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: mapOf()) +

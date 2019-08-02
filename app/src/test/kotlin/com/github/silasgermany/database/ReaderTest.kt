@@ -1,8 +1,8 @@
 package com.github.silasgermany.database
 
 import android.os.Build.VERSION_CODES.LOLLIPOP
-import com.github.silasgermany.complexorm.ComplexOrmReader
-import com.github.silasgermany.complexorm.models.ReadTableInfo
+import app.rev79.projects.utils.ComplexOrmReader
+import app.rev79.projects.utils.models.ReadTableInfo
 import com.github.silasgermany.database.models.TestDatabase
 import com.github.silasgermany.database.tables.AllTables
 import org.junit.Test
@@ -11,7 +11,8 @@ import org.robolectric.RobolectricGradleTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricGradleTestRunner::class)
-@Config(constants = BuildConfig::class, sdk = [LOLLIPOP], packageName = BuildConfig.APPLICATION_ID, manifest = "/home/arch/android/rev79/database/app/src/main/AndroidManifest.xml")
+@Config(constants = BuildConfig::class, sdk = [LOLLIPOP], packageName = BuildConfig.APPLICATION_ID,
+    manifest = "/home/arch/android/rev79/database/app/src/main/AndroidManifest.xml")
 class ReaderTest {
 
     private val databaseReader by lazy { ComplexOrmReader(TestDatabase()) }

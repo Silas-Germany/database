@@ -4,8 +4,8 @@ import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import com.github.silasgermany.complexorm.models.ComplexOrmCursor
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import app.rev79.projects.utils.models.ComplexOrmCursor
+import app.rev79.projects.utils.models.ComplexOrmDatabaseInterface
 
 class RealTestDatabase(private val database: SQLiteDatabase):
     ComplexOrmDatabaseInterface {
