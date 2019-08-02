@@ -8,6 +8,7 @@ import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import org.joda.time.DateTime
 import org.json.JSONObject
 import java.io.File
 import java.nio.ByteBuffer
@@ -61,27 +62,4 @@ actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonJSONObject = JSONObject
-
-// todo: Create
-
-actual class DateTime actual constructor(unixMillisLong: Long) {
-    companion object {
-        fun now() = DateTime(0L)
-    }
-    actual val unixMillisLong: Long
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    actual fun format(formatDate: Any): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    actual val yearInt: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    actual val year: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    actual val month1: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-}
-
-
-actual class DateFormat
+actual typealias CommonDateTime = DateTime

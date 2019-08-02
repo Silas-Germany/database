@@ -100,12 +100,14 @@ expect val ByteArray.asCommonUUID: CommonUUID
 // Factory
 expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
 
-expect class DateFormat
-expect class DateTime(unixMillisLong: Long) {
-    fun format(formatDate: Any): String
+@Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS")
+expect class CommonDateTime(var1: Long) {
 
-    val year: Int
-    val month1: Int
-    val yearInt: Int
-    val unixMillisLong: Long
+    open fun getYear(): Int
+    fun getMonthOfYear(): Int
+    fun getDayOfMonth(): Int
+    fun getMillis(): Long
+
+    fun plusMonths(var1: Int): CommonDateTime
+    open fun toString(var1: String): String
 }

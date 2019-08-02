@@ -39,7 +39,7 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
-        linuxX64Main {
+        iosMain {
         }
         iosTest {
         }

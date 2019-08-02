@@ -206,20 +206,30 @@ actual fun getCursor(
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
-actual class DateTime actual constructor(unixMillisLong: Long) {
-    actual val unixMillisLong: Long
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    actual fun format(formatDate: Any): String {
+@Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS")
+actual class CommonDateTime actual constructor(var1: Long) {
+    actual open fun toString(var1: String): String {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    actual val yearInt: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    actual val year: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-    actual val month1: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-}
+    actual open fun getYear(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
-actual class DateFormat
+    actual fun getMonthOfYear(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    actual fun getDayOfMonth(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    actual fun plusMonths(var1: Int): CommonDateTime {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    actual fun getMillis(): Long {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+}

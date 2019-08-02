@@ -65,7 +65,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Day).asSql)
-                    ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, ((value as DateTime).unixMillisLong / 1000).toInt())
+                    ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, ((value as CommonDateTime).getMillis() / 1000).toInt())
                     ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as CommonUUID).asByteArray)
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                     else -> {

@@ -202,7 +202,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.String -> getString(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
             ComplexOrmTypes.Date -> Day(getString(index))
-            ComplexOrmTypes.DateTime -> DateTime(getInt(index) * 1000L)
+            ComplexOrmTypes.DateTime -> CommonDateTime(getInt(index) * 1000L)
             ComplexOrmTypes.Uuid -> getBlob(index).asCommonUUID
         }
     }
