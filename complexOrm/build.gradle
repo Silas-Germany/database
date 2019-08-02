@@ -28,11 +28,14 @@ android {
 
 kotlin {
     android('android')
+    linuxX64("ios")
+    /*
     iosX64("ios") {
         binaries {
             framework()
         }
     }
+    */
     sourceSets {
         commonMain {
             dependencies {
@@ -58,7 +61,7 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
-        iosMain {
+        linuxX64 {
             dependencies {
                 implementation project(":complexOrmApi")
             }

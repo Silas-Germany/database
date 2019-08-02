@@ -7,11 +7,14 @@ version '1.0'
 
 kotlin {
     jvm()
+    linuxX64("ios")
+    /*
     iosX64("ios") {
         binaries {
             framework()
         }
     }
+     */
     sourceSets {
         commonMain {
             dependencies {
@@ -36,14 +39,14 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
-        iosMain {
+        linuxX64Main {
         }
         iosTest {
         }
     }
 }
 
-task iosTest {
+task iosTest2 {
     def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
     dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
     group = JavaBasePlugin.VERIFICATION_GROUP
