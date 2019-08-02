@@ -21,7 +21,9 @@ android {
         }
     }
     sourceSets { main.java.srcDir("src/main/kotlin") }
-    packagingOptions { exclude 'META-INF/klock.kotlin_module' }
+    packagingOptions {
+        exclude 'META-INF/kotlinx-coroutines-core.kotlin_module'
+    }
 }
 
 kotlin {

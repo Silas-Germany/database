@@ -15,9 +15,9 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: CommonFile? = 
             database
         ), cacheDir)
 
-    private val complexOrmSchema = databaseSchema
+    private val complexOrmSchema by lazy { databaseSchema }
 
-    private val complexOrmTableInfo = tableInfo
+    private val complexOrmTableInfo by lazy { tableInfo }
 
 
     val complexOrmReader = ComplexOrmReader(database, cacheDir, complexOrmTableInfo)
