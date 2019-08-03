@@ -27,9 +27,6 @@ actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrm
 // Java class information
 actual val KClass<out ComplexOrmTable>.longName: String
     get() = java.name.replace("$", ".")
-actual val ComplexOrmTable.longName: String get() = javaClass.name.replace("$", ".")
-actual val KClass<*>.shortName: String
-    get() = java.simpleName
 
 actual val CommonUUID?.asByteArray: ByteArray?
     get() = this?.let { _ ->

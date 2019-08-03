@@ -1,5 +1,7 @@
 package com.github.silasgermany.complexormapi
 
+import kotlin.reflect.KClass
+
 @Suppress("UNUSED")
 actual class CommonUUID actual constructor(mostSigBits: Long, leastSigBits: Long) {
     actual fun getLeastSignificantBits(): Long {
@@ -20,3 +22,6 @@ actual object CommonUUIDObject {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
+
+actual val KClass<*>.shortName: String
+    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

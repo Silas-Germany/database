@@ -4,8 +4,10 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
     open val id: CommonUUID? by map
 
+    val shortName get() = this::class.shortName
+
     override fun toString(): String {
-        return map.toList().joinToString(prefix = "${this::class.simpleName!!}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "$shortName!!}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> "ComplexOrmTable(${value.id ?: "?"})"
                 is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
@@ -21,7 +23,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
     @Suppress("unused")
     fun showRecursive(): String {
-        return map.toList().joinToString(prefix = "${this::class.simpleName!!}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "$shortName!!}{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> value.showRecursive()
                 is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
@@ -46,14 +48,5 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
             }
         }
         fun init(id: CommonUUID?) = default.also { it["id"] = id }
-        @Suppress("unused")
-        inline fun <reified T: ComplexOrmTable>T.cloneWithoutId(vararg values: Pair<String, Any?>): T {
-            val newMap = default.apply {
-                putAll(map)
-                remove("id")
-                putAll(values)
-            }
-            return null!!//T::class.constructors.first().call(newMap)
-        }
     }
 }

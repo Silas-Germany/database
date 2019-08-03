@@ -103,8 +103,7 @@ expect val tableInfo: ComplexOrmTableInfoInterface
 // Table class information
 expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
 expect val KClass<out ComplexOrmTable>.longName: String
-expect val ComplexOrmTable.longName: String
-expect val KClass<*>.shortName: String
+val ComplexOrmTable.longName get() = this::class.longName
 // CommonUUID transformation
 expect val CommonUUID?.asByteArray: ByteArray?
 expect val ByteArray.asCommonUUID: CommonUUID

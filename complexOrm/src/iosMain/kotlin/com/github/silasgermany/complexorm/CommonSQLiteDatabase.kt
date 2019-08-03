@@ -188,11 +188,7 @@ actual fun KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.isS
     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
-actual val com.github.silasgermany.complexormapi.ComplexOrmTable.longName: String
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-actual val KClass<*>.shortName: String
     get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 actual val com.github.silasgermany.complexormapi.CommonUUID?.asByteArray: ByteArray?
     get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

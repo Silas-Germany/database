@@ -12,19 +12,11 @@ sourceSets {
 
 kotlin {
     jvm()
-    linuxX64("ios")
-    /*
-    iosX64("ios") {
-        binaries {
-            framework()
-        }
-    }
-     */
+    //iosX64("ios") { binaries { framework() } }
     sourceSets {
         commonMain {
             dependencies {
                 implementation kotlin('stdlib-common')
-                implementation kotlin('reflect')
             }
         }
         commonTest {
@@ -45,15 +37,19 @@ kotlin {
             }
         }
         iosMain {
+            dependencies {
+            }
         }
         iosTest {
+            dependencies {
+            }
         }
     }
 }
 
-task iosTest2 {
+task iosTest {
     def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
-    dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
+    //dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
     group = JavaBasePlugin.VERIFICATION_GROUP
     description = "Runs tests for target 'ios' on an iOS simulator"
 
