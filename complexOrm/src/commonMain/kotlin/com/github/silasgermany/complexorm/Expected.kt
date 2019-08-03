@@ -85,21 +85,6 @@ expect class CommonJSONObject(json: String) {
     fun getJSONObject(name: String): CommonJSONObject
     fun getString(name: String): String
 }
-
-// Get generated classes
-expect val databaseSchema: ComplexOrmDatabaseSchemaInterface
-expect val tableInfo: ComplexOrmTableInfoInterface
-// Java class information
-expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
-expect val KClass<out ComplexOrmTable>.longName: String
-expect val ComplexOrmTable.longName: String
-expect val KClass<*>.shortName: String
-// CommonUUID transformation
-expect val CommonUUID?.asByteArray: ByteArray?
-expect val ByteArray.asCommonUUID: CommonUUID
-// Factory
-expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
-
 @Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS")
 expect class CommonDateTime(var1: Long) {
 
@@ -111,3 +96,17 @@ expect class CommonDateTime(var1: Long) {
     fun plusMonths(var1: Int): CommonDateTime
     open fun toString(var1: String): String
 }
+
+// Get generated classes
+expect val databaseSchema: ComplexOrmDatabaseSchemaInterface
+expect val tableInfo: ComplexOrmTableInfoInterface
+// Table class information
+expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
+expect val KClass<out ComplexOrmTable>.longName: String
+expect val ComplexOrmTable.longName: String
+expect val KClass<*>.shortName: String
+// CommonUUID transformation
+expect val CommonUUID?.asByteArray: ByteArray?
+expect val ByteArray.asCommonUUID: CommonUUID
+// Cursor transformation
+expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor

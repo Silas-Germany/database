@@ -10,6 +10,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         minSdkVersion 15
+        //noinspection OldTargetApi
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -20,7 +21,10 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
-    sourceSets { main.java.srcDir("src/main/kotlin") }
+    sourceSets {
+        main.java.srcDir("src/main/kotlin")
+        main.java.srcDirs += "src/commonMain/kotlin"
+    }
     packagingOptions {
         exclude 'META-INF/kotlinx-coroutines-core.kotlin_module'
     }
