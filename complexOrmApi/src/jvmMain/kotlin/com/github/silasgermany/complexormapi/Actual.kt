@@ -10,4 +10,4 @@ actual object CommonUUIDObject {
     actual fun nameUUIDFromBytes(name: String): CommonUUID = UUID.nameUUIDFromBytes(name.toByteArray())
 }
 
-actual val KClass<*>.shortName: String get() = java.simpleName
+actual val KClass<*>.shortName: String get() = java.simpleName.split("$").last()

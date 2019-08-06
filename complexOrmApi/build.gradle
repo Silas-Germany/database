@@ -48,8 +48,9 @@ kotlin {
 }
 
 task iosTest {
+    /*
     def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
-    //dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
+    dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
     group = JavaBasePlugin.VERIFICATION_GROUP
     description = "Runs tests for target 'ios' on an iOS simulator"
 
@@ -59,6 +60,7 @@ task iosTest {
             commandLine 'xcrun', 'simctl', 'spawn', device, binary.absolutePath
         }
     }
+    */
 }
 
 configurations {

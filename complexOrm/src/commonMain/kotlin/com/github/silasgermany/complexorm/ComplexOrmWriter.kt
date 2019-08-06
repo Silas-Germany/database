@@ -68,9 +68,6 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, ((value as CommonDateTime).getMillis() / 1000).toInt())
                     ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as CommonUUID).asByteArray)
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
-                    else -> {
-                        throw IllegalStateException("Normal table shouldn't have ComplexOrmTable inside")
-                    }
                 }
             }
             connectedColumns[sqlKey]?.let {
@@ -101,7 +98,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         try {
             save(tableName, contentValues)?.let { table.map["id"] = it }
         } catch (e: Throwable) {
-            throw e//IllegalArgumentException("Couldn't save table entries: $table (${e.message})", e)
+            throw IllegalArgumentException("Couldn't save table entries: $table (${e.message})", e)
         }
         table.map.forEach { (key, value) ->
             val sqlKey = key.toSql()
