@@ -164,12 +164,13 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     }
 
     private fun createRelatedTableCommand(tableName: String, column: Column): String {
-        var referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName!!
-        if (referenceTableName == tableName) referenceTableName = "second_$referenceTableName"
+        val referenceTableName = rootTables.getValue(column.columnType.referenceTable!!).tableName!!
+        val secondColumnName = if (referenceTableName == tableName) "second_$referenceTableName"
+        else referenceTableName
         return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE '${tableName}_${column.columnName}'(\n" +
                 "'${tableName}_id' INTEGER NOT NULL REFERENCES '$tableName'(id) ON DELETE CASCADE,\n" +
-                "'${referenceTableName}_id' INTEGER NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
-                "PRIMARY KEY ('${tableName}_id','${referenceTableName}_id')\n" +
+                "'${secondColumnName}_id' INTEGER NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
+                "PRIMARY KEY ('${tableName}_id','${secondColumnName}_id')\n" +
                 ");\"\"\""
     }
 

@@ -7,7 +7,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     val shortName get() = this::class.shortName
 
     override fun toString(): String {
-        return map.toList().joinToString(prefix = "$shortName!!}{", postfix = "}") { (key, value) ->
+        return map.toList().joinToString(prefix = "$shortName{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> "ComplexOrmTable(${value.id ?: "?"})"
                 is List<*> -> value.joinToString(prefix = "[", postfix = "]") {
