@@ -46,8 +46,12 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.where(
         table: KClass<T>, column: KProperty1<T, Any?>,
         selection: String?, vararg selectionArguments: Any?
+    ) = where(table, column.name, selection, *selectionArguments)
+    open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.where(
+        table: KClass<T>, columnPropertyName: String,
+        selection: String?, vararg selectionArguments: Any?
     ): ComplexOrmQueryBuilder {
-        var columnName = column.name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
+        var columnName = columnPropertyName.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
         val rootTableName = basicTableInfo.getValue(table.longName).second
         if (connectedColumns[rootTableName]?.contains(columnName) == true) columnName += "_id"
         else if (columnName != "id" && normalColumns[rootTableName]?.contains(columnName) != true)
