@@ -171,7 +171,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     }
 
     private fun save(table: String, contentValues: CommonContentValues): CommonUUID? {
-        var changedId: CommonUUID? = null
+        var changedId = (contentValues.valueSet().find { it.key == "id" }?.value as ByteArray?)?.asCommonUUID
         var changed = false
         try {
             if (!contentValues.containsKey("id")) {
