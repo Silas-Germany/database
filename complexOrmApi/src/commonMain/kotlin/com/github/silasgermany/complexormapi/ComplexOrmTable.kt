@@ -2,9 +2,9 @@ package com.github.silasgermany.complexormapi
 
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
-    open val id: CommonUUID? by map
+    open val id: IdType? by map
 
-    val shortClassName get() = this::class.shortName
+    val shortClassName get() = this::class.className
 
     override fun toString(): String {
         return map.toList().joinToString(prefix = "$shortClassName{", postfix = "}") { (key, value) ->
@@ -47,6 +47,6 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 throw NoSuchElementException("Key does not exist: $it in $this")
             }
         }
-        fun init(id: CommonUUID?) = default.also { it["id"] = id }
+        fun init(id: IdType?) = default.also { it["id"] = id }
     }
 }

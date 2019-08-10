@@ -3,11 +3,7 @@ package com.github.silasgermany.complexormapi
 import java.util.*
 import kotlin.reflect.KClass
 
-actual typealias CommonUUID = UUID
-actual object CommonUUIDObject {
-    actual fun randomCommonUUID(): CommonUUID = UUID.randomUUID()
+// Replace with Int or Long if such an ID should be used
+actual typealias IdType = UUID
 
-    actual fun nameUUIDFromBytes(name: String): CommonUUID = UUID.nameUUIDFromBytes(name.toByteArray())
-}
-
-actual val KClass<*>.shortName: String get() = java.simpleName.split("$").last()
+actual val KClass<*>.className: String get() = java.simpleName.split("$").last()

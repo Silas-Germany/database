@@ -9,7 +9,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                                             private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
-    private val CommonUUID?.asSql get() = this?.let { _ ->
+    private val IdType?.asSql get() = this?.let { _ ->
         "x'${toString().replace("-", "")}'"
     }
     fun execSQL(sql: String) = database.execSQL(sql)
@@ -66,7 +66,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
                     ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Day).asSql)
                     ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, ((value as CommonDateTime).getMillis() / 1000).toInt())
-                    ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as CommonUUID).asByteArray)
+                    ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as IdType).asByteArray)
                     ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
                 }
             }
@@ -165,12 +165,12 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     operator fun <K, V> Map<out K, V>?.contains(key: K) = this?.containsKey(key) == true
 
-    private fun delete(table: String, column: String, id: CommonUUID?) {
+    private fun delete(table: String, column: String, id: IdType?) {
         id ?: return
         database.delete(table, "$column = ${id.asSql}", null)
     }
 
-    private fun save(table: String, contentValues: CommonContentValues): CommonUUID? {
+    private fun save(table: String, contentValues: CommonContentValues): IdType? {
         var changedId = (contentValues.valueSet().find { it.key == "id" }?.value as ByteArray?)?.asCommonUUID
         var changed = false
         try {
@@ -192,13 +192,13 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         return changedId
     }
 
-    private fun update(table: String, contentValues: CommonContentValues, id: CommonUUID?) {
+    private fun update(table: String, contentValues: CommonContentValues, id: IdType?) {
         id ?: return
         val changed = database.updateWithOnConflict(table, contentValues, "id = ${id.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
         if (changed != 1) throw IllegalArgumentException("Couldn't update values $contentValues for $table (ID: $id)")
     }
 
-    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: CommonUUID, value: R) {
+    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType, value: R) {
         val contentValues = CommonContentValues()
         when (value) {
             is Int -> contentValues.put(column.name.toSql(), value)
@@ -212,7 +212,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         save(table.tableName, contentValues)
     }
 
-    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: CommonUUID, newId: CommonUUID) {
+    fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: IdType, newId: IdType) {
         if (oldId == newId) return
         database.beginTransaction()
         try {

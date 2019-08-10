@@ -1,16 +1,16 @@
 package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexorm.models.ReadTableInfo
-import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
                                                        private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val CommonUUID.asSql get() = "x'${toString().replace("-", "")}'"
+    private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
 
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
@@ -19,7 +19,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     private val KClass<out ComplexOrmTable>.tableName get() = complexOrmTableInfo.basicTableInfo.getValue(longName).first
 
     private val restrictions = mutableMapOf<String, String>()
-    private val existingEntries = mutableMapOf<String, MutableMap<CommonUUID, ComplexOrmTable>>()
+    private val existingEntries = mutableMapOf<String, MutableMap<IdType, ComplexOrmTable>>()
 
     @Suppress("unused")
     private inline fun <reified T : ComplexOrmTable> specialWhere(
@@ -73,7 +73,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                 }
                 is Int, is Long -> "$whereArgument"
                 is Enum<*> -> "${whereArgument.ordinal}"
-                is CommonUUID -> whereArgument.asSql
+                is IdType -> whereArgument.asSql
                 is Collection<*> -> {
                     if (whereArgument.any { it == null }) {
                         where = when {
@@ -81,7 +81,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                                 where.replace("??", "COALESCE(??, 'NULL')")
                             whereArgument.any { it is Enum<*> || it is Int || it is Long || it is ComplexOrmTable } ->
                                 where.replace("??", "COALESCE(??, -1)")
-                            whereArgument.any { it is CommonUUID } ->
+                            whereArgument.any { it is IdType } ->
                                 where.replace("??", "COALESCE(??, x'')")
                             !whereArgument.any { it != null } ->
                                 where
@@ -102,8 +102,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                             whereArgument.joinToString { it?.toString() ?: "-1" }
                         whereArgument.any { it is String } ->
                             whereArgument.joinToString { it?.run { "'$this'" } ?: "'NULL'" }
-                        whereArgument.any { it is CommonUUID } ->
-                            whereArgument.joinToString { it?.let { (it as CommonUUID).asSql } ?: "x''" }
+                        whereArgument.any { it is IdType } ->
+                            whereArgument.joinToString { it?.let { (it as IdType).asSql } ?: "x''" }
                         !whereArgument.any { it != null } -> "NULL"
                         whereArgument.any { it is ComplexOrmTable } ->
                             whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.toString() ?: "-1" }
@@ -160,8 +160,8 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
         return this
     }
 
-    inline fun <reified T : ComplexOrmTable> get(id: CommonUUID?): T? = get(T::class, id)
-    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: CommonUUID?): T? {
+    inline fun <reified T : ComplexOrmTable> get(id: IdType?): T? = get(T::class, id)
+    fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.get(table: KClass<T>, id: IdType?): T? {
         id ?: return null
         val tableClassName = table.longName
         this@ComplexOrmQueryBuilder.restrictions[tableClassName] = if (tableClassName !in restrictions) "$$.id = ${id.asSql}"

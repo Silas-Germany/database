@@ -3,11 +3,11 @@ package com.github.silasgermany.complexorm.models
 import com.github.silasgermany.complexorm.*
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-import com.github.silasgermany.complexormapi.CommonUUID
+import com.github.silasgermany.complexormapi.IdType
 
 class ReadTableInfo constructor(
     val restrictions: Map<String, String>,
-    private val alreadyLoaded: MutableMap<String, MutableMap<CommonUUID, ComplexOrmTable>>,
+    private val alreadyLoaded: MutableMap<String, MutableMap<IdType, ComplexOrmTable>>,
     private val complexOrmTableInfo: ComplexOrmTableInfoInterface
 ) {
     var readIndex = 0
@@ -33,9 +33,9 @@ class ReadTableInfo constructor(
     fun alreadyGiven(tableClassName: String) = tableClassName in givenTables && !isMissingRequest(tableClassName)
     fun alreadyLoading(tableClassName: String) = tableClassName in loadingTables
     fun has(tableClassName: String) = alreadyLoaded.containsKey(tableClassName)
-    fun getTable(tableClassName: String, id: CommonUUID?) = alreadyLoaded[tableClassName]?.get(id)
+    fun getTable(tableClassName: String, id: IdType?) = alreadyLoaded[tableClassName]?.get(id)
     fun setTable(tableClassName: String, table: ComplexOrmTable, specialColumnValue: String? = null) {
-        (table.map[specialColumnValue ?: "id"] as CommonUUID?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
+        (table.map[specialColumnValue ?: "id"] as IdType?)?.let { alreadyLoaded.init(tableClassName)[it] = table }
     }
     fun isMissingRequest(tableClassName: String) = missingEntries?.any { it.longName == tableClassName } == true
 

@@ -1,9 +1,9 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
@@ -105,7 +105,7 @@ expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrm
 expect val KClass<out ComplexOrmTable>.longName: String
 val ComplexOrmTable.longName get() = this::class.longName
 // CommonUUID transformation
-expect val CommonUUID?.asByteArray: ByteArray?
-expect val ByteArray.asCommonUUID: CommonUUID
+expect val IdType?.asByteArray: ByteArray?
+expect val ByteArray.asCommonUUID: IdType
 // Cursor transformation
 expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor

@@ -10,12 +10,12 @@ import kotlin.reflect.KProperty1
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
                                            private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val CommonUUID.asSql get() = "x'${toString().replace("-", "")}'"
+    private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
 
     fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = database.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = database.queryMap(sql, f)
 
-    fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: CommonUUID, returnClass: KClass<V>): V? {
+    fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: IdType, returnClass: KClass<V>): V? {
         return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
             @Suppress("UNCHECKED_CAST")
             if (it.isNull(0)) null
@@ -24,7 +24,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 Int::class -> it.getInt(0) as V
                 Long::class -> it.getLong(0) as V
                 String::class -> it.getString(0) as V
-                else -> throw IllegalArgumentException("Doesn't have type ${returnClass.shortName}")
+                else -> throw IllegalArgumentException("Doesn't have type ${returnClass.className}")
             }
         }.firstOrNull()
     }
@@ -36,13 +36,13 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         tableClassName: String,
         readTableInfo: ReadTableInfo,
         where: String? = null
-    ): List<Pair<CommonUUID?, ComplexOrmTable>> {
+    ): List<Pair<IdType?, ComplexOrmTable>> {
         val requestInfo = RequestInfo(
             readTableInfo.getBasicTableInfoFirstValue(tableClassName), tableClassName, where, readTableInfo
         )
         requestInfo.addData(tableClassName)
 
-        val result: MutableList<Pair<CommonUUID?, ComplexOrmTable>> = mutableListOf()
+        val result: MutableList<Pair<IdType?, ComplexOrmTable>> = mutableListOf()
         database.queryForEach(requestInfo.query) {
             readTableInfo.readIndex = 0
             val (connectedId, databaseEntry) = readColumns(tableClassName, it, readTableInfo, readTableInfo.connectedColumn)
@@ -114,11 +114,11 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                     readTableInfo.has(connectedColumnName)
 
     private fun readColumns(tableClassName: String, cursor: CommonCursor, readTableInfo: ReadTableInfo,
-                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<CommonUUID?, ComplexOrmTable?> {
-        val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID?
+                            connectedColumn: String?, specialConnectedColumn: String? = null): Pair<IdType?, ComplexOrmTable?> {
+        val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType?
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID }
+            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -135,7 +135,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             databaseMap[columnName] = cursor.getValue(readTableInfo.readIndex++, it.value)
         }
 
-        val handleConnectedColumns: (String, String, String?) -> Pair<CommonUUID?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
+        val handleConnectedColumns: (String, String, String?) -> Pair<IdType?, ComplexOrmTable?>? = handleConnectedColumns@{ connectedColumnName, connectedTableClassName, specialConnectedColumnName ->
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@handleConnectedColumns null
             val columnName = readTableInfo.getColumnNamesValue(tableClassName).getValue(connectedColumnName)
             val specialColumnName = specialConnectedColumnName?.let {
@@ -148,7 +148,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID }
+                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType }
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable // (Not sure, why it has to return here)
                 }
             } else databaseMap[columnName] = null
@@ -165,7 +165,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as CommonUUID? }
+        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType? }
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }

@@ -4,10 +4,10 @@ import android.content.ContentValues
 import android.database.CrossProcessCursor
 import android.database.DatabaseErrorHandler
 import com.github.silasgermany.complexorm.models.ComplexOrmCursor
-import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.IdType
 import org.joda.time.DateTime
 import org.json.JSONObject
 import java.io.File
@@ -28,15 +28,15 @@ actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrm
 actual val KClass<out ComplexOrmTable>.longName: String
     get() = java.name.replace("$", ".")
 
-actual val CommonUUID?.asByteArray: ByteArray?
+actual val IdType?.asByteArray: ByteArray?
     get() = this?.let { _ ->
         ByteBuffer.allocate(2 * Long.SIZE_BYTES)
             .putLong(getMostSignificantBits())
             .putLong(getLeastSignificantBits())
             .array()
     }
-actual val ByteArray.asCommonUUID: CommonUUID
-    get() = ByteBuffer.wrap(this).run { CommonUUID(long, long) }
+actual val ByteArray.asCommonUUID: IdType
+    get() = ByteBuffer.wrap(this).run { IdType(long, long) }
 // Factory
 actual fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean): CommonCursor {
     return (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it, withColumnsInfo) }

@@ -2,15 +2,15 @@ package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
-import com.github.silasgermany.complexormapi.CommonUUID
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: CommonFile? = null,
                                             complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val CommonUUID.asSql get() = "x'${toString().replace("-", "")}'"
+    private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
 
     val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 

@@ -190,9 +190,9 @@ actual fun KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.isS
 
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
     get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-actual val com.github.silasgermany.complexormapi.CommonUUID?.asByteArray: ByteArray?
+actual val com.github.silasgermany.complexormapi.IdType?.asByteArray: ByteArray?
     get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-actual val ByteArray.asCommonUUID: com.github.silasgermany.complexormapi.CommonUUID
+actual val ByteArray.asCommonUUID: com.github.silasgermany.complexormapi.IdType
     get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
 actual fun getCursor(
