@@ -12,6 +12,9 @@ sourceSets {
 
 kotlin {
     jvm()
+    linuxX64("linux") {
+        binaries { executable() }
+    }
     //iosX64("ios") { binaries { framework() } }
     sourceSets {
         commonMain {
@@ -36,14 +39,10 @@ kotlin {
                 implementation kotlin('test-junit')
             }
         }
-        iosMain {
-            dependencies {
-            }
-        }
-        iosTest {
-            dependencies {
-            }
-        }
+        iosMain { }
+        iosTest { }
+        linuxMain { }
+        linuxTest { }
     }
 }
 
