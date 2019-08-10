@@ -8,6 +8,8 @@ version '1.0'
 sourceSets {
     main.java.srcDir("src/jvmMain/kotlin")
     main.java.srcDirs += "src/commonMain/kotlin"
+    test.java.srcDir("src/jvmTest/kotlin")
+    test.java.srcDirs += "src/commonTest/kotlin"
 }
 
 kotlin {
