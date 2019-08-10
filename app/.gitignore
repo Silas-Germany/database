@@ -1,5 +1,0 @@
-/build
-src/test/kotlin/com/github/silasgermany/database/RealTablesTest.kt
-src/test/kotlin/com/github/silasgermany/database/tables/DatabaseAll.kt
-src/test/kotlin/com/github/silasgermany/database/tables/DatabaseTable.kt
-src/test/kotlin/com/github/silasgermany/database/tables/FacilitatorChurchTeamEvaluateModel.kt

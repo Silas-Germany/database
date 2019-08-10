@@ -1,0 +1,5 @@
+*
+!dictionaries/*
+!scopes/*
+!inspectionProfiles/Project_Default.xml
+!.gitignore

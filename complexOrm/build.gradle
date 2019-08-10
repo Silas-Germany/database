@@ -4,8 +4,6 @@ plugins {
 apply plugin: "com.android.library"
 apply plugin: 'kotlin-android-extensions'
 
-version '1.0'
-
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -13,7 +11,7 @@ android {
         //noinspection OldTargetApi
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "1.1"
     }
     buildTypes {
         release {
@@ -22,11 +20,9 @@ android {
         }
     }
     sourceSets {
-        main.java.srcDir("src/main/kotlin")
-        main.java.srcDirs += "src/commonMain/kotlin"
-    }
-    packagingOptions {
-        exclude 'META-INF/kotlinx-coroutines-core.kotlin_module'
+        main.manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        main.java.srcDir("src/androidMain/kotlin")
+        test.java.srcDir("src/androidTest/kotlin")
     }
 }
 
@@ -60,7 +56,6 @@ kotlin {
         }
         iosMain {
             dependencies {
-                implementation project(":complexOrmApi")
             }
         }
         iosTest {
