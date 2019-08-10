@@ -15,7 +15,7 @@ actual class CommonSQLiteDatabase private actual constructor(
     syncMode: String
 ) {
     actual fun getVersion(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun setVersion(version: Int) {
@@ -36,7 +36,7 @@ actual class CommonSQLiteDatabase private actual constructor(
         initialValues: CommonContentValues,
         conflictAlgorithm: Int
     ): Long {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun updateWithOnConflict(
@@ -46,7 +46,7 @@ actual class CommonSQLiteDatabase private actual constructor(
         whereArgs: Array<String>?,
         conflictAlgorithm: Int
     ): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun delete(
@@ -54,7 +54,7 @@ actual class CommonSQLiteDatabase private actual constructor(
         whereClause: String,
         whereArgs: Array<String>?
     ): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun execSQL(sql: String) {
@@ -64,18 +64,18 @@ actual class CommonSQLiteDatabase private actual constructor(
         sql: String,
         selectionArgs: Array<String>?
     ): CommonCursor {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }
 
 actual object CommonSQLiteDatabaseObject {
     actual val CONFLICT_IGNORE: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     actual val CONFLICT_FAIL: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     actual val CONFLICT_ROLLBACK: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 }
 
 actual interface CommonCursorFactory
@@ -93,7 +93,7 @@ actual interface CommonCursor {
 }
 
 actual fun <T> CommonCursor.commonUse(block: (CommonCursor) -> T): T {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 actual class CommonContentValues actual constructor() {
@@ -119,43 +119,43 @@ actual class CommonContentValues actual constructor() {
     }
 
     actual fun containsKey(key: String): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun valueSet(): Set<Map.Entry<String, Any?>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
 
 actual class CommonFile actual constructor(parent: String, child: String) {
     actual fun getParentFile(): CommonFile {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual constructor(parent: CommonFile, child: String) : this("", "") {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun listFiles(): Array<CommonFile> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun delete(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun exists(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun mkdir(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }
 
 actual fun CommonFile.commonReadText(): String {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 actual fun CommonFile.commonWriteText(text: String) {
@@ -163,69 +163,69 @@ actual fun CommonFile.commonWriteText(text: String) {
 
 actual class CommonJSONObject actual constructor(json: String) {
     actual fun keys(): Iterator<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun put(name: String, value: Any): CommonJSONObject {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun getJSONObject(name: String): CommonJSONObject {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun getString(name: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
 
 actual val databaseSchema: com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 actual val tableInfo: com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
 actual fun KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.isSubClassOf(table: KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>): Boolean {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 actual val com.github.silasgermany.complexormapi.IdType?.asByteArray: ByteArray?
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 actual val ByteArray.asCommonUUID: com.github.silasgermany.complexormapi.IdType
-    get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
 actual fun getCursor(
     cursor: CommonCursor,
     withColumnsInfo: Boolean
 ): CommonCursor {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 @Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS")
 actual class CommonDateTime actual constructor(var1: Long) {
     actual open fun toString(var1: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual open fun getYear(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun getMonthOfYear(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun getDayOfMonth(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun plusMonths(var1: Int): CommonDateTime {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     actual fun getMillis(): Long {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }

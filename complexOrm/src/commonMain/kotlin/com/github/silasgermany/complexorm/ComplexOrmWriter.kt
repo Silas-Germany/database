@@ -175,7 +175,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         var changed = false
         try {
             if (!contentValues.containsKey("id")) {
-                changedId = CommonUUIDObject.randomCommonUUID()
+                // todo: Handle null as command to not insert it
+                changedId = generateNewId()
                 contentValues.put("id", changedId.asByteArray)
             }
             database.insertWithOnConflict(table, "id", contentValues, CommonSQLiteDatabaseObject.CONFLICT_FAIL).toInt()

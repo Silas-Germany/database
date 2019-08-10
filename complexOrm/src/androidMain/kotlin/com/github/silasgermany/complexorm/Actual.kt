@@ -12,6 +12,7 @@ import org.joda.time.DateTime
 import org.json.JSONObject
 import java.io.File
 import java.nio.ByteBuffer
+import java.util.*
 import kotlin.reflect.KClass
 
 // Get generated classes
@@ -60,3 +61,6 @@ actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonJSONObject = JSONObject
 actual typealias CommonDateTime = DateTime
+
+// Return null if not necessary (if database takes care of it through autoincrement)
+actual fun generateNewId() = UUID.randomUUID()

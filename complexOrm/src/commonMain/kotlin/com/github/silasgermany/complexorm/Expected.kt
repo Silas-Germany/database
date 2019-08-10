@@ -109,3 +109,5 @@ expect val IdType?.asByteArray: ByteArray?
 expect val ByteArray.asCommonUUID: IdType
 // Cursor transformation
 expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
+
+expect fun generateNewId(): IdType?
