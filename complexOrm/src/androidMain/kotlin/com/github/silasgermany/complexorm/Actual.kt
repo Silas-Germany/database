@@ -11,7 +11,6 @@ import com.github.silasgermany.complexormapi.IdType
 import org.joda.time.DateTime
 import org.json.JSONObject
 import java.io.File
-import java.nio.ByteBuffer
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -29,15 +28,6 @@ actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrm
 actual val KClass<out ComplexOrmTable>.longName: String
     get() = java.name.replace("$", ".")
 
-actual val IdType?.asByteArray: ByteArray?
-    get() = this?.let { _ ->
-        ByteBuffer.allocate(2 * Long.SIZE_BYTES)
-            .putLong(getMostSignificantBits())
-            .putLong(getLeastSignificantBits())
-            .array()
-    }
-actual val ByteArray.asCommonUUID: IdType
-    get() = ByteBuffer.wrap(this).run { IdType(long, long) }
 // Factory
 actual fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean): CommonCursor {
     return (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it, withColumnsInfo) }
@@ -54,7 +44,6 @@ actual object CommonSQLiteDatabaseObject {
 actual typealias CommonCursorFactory = android.database.sqlite.SQLiteDatabase.CursorFactory
 actual typealias CommonDatabaseErrorHandler = DatabaseErrorHandler
 actual typealias CommonCursor = android.database.Cursor
-actual fun <T> CommonCursor.commonUse(block: (CommonCursor) -> T): T = use(block)
 actual typealias CommonContentValues = ContentValues
 actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
@@ -63,4 +52,4 @@ actual typealias CommonJSONObject = JSONObject
 actual typealias CommonDateTime = DateTime
 
 // Return null if not necessary (if database takes care of it through autoincrement)
-actual fun generateNewId() = UUID.randomUUID()
+actual fun generateNewId(): IdType? = IdType(UUID.randomUUID())

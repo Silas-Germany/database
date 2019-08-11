@@ -88,13 +88,6 @@ actual interface CommonCursor {
     actual fun getFloat(columnIndex: Int): Float
     actual fun getString(columnIndex: Int): String
     actual fun getBlob(columnIndex: Int): ByteArray
-    actual fun moveToFirst(): Boolean
-    actual fun getCount(): Int
-    actual fun moveToNext(): Boolean
-}
-
-actual fun <T> CommonCursor.commonUse(block: (CommonCursor) -> T): T {
-    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 actual class CommonContentValues actual constructor() {
@@ -191,10 +184,6 @@ actual fun KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.isS
 
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
     get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-actual val IdType?.asByteArray: ByteArray?
-    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-actual val ByteArray.asCommonUUID: IdType
-    get() = null!!//TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
 actual fun getCursor(
     cursor: CommonCursor,
@@ -231,6 +220,4 @@ actual class CommonDateTime actual constructor(var1: Long) {
 
 }
 
-actual fun generateNewId(): IdType? {
-    null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-}
+actual fun generateNewId(): IdType? = null

@@ -51,11 +51,8 @@ expect interface CommonCursor {
     fun getFloat(columnIndex: Int): Float
     fun getString(columnIndex: Int): String
     fun getBlob(columnIndex: Int): ByteArray
-    fun moveToFirst(): Boolean
-    fun getCount(): Int
-    fun moveToNext(): Boolean
 }
-expect fun <T> CommonCursor.commonUse(block: (CommonCursor) -> T): T
+
 expect class CommonContentValues() {
     fun putNull(key: String)
     fun put(key: String, value: String)
@@ -104,9 +101,6 @@ expect val tableInfo: ComplexOrmTableInfoInterface
 expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
 expect val KClass<out ComplexOrmTable>.longName: String
 val ComplexOrmTable.longName get() = this::class.longName
-// CommonUUID transformation
-expect val IdType?.asByteArray: ByteArray?
-expect val ByteArray.asCommonUUID: IdType
 // Cursor transformation
 expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
 
