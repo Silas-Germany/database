@@ -7,13 +7,12 @@ import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexormapi.Day
 import kotlinx.cinterop.*
 import sqlite3.*
-import kotlin.experimental.and
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
     
     fun Int.checkResult() {
-        if (this != 0) {
+        if (this != SQLITE_OK) {
             throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
         }
     }
@@ -35,25 +34,35 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         }
     }
 
-    private val ByteArray.asHex: String get() {
-        val hexArray = "0123456789ABCDEF".toCharArray()
-        val hexChars = CharArray(size * 2)
-        indices.forEach {
-            val lowestByte = (this[it] and 0xFF.toByte()).toInt()
-            hexChars[it * 2] = hexArray[lowestByte ushr 4]
-            hexChars[it * 2 + 1] = hexArray[lowestByte and 0x0F]
+    private fun execSqlWithBlob(sql: String, blobValues: MutableList<ByteArray>) {
+        useSqlStatement(sql) {
+            (1..blobValues.size).forEach { index ->
+                sqlite3_bind_blob(
+                    it,
+                    index,
+                    blobValues[index].refTo(0),
+                    blobValues[index].size,
+                    SQLITE_TRANSIENT
+                ).checkResult()
+            }
+            if (sqlite3_step(it) != SQLITE_DONE) {
+                throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
+            }
         }
-        return String(hexChars)
+        blobValues.clear()
     }
 
-    private val Any?.sqlValue get() = 
+    private fun Any?.sqlValue(blobValues: MutableList<ByteArray>) =
         when (this) {
             null -> "null"
             is String -> "'$this'"
             is Boolean -> if (this) "1" else "0"
             is Day -> this.asSql
             is CommonDateTime -> "${this.getMillis() / 1000}"
-            is ByteArray -> "x'${this.asHex}'"
+            is ByteArray -> {
+                blobValues.add(this)
+                "?"
+            }
             else -> "$this"
         }
 
@@ -61,17 +70,21 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         table: String,
         values: Map<String, Any?>
     ): Long {
+        val blobValues = mutableListOf<ByteArray>()
         val sql = "INSERT OR REPLACE INTO $table(${values.keys.joinToString(",")})" +
-                "VALUES(${values.values.joinToString(",") { it.sqlValue }});"
-        execSQL(sql)
+                "VALUES(${values.values.joinToString(",") { it.sqlValue(blobValues) }});"
+        if (blobValues.isEmpty()) execSQL(sql)
+        else execSqlWithBlob(sql, blobValues)
         return sqlite3_last_insert_rowid(db)
     }
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int {
+        val blobValues = mutableListOf<ByteArray>()
         val sql = "UPDATE $table SET " +
-                "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue}" }} " +
+                "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
                 "WHERE $whereClause;"
-        execSQL(sql)
+        if (blobValues.isEmpty()) execSQL(sql)
+        else execSqlWithBlob(sql, blobValues)
         return sqlite3_changes(db)
     }
 
@@ -85,79 +98,77 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         sqlite3_exec(db, sql, null, null, null).checkResult()
     }
 
-    class Cursor(private val cursor: CPointer<sqlite3_stmt>) : CommonCursor {
+    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor {
         override fun isNull(columnIndex: Int): Boolean =
-            sqlite3_column_type(cursor, columnIndex) == SQLITE_NULL
+            sqlite3_column_type(it, columnIndex) == SQLITE_NULL
         override fun getInt(columnIndex: Int): Int =
-            sqlite3_column_int(cursor, columnIndex)
+            sqlite3_column_int(it, columnIndex)
         override fun getLong(columnIndex: Int): Long =
-            sqlite3_column_double(cursor, columnIndex).toLong()
+            sqlite3_column_double(it, columnIndex).toLong()
         override fun getFloat(columnIndex: Int): Float =
-            sqlite3_column_double(cursor, columnIndex).toFloat()
+            sqlite3_column_double(it, columnIndex).toFloat()
         override fun getString(columnIndex: Int): String {
-            val size = sqlite3_column_bytes(cursor, columnIndex)
-            return sqlite3_column_text(cursor, columnIndex)?.readBytes(size)?.stringFromUtf8() ?: ""
+            val size = sqlite3_column_bytes(it, columnIndex)
+            return sqlite3_column_text(it, columnIndex)?.readBytes(size)?.stringFromUtf8() ?: ""
         }
         override fun getBlob(columnIndex: Int): ByteArray {
-            val size = sqlite3_column_bytes(cursor, columnIndex)
-            return sqlite3_column_blob(cursor, columnIndex)?.readBytes(size) ?: byteArrayOf()
+            val size = sqlite3_column_bytes(it, columnIndex)
+            return sqlite3_column_blob(it, columnIndex)?.readBytes(size) ?: byteArrayOf()
         }
     }
 
-    fun createCursor(sqlQuery: String) = memScoped {
-        val cursorPointer = allocPointerTo<sqlite3_stmt>()
-        sqlite3_prepare_v2(db, sqlQuery,
-            -1, cursorPointer.ptr, null).checkResult()
-        cursorPointer.value
-    } ?: throw IllegalArgumentException("Couldn't create cursor")
+    inline fun <T>useSqlStatement(sqlQuery: String, useStatement: (CPointer<sqlite3_stmt>) -> T): T {
+        val cursor = memScoped {
+            val itPointer = allocPointerTo<sqlite3_stmt>()
+            sqlite3_prepare_v2(db, sqlQuery,
+                -1, itPointer.ptr, null).checkResult()
+            itPointer.value
+        } ?: throw IllegalArgumentException("Couldn't create it")
+        try {
+            return useStatement(cursor)
+        } finally {
+            sqlite3_finalize(cursor).checkResult()
+        }
+    }
 
     override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
-        val cursor = createCursor(sql)
-        try {
-            var stepStatus: Int = sqlite3_step(cursor)
+        useSqlStatement(sql) {
+            var stepStatus: Int = sqlite3_step(it)
             while (stepStatus == SQLITE_ROW) {
-                f(Cursor(cursor))
-                stepStatus = sqlite3_step(cursor)
+                f(Cursor(it))
+                stepStatus = sqlite3_step(it)
             }
             if (stepStatus != SQLITE_DONE) {
                 throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
             }
-        } finally {
-            sqlite3_finalize(cursor).checkResult()
         }
     }
     override inline fun <T> queryMap(
         sql: String,
         f: (CommonCursor) -> T
     ): List<T> {
-        val cursor = createCursor(sql)
-        try {
-            var stepStatus: Int = sqlite3_step(cursor)
+        useSqlStatement(sql) {
+            var stepStatus: Int = sqlite3_step(it)
             val result = mutableListOf<T>()
             while (stepStatus == SQLITE_ROW) {
-                result.add(f(Cursor(cursor)))
-                stepStatus = sqlite3_step(cursor)
+                result.add(f(Cursor(it)))
+                stepStatus = sqlite3_step(it)
             }
             if (stepStatus != SQLITE_DONE) {
                 throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
             }
             return result
-        } finally {
-            sqlite3_finalize(cursor).checkResult()
         }
     }
 
     override var version: Int
         get() {
-            val cursor = createCursor("PRAGMA schema_version;")
-            try {
-                if (sqlite3_step(cursor) == SQLITE_ROW) {
-                    return sqlite3_column_int(cursor, 0)
+            return useSqlStatement("PRAGMA schema_version;") {
+                if (sqlite3_step(it) == SQLITE_ROW) {
+                    sqlite3_column_int(it, 0)
                 } else {
                     throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
                 }
-            } finally {
-                sqlite3_finalize(cursor).checkResult()
             }
         }
         set(value) {
