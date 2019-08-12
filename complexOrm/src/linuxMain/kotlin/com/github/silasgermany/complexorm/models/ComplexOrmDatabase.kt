@@ -138,20 +138,20 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     inline fun <T>useSqlStatement(sqlQuery: String, useStatement: (CPointer<sqlite3_stmt>) -> T): T {
-        val cursor = memScoped {
+        val sqlStatement = memScoped {
             val itPointer = allocPointerTo<sqlite3_stmt>()
             sqlite3_prepare_v2(db, sqlQuery,
                 -1, itPointer.ptr, null).checkResult()
             itPointer.value
         } ?: throw IllegalArgumentException("Couldn't create it")
         try {
-            return useStatement(cursor)
+            return useStatement(sqlStatement)
         } finally {
-            sqlite3_finalize(cursor).checkResult()
+            sqlite3_finalize(sqlStatement).checkResult()
         }
     }
 
-    override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
+    actual override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
             while (stepStatus == SQLITE_ROW) {
@@ -163,7 +163,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             }
         }
     }
-    override inline fun <T> queryMap(
+    actual override inline fun <T> queryMap(
         sql: String,
         f: (CommonCursor) -> T
     ): List<T> {

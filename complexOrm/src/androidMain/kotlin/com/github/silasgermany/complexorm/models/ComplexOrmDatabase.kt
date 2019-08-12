@@ -60,14 +60,14 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         database.execSQL(sql)
     }
 
-    override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
+    actual override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
         database.rawQuery(sql, null).use {
             it.moveToFirst()
             while (it.moveToNext()) f(it as CommonCursor)
         }
     }
     @SuppressLint("Recycle")
-    override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> {
+    actual override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> {
         val cursor = database.rawQuery(sql, null)
         val ownCursor = (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
             ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
