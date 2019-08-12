@@ -6,6 +6,7 @@ import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexorm.CommonSQLiteDatabase
 import com.github.silasgermany.complexormapi.Day
 import com.github.silasgermany.complexormapi.IdType
+import java.util.*
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase(val database: CommonSQLiteDatabase):
@@ -32,13 +33,17 @@ actual class ComplexOrmDatabase(val database: CommonSQLiteDatabase):
                 is Day -> put(key, value.asSql)
                 is CommonDateTime -> put(key, (value.millis / 1000).toInt())
                 is ByteArray -> put(key, value)
+                is IdType -> put(key, value.bytes)
                 else -> throw IllegalArgumentException()
             }
         }
     }
 
-    override fun insert(table: String, values: Map<String, Any?>): Long =
-        database.insertWithOnConflict(table, null, values.asContentValues, 0)
+    override fun insert(table: String, values: Map<String, Any?>): Long {
+        val valuesWithId = if ("id" in values) values
+        else values + ("id" to IdType(UUID.randomUUID()))
+        return database.insertWithOnConflict(table, null, valuesWithId.asContentValues, 0)
+    }
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int =
         database.update(table, values.asContentValues, whereClause, null)

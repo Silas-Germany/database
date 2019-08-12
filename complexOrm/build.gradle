@@ -30,7 +30,8 @@ kotlin {
     android('android')
     linuxX64("linux") {
         compilations.main.cinterops {
-            sqlite3 { compilerOpts '-I/usr/include/' }
+            sqlite3
+            uuid
         }
         binaries { executable() }
     }

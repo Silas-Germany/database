@@ -7,10 +7,20 @@ import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexormapi.Day
 import kotlinx.cinterop.*
 import sqlite3.*
+import uuid.uuid_generate
+import uuid.uuid_t
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
-    
+
+    init {
+        memScoped {
+            val id: uuid_t = allocArray(16)
+            uuid_generate(id)
+            println(id)
+        }
+    }
+
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
             throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
@@ -70,9 +80,19 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         table: String,
         values: Map<String, Any?>
     ): Long {
+        // For UUID Id only
+        val valuesWithId = if ("id" in values) values
+        else {
+            val id = memScoped {
+                val id: uuid_t = allocArray(16)
+                uuid_generate(id)
+                id.readBytes(16)
+            }
+            values + ("id" to id)
+        }
         val blobValues = mutableListOf<ByteArray>()
-        val sql = "INSERT OR REPLACE INTO $table(${values.keys.joinToString(",")})" +
-                "VALUES(${values.values.joinToString(",") { it.sqlValue(blobValues) }});"
+        val sql = "INSERT OR REPLACE INTO $table(${valuesWithId.keys.joinToString(",")})" +
+                "VALUES(${valuesWithId.values.joinToString(",") { it.sqlValue(blobValues) }});"
         if (blobValues.isEmpty()) execSQL(sql)
         else execSqlWithBlob(sql, blobValues)
         return sqlite3_last_insert_rowid(db)

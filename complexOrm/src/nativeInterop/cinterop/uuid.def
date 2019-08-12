@@ -1,0 +1,5 @@
+headers = uuid/uuid.h
+headerFilter = uuid/uuid.h
+package = uuid
+linkerOpts = -L/usr/lib/ -luuid
+compilerOpts = -I/usr/include/
