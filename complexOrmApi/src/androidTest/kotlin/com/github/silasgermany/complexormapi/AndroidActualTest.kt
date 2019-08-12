@@ -1,7 +1,8 @@
 package com.github.silasgermany.complexormapi
 
 import java.util.*
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class AndroidActualTest {
 

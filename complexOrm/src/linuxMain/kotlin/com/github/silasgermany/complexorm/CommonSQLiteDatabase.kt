@@ -11,7 +11,7 @@ actual abstract class CommonCursor {
     actual abstract fun getFloat(columnIndex: Int): Float
     actual abstract fun getString(columnIndex: Int): String
     actual abstract fun getBlob(columnIndex: Int): ByteArray
-    actual fun getId(columnIndex: Int): IdType = getBlob(columnIndex)
+    actual fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
 }
 
 actual class CommonFile actual constructor(parent: String, child: String) {

@@ -3,7 +3,8 @@ package com.github.silasgermany.complexorm
 import com.github.silasgermany.complexormapi.Day
 import com.github.silasgermany.complexormapi.className
 import com.github.silasgermany.complexormapi.className2
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ExpectTest {
 

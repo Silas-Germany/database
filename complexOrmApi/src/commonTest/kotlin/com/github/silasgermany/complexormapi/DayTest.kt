@@ -1,6 +1,9 @@
 package com.github.silasgermany.complexormapi
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFails
+import kotlin.test.fail
 
 class DayTest {
 

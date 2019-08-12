@@ -6,13 +6,18 @@ import kotlin.reflect.KClass
 
 // Replace with Int or Long if such an ID should be used
 actual class IdType(private val uuid: UUID) {
-    constructor(bytes: ByteArray) : this(ByteBuffer.wrap(bytes).run { UUID(long, long) })
-    val bytes: ByteArray = uuid.run {
+
+    constructor(bytes: ByteArray) : this(ByteBuffer.wrap(bytes).run { UUID(long, long) }) {
+        if (bytes.size != 16) throw IllegalArgumentException("Wrong byte size (${bytes.size})")
+    }
+
+    val bytes: ByteArray get() = uuid.run {
         ByteBuffer.allocate(2 * Long.SIZE_BYTES)
             .putLong(mostSignificantBits)
             .putLong(leastSignificantBits)
             .array()
     }
+
     actual override fun toString() = "x'${uuid.toString().replace("-", "")}'"
 }
 
