@@ -1,22 +1,26 @@
 package com.github.silasgermany.complexorm.models
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.database.CrossProcessCursor
+import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
-import com.github.silasgermany.complexorm.CommonSQLiteDatabase
 import com.github.silasgermany.complexormapi.Day
 import com.github.silasgermany.complexormapi.IdType
 import java.util.*
 
 @Suppress("OVERRIDE_BY_INLINE")
-actual class ComplexOrmDatabase(val database: CommonSQLiteDatabase):
-    ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
 
-    override inline fun doInTransaction(f: () -> Unit) {
+    val database: SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(path, null)
+
+    actual override inline fun <T>doInTransaction(f: () -> T): T {
         database.beginTransaction()
-        try {
-            f()
-            database.setTransactionSuccessful()
+        return try {
+            f().also {
+                database.setTransactionSuccessful()
+            }
         } finally {
             database.endTransaction()
         }
@@ -39,10 +43,11 @@ actual class ComplexOrmDatabase(val database: CommonSQLiteDatabase):
         }
     }
 
-    override fun insert(table: String, values: Map<String, Any?>): Long {
-        val valuesWithId = if ("id" in values) values
+    override fun insert(table: String, values: Map<String, Any?>): IdType {
+        val valuesWithId = if (values["id"] != null) values
         else values + ("id" to IdType(UUID.randomUUID()))
-        return database.insertWithOnConflict(table, null, valuesWithId.asContentValues, 0)
+        database.insertWithOnConflict(table, null, valuesWithId.asContentValues, SQLiteDatabase.CONFLICT_ROLLBACK)
+        return valuesWithId["id"] as IdType
     }
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int =
@@ -58,14 +63,19 @@ actual class ComplexOrmDatabase(val database: CommonSQLiteDatabase):
     override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
         database.rawQuery(sql, null).use {
             it.moveToFirst()
-            while (it.moveToNext()) f(it)
+            while (it.moveToNext()) f(it as CommonCursor)
         }
     }
-    override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> =
-        database.rawQuery(sql, null).use {
+    @SuppressLint("Recycle")
+    override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> {
+        val cursor = database.rawQuery(sql, null)
+        val ownCursor = (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
+            ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
+        ownCursor.use {
             it.moveToFirst()
-            (0 until it.count).map { _ -> f(it).apply { it.moveToNext() } }
+            return (0 until it.count).map { _ -> f(it as CommonCursor).apply { it.moveToNext() } }
         }
+    }
 
     override var version: Int
         get() = database.version

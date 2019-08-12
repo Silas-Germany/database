@@ -1,11 +1,11 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexormapi.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmWriter internal constructor(private val database: ComplexOrmDatabaseInterface,
+class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                                             private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
@@ -15,12 +15,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
     fun execSQL(sql: String) = database.execSQL(sql)
 
     fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
-        try {
-            database.beginTransaction()
-            return write(table, writeDeep)
-                .apply { database.setTransactionSuccessful() }
-        } finally {
-            database.endTransaction()
+        return database.doInTransaction {
+            write(table, writeDeep)
         }
     }
 
@@ -32,7 +28,7 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
         .getValue(longName).first
 
     private fun write(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
-        val contentValues = CommonContentValues()
+        val contentValues = mutableMapOf<String, Any?>()
         val tableName = table.tableName
         val tableClassName: String = table.longName
         val rootTableClass = complexOrmTableInfo.basicTableInfo.
@@ -56,18 +52,18 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
             normalColumns[sqlKey]?.also { type ->
                 keyFound = true
                 if (value == null) {
-                    if (sqlKey != "id") contentValues.putNull(sqlKey)
+                    if (sqlKey != "id") contentValues[sqlKey] = null
                 } else when (ComplexOrmTypes.values().find { it.name == type }
                     ?: throw IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
-                    ComplexOrmTypes.String -> contentValues.put(sqlKey, value as String)
-                    ComplexOrmTypes.Int -> contentValues.put(sqlKey, value as Int)
-                    ComplexOrmTypes.Boolean -> contentValues.put(sqlKey, if (value as Boolean) 1 else 0)
-                    ComplexOrmTypes.Long -> contentValues.put(sqlKey, value as Long)
-                    ComplexOrmTypes.Float -> contentValues.put(sqlKey, value as Float)
-                    ComplexOrmTypes.Date -> contentValues.put(sqlKey, (value as Day).asSql)
-                    ComplexOrmTypes.DateTime -> contentValues.put(sqlKey, ((value as CommonDateTime).getMillis() / 1000).toInt())
-                    ComplexOrmTypes.Uuid -> contentValues.put(sqlKey, (value as IdType).asByteArray)
-                    ComplexOrmTypes.ByteArray -> contentValues.put(sqlKey, value as ByteArray)
+                    ComplexOrmTypes.String -> contentValues[sqlKey] = value as String
+                    ComplexOrmTypes.Int -> contentValues[sqlKey] = value as Int
+                    ComplexOrmTypes.Boolean -> contentValues[sqlKey] = if (value as Boolean) 1 else 0
+                    ComplexOrmTypes.Long -> contentValues[sqlKey] = value as Long
+                    ComplexOrmTypes.Float -> contentValues[sqlKey] = value as Float
+                    ComplexOrmTypes.Date -> contentValues[sqlKey] = (value as Day).asSql
+                    ComplexOrmTypes.DateTime -> contentValues[sqlKey] = ((value as CommonDateTime).getMillis() / 1000).toInt()
+                    ComplexOrmTypes.Uuid -> contentValues[sqlKey] = (value as IdType)
+                    ComplexOrmTypes.ByteArray -> contentValues[sqlKey] = value as ByteArray
                 }
             }
             connectedColumns[sqlKey]?.let {
@@ -79,8 +75,8 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                             if (!writeDeep) return@let
                             write(connectedEntry)
                         }
-                        contentValues.put("${sqlKey.toSql()}_id", connectedEntry.id.toString())
-                    } else contentValues.putNull("${sqlKey.toSql()}_id")
+                        contentValues["${sqlKey.toSql()}_id"] = connectedEntry.id.toString()
+                    } else contentValues["${sqlKey.toSql()}_id"] = null
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
@@ -106,15 +102,15 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                 try {
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(joinTable).first
                     delete("${tableName}_$sqlKey", "${tableName}_id", table.id)
-                    val innerContentValues = CommonContentValues()
-                    innerContentValues.put("${tableName}_id", table.id.asByteArray)
+                    val innerContentValues = mutableMapOf<String, Any?>()
+                    innerContentValues["${tableName}_id"] = table.id
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
                             write(joinTableEntry)
                         }
-                        innerContentValues.put("${joinTableName}_id", joinTableEntry.id.asByteArray)
+                        innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         save("${tableName}_$sqlKey", innerContentValues)
                     }
                 } catch (e: Throwable) {
@@ -126,15 +122,15 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val (reverseJoinTableDataFirst, reverseJoinTableDataSecond) = reverseJoinTableData.split(';').let { it[0] to it[1] }
                     val joinTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseJoinTableDataFirst).first
                     delete("${joinTableName}_$reverseJoinTableDataSecond", "${tableName}_id", table.id)
-                    val innerContentValues = CommonContentValues()
-                    innerContentValues.put("${tableName}_id", table.id.asByteArray)
+                    val innerContentValues = mutableMapOf<String, Any?>()
+                    innerContentValues["${tableName}_id"] = table.id
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
                             write(joinTableEntry)
                         }
-                        innerContentValues.put("${joinTableName}_id", joinTableEntry.id.asByteArray)
+                        innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         save("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues)
                     }
                 } catch (e: Throwable) {
@@ -145,15 +141,15 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                 try {
                     val (reverseConnectedTableDataFirst, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableDataFirst).first
-                    val innerContentValues = CommonContentValues()
+                    val innerContentValues = mutableMapOf<String, Any?>()
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
                             write(joinTableEntry)
                         }
-                        innerContentValues.put("${reverseConnectedTableDataSecond}_id", table.id.asByteArray)
-                        update(connectedTableName, innerContentValues, joinTableEntry.id)
+                        innerContentValues["${reverseConnectedTableDataSecond}_id"] = table.id
+                        database.updateOne(connectedTableName, innerContentValues, joinTableEntry.id)
                     }
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
@@ -167,88 +163,57 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
 
     private fun delete(table: String, column: String, id: IdType?) {
         id ?: return
-        database.delete(table, "$column = ${id.asSql}", null)
+        database.delete(table, "$column=$id")
     }
 
-    private fun save(table: String, contentValues: CommonContentValues): IdType? {
-        var changedId = (contentValues.valueSet().find { it.key == "id" }?.value as ByteArray?)?.asCommonUUID
-        var changed = false
-        try {
-            if (!contentValues.containsKey("id")) {
-                // todo: Handle null as command to not insert it
-                changedId = generateNewId()
-                contentValues.put("id", changedId.asByteArray)
-            }
-            database.insertWithOnConflict(table, "id", contentValues, CommonSQLiteDatabaseObject.CONFLICT_FAIL).toInt()
-            changed = true
-        } catch (e: Throwable) {
-            if (changedId == null) {
-                throw IllegalArgumentException("Couldn't insert values $contentValues in $table", e)
-            }
-        }
-        if (!changed) {
-            database.updateWithOnConflict(table, contentValues, "id = ${changedId.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
-                .let { if (it != 1) throw IllegalArgumentException("Couldn't update values $contentValues for $table") }
-        }
-        return changedId
-    }
-
-    private fun update(table: String, contentValues: CommonContentValues, id: IdType?) {
-        id ?: return
-        val changed = database.updateWithOnConflict(table, contentValues, "id = ${id.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
-        if (changed != 1) throw IllegalArgumentException("Couldn't update values $contentValues for $table (ID: $id)")
+    private fun save(table: String, contentValues: MutableMap<String, Any?>): IdType? {
+        return database.insertOrUpdate(table, contentValues)
     }
 
     fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType, value: R) {
-        val contentValues = CommonContentValues()
+        val contentValues = mutableMapOf<String, Any?>()
         when (value) {
-            is Int -> contentValues.put(column.name.toSql(), value)
-            is String -> contentValues.put(column.name.toSql(), value)
-            is Long -> contentValues.put(column.name.toSql(), value)
-            is Boolean -> contentValues.put(column.name.toSql(), value)
-            is ByteArray -> contentValues.put(column.name.toSql(), value)
+            is Int -> contentValues[column.name.toSql()] = value
+            is String -> contentValues[column.name.toSql()] = value
+            is Long -> contentValues[column.name.toSql()] = value
+            is Boolean -> contentValues[column.name.toSql()] = value
+            is ByteArray -> contentValues[column.name.toSql()] = value
             else -> throw IllegalArgumentException("Can't save value $value (unknown type)")
         }
-        contentValues.put("id", id.asByteArray)
+        contentValues["id"] = id
         save(table.tableName, contentValues)
     }
 
     fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: IdType, newId: IdType) {
         if (oldId == newId) return
-        database.beginTransaction()
-        try {
+        database.doInTransaction {
             val tableClass = table.longName
             val tableName = table.tableName
-            val values = CommonContentValues()
-            values.put(ComplexOrmTable::id.name.toSql(), newId.asByteArray)
+            val values = mutableMapOf<String, Any?>()
+            values[ComplexOrmTable::id.name.toSql()] = newId
             try {
-                val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
-                        null, CommonSQLiteDatabaseObject.CONFLICT_IGNORE)
-                if (feedback == -1) return
+                if (!database.updateOne(tableName, values, oldId)) return@doInTransaction
             } catch (e: Throwable) {
                 if (!e.toString().contains("SQLiteConstraintException")) throw e
-                database.delete(tableName, "id = $newId", null)
-                val feedback = database.updateWithOnConflict(tableName, values, "id = $oldId",
-                        null, CommonSQLiteDatabaseObject.CONFLICT_IGNORE)
-                if (feedback == -1) return
+                database.deleteOne(tableName, newId)
+                if (!database.updateOne(tableName, values, oldId)) return@doInTransaction
             }
             complexOrmTableInfo.connectedColumns.forEach { connectedTable ->
                 connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTable.key).first
                     val idColumnName = "${connectedColumn.key}_id"
-                    val contentValues = CommonContentValues()
-                    contentValues.put(idColumnName, newId.asByteArray)
-                    database.updateWithOnConflict(connectedTableName, contentValues,
-                            "$idColumnName = ${oldId.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
+                    val contentValues = mutableMapOf<String, Any?>()
+                    contentValues[idColumnName] = newId
+                    database.update(connectedTableName, contentValues, "$idColumnName = ${oldId.asSql}")
                 }
             }
             complexOrmTableInfo.joinColumns.forEach { connectedTable ->
                 connectedTable.value.filter { it.value == tableClass }.forEach { connectedColumn ->
                     val idColumnName = "${tableName}_id"
-                    val contentValues = CommonContentValues()
-                    contentValues.put(idColumnName, newId.asByteArray)
-                    database.updateWithOnConflict("${tableName}_${connectedColumn.key}", contentValues,
-                            "$idColumnName = ${oldId.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
+                    val contentValues = mutableMapOf<String, Any?>()
+                    contentValues[idColumnName] = newId
+                    database.update("${tableName}_${connectedColumn.key}", contentValues,
+                        "$idColumnName = ${oldId.asSql}")
                 }
             }
             complexOrmTableInfo.reverseJoinColumns.forEach { connectedTable ->
@@ -256,10 +221,10 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
                     val idColumnName = "${tableName}_id"
-                    val contentValues = CommonContentValues()
-                    contentValues.put(idColumnName, newId.asByteArray)
-                    database.updateWithOnConflict("${connectedTableName}_$connectedColumn", contentValues,
-                            "$idColumnName = ${oldId.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
+                    val contentValues = mutableMapOf<String, Any?>()
+                    contentValues[idColumnName] = newId
+                    database.update("${connectedTableName}_$connectedColumn", contentValues,
+                        "$idColumnName = ${oldId.asSql}")
                 }
             }
             complexOrmTableInfo.reverseConnectedColumns.forEach { connectedTable ->
@@ -267,28 +232,14 @@ class ComplexOrmWriter internal constructor(private val database: ComplexOrmData
                     val (connectedTableClass, connectedColumn) = connectedTableAndColumn.value.split(';')
                     val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(connectedTableClass).first
                     val idColumnName = "${connectedColumn}_id"
-                    val contentValues = CommonContentValues()
-                    contentValues.put(idColumnName, newId.asByteArray)
-                    database.updateWithOnConflict(connectedTableName, contentValues,
-                            "$idColumnName = ${oldId.asSql}", null, CommonSQLiteDatabaseObject.CONFLICT_ROLLBACK)
+                    val contentValues = mutableMapOf<String, Any?>()
+                    contentValues[idColumnName] = newId
+                    database.update(connectedTableName, contentValues,
+                        "$idColumnName = ${oldId.asSql}")
                 }
             }
-            database.setTransactionSuccessful()
-        } finally {
-            database.endTransaction()
         }
     }
-    inline fun <T>doInTransaction(f: () -> T, errorHandling: (Throwable) -> Unit) {
-        beginTransaction()
-        try {
-            f().also { setTransactionSuccessful() }
-        } catch (e: Throwable) {
-            errorHandling(e)
-        } finally {
-            endTransaction()
-        }
-    }
-    fun beginTransaction() = database.beginTransaction()
-    fun setTransactionSuccessful() = database.setTransactionSuccessful()
-    fun endTransaction() = database.endTransaction()
+
+    inline fun <T>doInTransaction(f: () -> T) = database.doInTransaction(f)
 }

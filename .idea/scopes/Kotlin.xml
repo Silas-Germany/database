@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Kotlin" pattern="file:src/*/kotlin//*||file:kotlin//*||file:src/*/java//*||file[*iosMain]:*/||file[*commonMain]:*/" />
+</component>

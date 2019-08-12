@@ -41,8 +41,8 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val dropTableCommands = (rootTablesList.map {
             val tableName = it.second.tableName!!
             it.second.columns.forEach { column ->
-                column.getAnnotationValue(ComplexOrmIndex::class)?.let {
-                    joinTables.add("index_${tableName}_${it as? Int ?: 1}")
+                column.getAnnotationValue(ComplexOrmIndex::class)?.let { annotationValue ->
+                    joinTables.add("index_${tableName}_${annotationValue as? Int ?: 1}")
                 }
                 if (column.columnType.type == InternComplexOrmTypes.ComplexOrmTables)
                     joinTables.add("${tableName}_${column.columnName}")

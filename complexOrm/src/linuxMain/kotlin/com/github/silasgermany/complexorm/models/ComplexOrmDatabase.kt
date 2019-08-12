@@ -5,13 +5,14 @@ import cnames.structs.sqlite3_stmt
 import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexormapi.Day
+import com.github.silasgermany.complexormapi.IdType
 import kotlinx.cinterop.*
 import sqlite3.*
 import uuid.uuid_generate
 import uuid.uuid_t
 
 @Suppress("OVERRIDE_BY_INLINE")
-actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
 
     init {
         memScoped {
@@ -33,11 +34,12 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         databasePointer.value
     }
 
-    override inline fun doInTransaction(f: () -> Unit) {
+    actual override inline fun <T>doInTransaction(f: () -> T): T {
         execSQL("BEGIN TRANSACTION;")
-        try {
-            f()
-            execSQL("COMMIT TRANSACTION;")
+        return try {
+            f().also {
+                execSQL("COMMIT TRANSACTION;")
+            }
         } catch (e: Throwable) {
             execSQL("ROLLBACK TRANSACTION;")
             throw e
@@ -76,12 +78,9 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
             else -> "$this"
         }
 
-    override fun insert(
-        table: String,
-        values: Map<String, Any?>
-    ): Long {
+    override fun insert(table: String, values: Map<String, Any?>): IdType {
         // For UUID Id only
-        val valuesWithId = if ("id" in values) values
+        val valuesWithId = if (values["id"] != null) values
         else {
             val id = memScoped {
                 val id: uuid_t = allocArray(16)
@@ -95,7 +94,8 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
                 "VALUES(${valuesWithId.values.joinToString(",") { it.sqlValue(blobValues) }});"
         if (blobValues.isEmpty()) execSQL(sql)
         else execSqlWithBlob(sql, blobValues)
-        return sqlite3_last_insert_rowid(db)
+        sqlite3_last_insert_rowid(db)
+        return valuesWithId["id"] as IdType
     }
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int {
@@ -118,7 +118,7 @@ actual class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         sqlite3_exec(db, sql, null, null, null).checkResult()
     }
 
-    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor {
+    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor() {
         override fun isNull(columnIndex: Int): Boolean =
             sqlite3_column_type(it, columnIndex) == SQLITE_NULL
         override fun getInt(columnIndex: Int): Int =

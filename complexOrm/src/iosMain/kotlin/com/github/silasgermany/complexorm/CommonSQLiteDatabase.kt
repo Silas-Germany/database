@@ -33,7 +33,7 @@ actual class CommonSQLiteDatabase private actual constructor(
     actual fun insertWithOnConflict(
         table: String,
         nullColumnHack: String?,
-        initialValues: CommonContentValues,
+        initialValues: MutableMap<String, Any?>,
         conflictAlgorithm: Int
     ): Long {
         null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -41,7 +41,7 @@ actual class CommonSQLiteDatabase private actual constructor(
 
     actual fun updateWithOnConflict(
         table: String,
-        values: CommonContentValues,
+        values: MutableMap<String, Any?>,
         whereClause: String,
         whereArgs: Array<String>?,
         conflictAlgorithm: Int
@@ -94,37 +94,6 @@ actual interface CommonCursor {
 
 actual fun <T> CommonCursor.commonUse(block: (CommonCursor) -> T): T {
     null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-}
-
-actual class CommonContentValues actual constructor() {
-    actual fun putNull(key: String) {
-    }
-
-    actual fun put(key: String, value: String) {
-    }
-
-    actual fun put(key: String, value: Int) {
-    }
-
-    actual fun put(key: String, value: Boolean) {
-    }
-
-    actual fun put(key: String, value: Long) {
-    }
-
-    actual fun put(key: String, value: Float) {
-    }
-
-    actual fun put(key: String, value: ByteArray?) {
-    }
-
-    actual fun containsKey(key: String): Boolean {
-        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    actual fun valueSet(): Set<Map.Entry<String, Any?>> {
-        null!!//TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 }
 
 actual class CommonFile actual constructor(parent: String, child: String) {

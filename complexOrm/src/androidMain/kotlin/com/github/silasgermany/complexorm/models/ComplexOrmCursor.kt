@@ -6,13 +6,12 @@ import android.net.Uri
 import android.os.Bundle
 import com.github.silasgermany.complexorm.CommonCursor
 
-class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = false): CommonCursor {
+class ComplexOrmCursor(cursor: CrossProcessCursor): CommonCursor() {
 
     private var window = CursorWindow(null)
     private var cursorPosition = 0
     private val count: Int
     private var closed = false
-    private var columns: Array<String>? = if (withColumnsInfo) cursor.columnNames else null
     val valid: Boolean
 
     init {
@@ -76,7 +75,7 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = fa
     }
 
     override fun isNull(columnIndex: Int): Boolean {
-        return window.getType(cursorPosition, columnIndex) == CommonCursor.FIELD_TYPE_NULL
+        return window.getType(cursorPosition, columnIndex) == Cursor.FIELD_TYPE_NULL
     }
 
     override fun getShort(columnIndex: Int): Short {
@@ -112,24 +111,23 @@ class ComplexOrmCursor(cursor: CrossProcessCursor, withColumnsInfo: Boolean = fa
             }
 
     override fun getColumnCount(): Int {
-        return columns?.size ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        throw UnsupportedOperationException()
     }
 
     override fun getColumnName(columnIndex: Int): String {
-        return columns?.get(columnIndex) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        throw UnsupportedOperationException()
     }
 
     override fun getColumnIndex(columnName: String?): Int {
-        return columns?.indexOf(columnName) ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        throw UnsupportedOperationException()
     }
 
     override fun getColumnNames(): Array<String> {
-        return columns ?: throw IllegalAccessException("Cursor doesn't have column info activated")
+        throw UnsupportedOperationException()
     }
 
     override fun getColumnIndexOrThrow(columnName: String?): Int {
-        return columns?.indexOf(columnName).takeUnless { it == -1 }
-            ?: throw IllegalAccessException("Couldn't find column $columnName in $columns")
+        throw UnsupportedOperationException()
     }
 
     override fun close() {

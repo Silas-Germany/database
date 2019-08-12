@@ -1,9 +1,6 @@
 package com.github.silasgermany.complexorm
 
-import android.content.ContentValues
-import android.database.CrossProcessCursor
-import android.database.DatabaseErrorHandler
-import com.github.silasgermany.complexorm.models.ComplexOrmCursor
+import android.database.Cursor
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
@@ -11,7 +8,6 @@ import com.github.silasgermany.complexormapi.IdType
 import org.joda.time.DateTime
 import org.json.JSONObject
 import java.io.File
-import java.util.*
 import kotlin.reflect.KClass
 
 // Get generated classes
@@ -28,28 +24,12 @@ actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrm
 actual val KClass<out ComplexOrmTable>.longName: String
     get() = java.name.replace("$", ".")
 
-// Factory
-actual fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean): CommonCursor {
-    return (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it, withColumnsInfo) }
-        ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
-}
-
 // Classes (typealias in Java)
-actual typealias CommonSQLiteDatabase = android.database.sqlite.SQLiteDatabase
-actual object CommonSQLiteDatabaseObject {
-    actual val CONFLICT_IGNORE: Int get() = android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE
-    actual val CONFLICT_FAIL: Int get() = android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL
-    actual val CONFLICT_ROLLBACK: Int get() = android.database.sqlite.SQLiteDatabase.CONFLICT_ROLLBACK
+actual abstract class CommonCursor : Cursor {
+    actual fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
 }
-actual typealias CommonCursorFactory = android.database.sqlite.SQLiteDatabase.CursorFactory
-actual typealias CommonDatabaseErrorHandler = DatabaseErrorHandler
-actual typealias CommonCursor = android.database.Cursor
-actual typealias CommonContentValues = ContentValues
 actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonJSONObject = JSONObject
 actual typealias CommonDateTime = DateTime
-
-// Return null if not necessary (if database takes care of it through autoincrement)
-actual fun generateNewId(): IdType? = IdType(UUID.randomUUID())

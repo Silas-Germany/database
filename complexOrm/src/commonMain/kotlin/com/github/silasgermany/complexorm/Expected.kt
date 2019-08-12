@@ -7,72 +7,23 @@ import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
-expect class CommonSQLiteDatabase private constructor(
-    path: String,
-    openFlags: Int,
-    cursorFactory: CommonCursorFactory,
-    errorHandler: CommonDatabaseErrorHandler,
-    lookasideSlotSize: Int,
-    lookasideSlotCount: Int,
-    idleConnectionTimeoutMs: Long,
-    journalMode: String,
-    syncMode: String
-) {
-    fun getVersion(): Int
-    fun setVersion(version: Int)
-
-    fun beginTransaction()
-    fun setTransactionSuccessful()
-    fun endTransaction()
-    fun insertWithOnConflict(
-        table: String, nullColumnHack: String?,
-        initialValues: CommonContentValues, conflictAlgorithm: Int
-    ): Long
-    fun updateWithOnConflict(
-        table: String, values: CommonContentValues,
-        whereClause: String, whereArgs: Array<String>?, conflictAlgorithm: Int
-    ): Int
-
-    fun delete(table: String, whereClause: String, whereArgs: Array<String>?): Int
-    fun execSQL(sql: String)
-    fun rawQuery(sql: String, selectionArgs: Array<String>?): CommonCursor
-}
-expect object CommonSQLiteDatabaseObject {
-    val CONFLICT_IGNORE: Int
-    val CONFLICT_FAIL: Int
-    val CONFLICT_ROLLBACK: Int
-}
-expect interface CommonCursorFactory
-expect interface CommonDatabaseErrorHandler
-expect interface CommonCursor {
-    fun isNull(columnIndex: Int): Boolean
-    fun getInt(columnIndex: Int): Int
-    fun getLong(columnIndex: Int): Long
-    fun getFloat(columnIndex: Int): Float
-    fun getString(columnIndex: Int): String
-    fun getBlob(columnIndex: Int): ByteArray
+expect abstract class CommonCursor {
+    abstract fun isNull(columnIndex: Int): Boolean
+    abstract fun getInt(columnIndex: Int): Int
+    abstract fun getLong(columnIndex: Int): Long
+    abstract fun getFloat(columnIndex: Int): Float
+    abstract fun getString(columnIndex: Int): String
+    abstract fun getBlob(columnIndex: Int): ByteArray
+    fun getId(columnIndex: Int): IdType
 }
 
-expect class CommonContentValues() {
-    fun putNull(key: String)
-    fun put(key: String, value: String)
-    fun put(key: String, value: Int)
-    fun put(key: String, value: Boolean)
-    fun put(key: String, value: Long)
-    fun put(key: String, value: Float)
-    fun put(key: String, value: ByteArray?)
-    fun containsKey(key: String): Boolean
-    fun valueSet(): Set<Map.Entry<String, Any?>>
-}
 expect class CommonFile(parent: String, child: String) {
-    fun getParentFile(): CommonFile
 
     constructor(parent: CommonFile, child: String)
 
     fun listFiles(): Array<CommonFile>
     fun delete(): Boolean
     fun exists(): Boolean
-    fun mkdir(): Boolean
 }
 expect fun CommonFile.commonReadText(): String
 expect fun CommonFile.commonWriteText(text: String)
@@ -101,7 +52,3 @@ expect val tableInfo: ComplexOrmTableInfoInterface
 expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
 expect val KClass<out ComplexOrmTable>.longName: String
 val ComplexOrmTable.longName get() = this::class.longName
-// Cursor transformation
-expect fun getCursor(cursor: CommonCursor, withColumnsInfo: Boolean = true): CommonCursor
-
-expect fun generateNewId(): IdType?

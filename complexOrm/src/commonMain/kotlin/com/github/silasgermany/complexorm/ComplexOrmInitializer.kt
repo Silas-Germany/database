@@ -3,11 +3,12 @@ package com.github.silasgermany.complexorm
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
-class ComplexOrmInitializer internal constructor(private val database: ComplexOrmDatabaseInterface,
-                                                 private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface, private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
+class ComplexOrmInitializer internal constructor(
+    private val database: ComplexOrmDatabaseInterface,
+    private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface
+) {
 
     inline fun <reified T: ComplexOrmTable>createTableIfNotExists() = createTableIfNotExists(T::class)
     fun <T: ComplexOrmTable>createTableIfNotExists(table: KClass<T>) {
@@ -35,6 +36,6 @@ class ComplexOrmInitializer internal constructor(private val database: ComplexOr
 
 
     var version: Int
-        get() = database.getVersion()
-        set(value) { database.setVersion(value) }
+        get() = database.version
+        set(value) { database.version = value }
 }

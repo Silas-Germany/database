@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexormapi
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
     open val id: IdType? by map

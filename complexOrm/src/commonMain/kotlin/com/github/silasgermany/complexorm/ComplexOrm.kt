@@ -1,7 +1,6 @@
 package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.IdType
@@ -9,11 +8,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 @Suppress("UNUSED")
-class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: CommonFile? = null) {
-    constructor(database: CommonSQLiteDatabase, cacheDir: CommonFile? = null) : this(
-        ComplexOrmDatabase(
-            database
-        ), cacheDir)
+class ComplexOrm(databasePath: String, cacheDir: CommonFile? = null) {
+    private val database = ComplexOrmDatabase(databasePath)
 
     private val complexOrmSchema by lazy { databaseSchema }
 
@@ -22,7 +18,7 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: CommonFile? = 
 
     val complexOrmReader = ComplexOrmReader(database, cacheDir, complexOrmTableInfo)
     val complexOrmInitializer =
-        ComplexOrmInitializer(database, complexOrmSchema, complexOrmTableInfo)
+        ComplexOrmInitializer(database, complexOrmSchema)
     val complexOrmWriter = ComplexOrmWriter(database, complexOrmTableInfo)
 
     inline fun <reified T : ComplexOrmTable> read(readTableInfo: ReadTableInfo) =
@@ -104,6 +100,5 @@ class ComplexOrm(database: ComplexOrmDatabaseInterface, cacheDir: CommonFile? = 
     fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
-    inline fun <T>doInTransaction(f: () -> T, errorHandling: (Throwable) -> Unit = { throw it })
-            = complexOrmWriter.doInTransaction(f, errorHandling)
+    inline fun <T>doInTransaction(f: () -> T) = complexOrmWriter.doInTransaction(f)
 }

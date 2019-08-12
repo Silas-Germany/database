@@ -7,6 +7,7 @@ import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
+@Suppress("unused")
 open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
                                                        private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
@@ -136,8 +137,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
     open fun <T : ComplexOrmTable> ComplexOrmQueryBuilder.alreadyLoaded(table: KClass<T>, entries: Collection<T?>?): ComplexOrmQueryBuilder {
         entries ?: return this
         existingEntries[table.longName] = entries
-                .filterNotNull()
-                .associateTo(mutableMapOf()) { it.id!! to it }
+            .filterNotNull().associateByTo(mutableMapOf()) { it.id!! }
         return this@ComplexOrmQueryBuilder
     }
 

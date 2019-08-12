@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Gradle" pattern="file:build.gradle||file:settings.gradle||file:gradle.properties||file:gradle/wrapper/gradle-wrapper.properties||file:proguard-rules.pro" />
+</component>
