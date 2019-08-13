@@ -18,8 +18,8 @@ actual class IdType(private val uuid: UUID) {
             .array()
     }
 
+    actual fun nicePrint(): String = "$uuid"
     actual override fun toString() = "x'${uuid.toString().replace("-", "")}'"
 }
 
 actual val KClass<*>.className: String get() = java.simpleName//.split("$").last()
-val KClass<*>.className2: String get() = java.canonicalName//.split("$").last()

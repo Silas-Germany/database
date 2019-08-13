@@ -85,7 +85,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             val id = memScoped {
                 val id: uuid_t = allocArray(16)
                 uuid_generate(id)
-                id.readBytes(16)
+                IdType(id.readBytes(16))
             }
             values + ("id" to id)
         }

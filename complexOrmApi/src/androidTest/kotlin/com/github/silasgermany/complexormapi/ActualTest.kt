@@ -1,10 +1,10 @@
 package com.github.silasgermany.complexormapi
 
+import org.junit.Test
 import java.util.*
-import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class AndroidActualTest {
+actual class ActualTest {
 
     @Test fun idClassCorrectlyImplemented() {
         val id = IdType(UUID.randomUUID()).let { it }
