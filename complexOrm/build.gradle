@@ -3,6 +3,8 @@ plugins {
 }
 apply plugin: "com.android.library"
 apply plugin: 'kotlin-android-extensions'
+// Kotlin annotation processor
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 28
@@ -75,6 +77,40 @@ kotlin {
     }
 }
 
-configurations {
-    compileClasspath
+dependencies {
+    kaptTest project(":complexOrmProcessor")
+}
+
+task "copyGeneratedFiles" {
+    doFirst {
+        exec {
+            commandLine "cp",
+                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
+                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doFirst {
+        exec {
+            commandLine "cp",
+                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt",
+                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "sed",
+                    "s/ @JvmWildcard//",
+                    "-i",
+                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "sed",
+                    "s/import kotlin.jvm.JvmWildcard//",
+                    "-i",
+                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
+        }
+    }
+    dependsOn "kaptReleaseUnitTestKotlinAndroid"
 }

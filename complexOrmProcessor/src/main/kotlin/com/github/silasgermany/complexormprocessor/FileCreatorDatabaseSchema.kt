@@ -32,7 +32,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         } + joinTables).joinToString(",")
         return PropertySpec.builder("tables", tableClassMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer("sortedMapOf($tableNames)")
+            .initializer("mapOf($tableNames)")
             .build()
     }
 
@@ -52,7 +52,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             "\n\"$it\" to \"\"\"DROP TABLE IF EXISTS '$it';\"\"\"" }
         return PropertySpec.builder("dropTableCommands", stringMapType)
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer("sortedMapOf($dropTableCommands)"
+                .initializer("mapOf($dropTableCommands)"
                 )
             .build()
     }
@@ -124,7 +124,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         } + relatedTables
         return PropertySpec.builder("createTableCommands", stringMapType)
             .addModifiers(KModifier.OVERRIDE)
-            .initializer(CodeBlock.of("sortedMapOf(${createTableCommands.joinToString(",")})"))
+            .initializer(CodeBlock.of("mapOf(${createTableCommands.joinToString(",")})"))
             .build()
     }
 

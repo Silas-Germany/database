@@ -1,1 +1,3 @@
 build
+src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt
+src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt
