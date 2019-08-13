@@ -12,9 +12,7 @@ class ComplexOrm(databasePath: String, cacheDir: CommonFile? = null) {
     private val database = ComplexOrmDatabase(databasePath)
 
     private val complexOrmSchema by lazy { databaseSchema }
-
     private val complexOrmTableInfo by lazy { tableInfo }
-
 
     val complexOrmReader = ComplexOrmReader(database, cacheDir, complexOrmTableInfo)
     val complexOrmInitializer =

@@ -22,7 +22,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         var fileName = "ComplexOrmDatabaseSchema"
         var file = FileSpec.builder(targetPackage, fileName)
                 .addType(
-                        TypeSpec.objectBuilder(fileName)
+                        TypeSpec.classBuilder(fileName)
                                 .addSuperinterface(ComplexOrmDatabaseSchemaInterface::class)
                                 .addProperty(schemaFileCreator.createNames())
                                 .addProperty(schemaFileCreator.createDropTables())
@@ -34,7 +34,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         val tableInfoFileCreator = FileCreatorTableInfo(tableInfo)
         fileName = "ComplexOrmTableInfo"
         file = FileSpec.builder(targetPackage, fileName)
-                .addType(TypeSpec.objectBuilder(fileName)
+                .addType(TypeSpec.classBuilder(fileName)
                         .addSuperinterface(ComplexOrmTableInfoInterface::class)
                         .addProperty(tableInfoFileCreator.createNormalColumnsInfo())
                         .addProperty(tableInfoFileCreator.createConnectedColumnsInfo())

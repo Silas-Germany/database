@@ -13,10 +13,10 @@ import kotlin.reflect.KClass
 // Get generated classes
 actual val databaseSchema: ComplexOrmDatabaseSchemaInterface
     get() = Class.forName("com.github.silasgermany.complexorm.ComplexOrmDatabaseSchema")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmDatabaseSchemaInterface
+        .newInstance() as ComplexOrmDatabaseSchemaInterface
 actual val tableInfo: ComplexOrmTableInfoInterface
     get() = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
-        .getDeclaredField("INSTANCE").get(null) as ComplexOrmTableInfoInterface
+        .newInstance() as ComplexOrmTableInfoInterface
 actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>) =
     java.isAssignableFrom(table.java)
 
