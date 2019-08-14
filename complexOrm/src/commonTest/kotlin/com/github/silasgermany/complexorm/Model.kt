@@ -1,9 +1,6 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.ComplexOrmAllTables
-import com.github.silasgermany.complexormapi.ComplexOrmDefault
-import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.Date
+import com.github.silasgermany.complexormapi.*
 
 @ComplexOrmAllTables
 interface Model {
@@ -26,8 +23,26 @@ interface Model {
 
         val nullableEntry: String? by initMap
 
-        val connectedEntry: ReferenceClass by initMap
-        val connectedEntries: List<ReferenceClass> by initMap
+        val connectedEntry: ReferenceTable by initMap
+        val connectedEntries: List<ReferenceTable> by initMap
     }
-    class ReferenceClass(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap)
+
+    class ReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        @ComplexOrmReverseConnectedColumn
+        val reverseConnectedEntryWithDefaultName: List<TableInfoTable> by initMap
+        @ComplexOrmReverseConnectedColumn("connectedEntry")
+        val reverseConnectedEntry: List<TableInfoTable> by initMap
+        @ComplexOrmReverseJoinColumn("connectedEntries")
+        val reverseJoinEntry: List<TableInfoTable> by initMap
+        @ComplexOrmSpecialConnectedColumn("specialId")
+        val specialConnectedEntry: TableInfoTable by initMap
+    }
+
+    class TableInfoTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        val referenceTable: ReferenceTable by initMap
+        val connectedEntry: ReferenceTable by initMap
+        val connectedEntries: List<ReferenceTable> by initMap
+        val specialId: String by initMap
+    }
+
 }
