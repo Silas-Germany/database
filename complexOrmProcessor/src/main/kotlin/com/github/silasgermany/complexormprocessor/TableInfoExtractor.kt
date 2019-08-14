@@ -140,11 +140,11 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             "long", "java.lang.Long" -> InternComplexOrmTypes.Long
             "float", "java.lang.Float" -> InternComplexOrmTypes.Float
             "java.lang.String" -> InternComplexOrmTypes.String
-            "com.github.silasgermany.complexormapi.Day" -> InternComplexOrmTypes.Date
+            "com.github.silasgermany.complexormapi.Date" -> InternComplexOrmTypes.Date
             "org.joda.time.DateTime",
             "com.github.silasgermany.complexorm.DateTime" -> InternComplexOrmTypes.DateTime
             "java.util.UUID",
-            "com.github.silasgermany.complexormapi.CommonUUID" -> InternComplexOrmTypes.Uuid
+            "com.github.silasgermany.complexormapi.IdType" -> InternComplexOrmTypes.IdType
             "byte[]" -> InternComplexOrmTypes.ByteArray
             else -> {
                 return when {

@@ -94,7 +94,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             InternComplexOrmTypes.Long,
                             InternComplexOrmTypes.Int -> "INTEGER"
                             InternComplexOrmTypes.Float -> "REAL"
-                            InternComplexOrmTypes.Uuid -> "BLOB"
+                            InternComplexOrmTypes.IdType -> "BLOB"
                             InternComplexOrmTypes.ByteArray -> "BLOB"
                             InternComplexOrmTypes.ComplexOrmTables -> {
                                 relatedTables.add(createRelatedTableCommand(tableInfo.tableName!!, column))
@@ -131,19 +131,19 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
     private fun defaultValue(type: InternComplexOrmTypes, defaultValue: String?): String {
         defaultValue ?: return ""
         return " DEFAULT " + when(type) {
-            InternComplexOrmTypes.String -> "'$defaultValue'"
             InternComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
                 else -> throw java.lang.IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
             }
-            InternComplexOrmTypes.Date,
-            InternComplexOrmTypes.DateTime,
-            InternComplexOrmTypes.Uuid,
-            InternComplexOrmTypes.ByteArray,
-            InternComplexOrmTypes.ComplexOrmTables,
-            InternComplexOrmTypes.ComplexOrmTable -> {
-                throw IllegalArgumentException("Default value not allowed for ${type.name} (has $defaultValue)")
+            InternComplexOrmTypes.Int,
+            InternComplexOrmTypes.Long,
+            InternComplexOrmTypes.DateTime -> {
+                try {
+                    defaultValue.toLong().toString()
+                } catch (e: Throwable) {
+                    throw java.lang.IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
+                }
             }
             InternComplexOrmTypes.Float -> {
                 try {
@@ -152,13 +152,13 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                     throw java.lang.IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
-            InternComplexOrmTypes.Long,
-            InternComplexOrmTypes.Int -> {
-                try {
-                    defaultValue.toLong().toString()
-                } catch (e: Throwable) {
-                    throw java.lang.IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
-                }
+            InternComplexOrmTypes.String,
+            InternComplexOrmTypes.Date -> "'$defaultValue'"
+            InternComplexOrmTypes.IdType,
+            InternComplexOrmTypes.ByteArray,
+            InternComplexOrmTypes.ComplexOrmTables,
+            InternComplexOrmTypes.ComplexOrmTable -> {
+                throw IllegalArgumentException("Default value not allowed for ${type.name} (has $defaultValue)")
             }
         }
     }

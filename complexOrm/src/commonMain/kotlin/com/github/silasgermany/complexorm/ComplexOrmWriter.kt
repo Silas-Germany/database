@@ -35,7 +35,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
             getValue(table.longName).second
         val normalColumns = (complexOrmTableInfo.normalColumns[rootTableClass] ?: mapOf()) +
                 (complexOrmTableInfo.normalColumns[tableClassName] ?: mapOf()) +
-                mapOf("id" to ComplexOrmTypes.Uuid.name)
+                mapOf("id" to ComplexOrmTypes.IdType.name)
         val joinColumns = (complexOrmTableInfo.joinColumns[rootTableClass] ?: mapOf()) +
                 (complexOrmTableInfo.joinColumns[tableClassName] ?: mapOf())
         val reverseJoinColumns = (complexOrmTableInfo.reverseJoinColumns[rootTableClass] ?: mapOf()) +
@@ -55,14 +55,14 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                     if (sqlKey != "id") contentValues[sqlKey] = null
                 } else when (ComplexOrmTypes.values().find { it.name == type }
                     ?: throw IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
-                    ComplexOrmTypes.String -> contentValues[sqlKey] = value as String
-                    ComplexOrmTypes.Int -> contentValues[sqlKey] = value as Int
+                    ComplexOrmTypes.IdType -> contentValues[sqlKey] = (value as IdType)
                     ComplexOrmTypes.Boolean -> contentValues[sqlKey] = if (value as Boolean) 1 else 0
+                    ComplexOrmTypes.Int -> contentValues[sqlKey] = value as Int
                     ComplexOrmTypes.Long -> contentValues[sqlKey] = value as Long
                     ComplexOrmTypes.Float -> contentValues[sqlKey] = value as Float
-                    ComplexOrmTypes.Date -> contentValues[sqlKey] = (value as Day).asSql
+                    ComplexOrmTypes.String -> contentValues[sqlKey] = value as String
+                    ComplexOrmTypes.Date -> contentValues[sqlKey] = (value as Date).asSql
                     ComplexOrmTypes.DateTime -> contentValues[sqlKey] = ((value as CommonDateTime).getMillis() / 1000).toInt()
-                    ComplexOrmTypes.Uuid -> contentValues[sqlKey] = (value as IdType)
                     ComplexOrmTypes.ByteArray -> contentValues[sqlKey] = value as ByteArray
                 }
             }

@@ -64,15 +64,13 @@ kotlin {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')
 
+                implementation 'net.danlew:android.joda:2.10.2'
                 implementation project(":complexOrmApi")
             }
         }
         iosMain { }
         iosTest { }
-        linuxMain {
-            dependencies {
-            }
-        }
+        linuxMain { }
         linuxTest { }
     }
 }

@@ -1,13 +1,13 @@
 package com.github.silasgermany.complexormapi
 
 enum class ComplexOrmTypes {
-    String,
-    Int,
+    IdType,
     Boolean,
+    Int,
     Long,
     Float,
+    String,
     Date,
     DateTime,
-    Uuid,
     ByteArray
 }

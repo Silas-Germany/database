@@ -1,6 +1,6 @@
 package com.github.silasgermany.complexormapi
 
-data class Day(
+data class Date(
     val year: Int,
     val month: Int,
     val day: Int

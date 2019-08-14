@@ -6,7 +6,7 @@ import android.database.CrossProcessCursor
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
-import com.github.silasgermany.complexormapi.Day
+import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import java.util.*
 
@@ -34,7 +34,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 is Int -> put(key, value)
                 is Boolean -> put(key, value)
                 is Long -> put(key, value)
-                is Day -> put(key, value.asSql)
+                is Date -> put(key, value.asSql)
                 is CommonDateTime -> put(key, (value.millis / 1000).toInt())
                 is ByteArray -> put(key, value)
                 is IdType -> put(key, value.bytes)

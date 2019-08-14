@@ -1,14 +1,14 @@
 package com.github.silasgermany.complexormprocessor.models
 
 enum class InternComplexOrmTypes {
-    String,
-    Int,
+    IdType,
     Boolean,
+    Int,
     Long,
     Float,
+    String,
     Date,
     DateTime,
-    Uuid,
     ByteArray,
     ComplexOrmTable,
     ComplexOrmTables

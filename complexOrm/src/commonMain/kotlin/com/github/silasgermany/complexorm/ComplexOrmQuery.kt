@@ -115,10 +115,10 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
 
     private fun readColumns(tableClassName: String, cursor: CommonCursor, readTableInfo: ReadTableInfo,
                             connectedColumn: String?, specialConnectedColumn: String? = null): Pair<IdType?, ComplexOrmTable?> {
-        val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType?
+        val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.IdType.name) as IdType?
 
         if (readTableInfo.alreadyGiven(tableClassName) || readTableInfo.alreadyLoading(tableClassName)) {
-            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType }
+            val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.IdType.name) as IdType }
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
@@ -148,7 +148,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                 readTableInfo.setTable(connectedTableClassName, databaseEntry, specialColumnName)
                 if (columnName !in databaseMap) databaseMap[columnName] = databaseEntry
                 else {
-                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType }
+                    val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.IdType.name) as IdType }
                     return@handleConnectedColumns connectedId to databaseMap.getValue(columnName) as ComplexOrmTable // (Not sure, why it has to return here)
                 }
             } else databaseMap[columnName] = null
@@ -165,7 +165,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             if (result != null) return result
         }
 
-        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.Uuid.name) as IdType? }
+        val connectedId = connectedColumn?.let { cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.IdType.name) as IdType? }
 
         if (!readTableInfo.isMissingRequest(tableClassName))
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
@@ -195,15 +195,15 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
     private fun CommonCursor.getValue(index: Int, type: String): Any? {
         return if (isNull(index)) null
         else when (type.asType) {
+            ComplexOrmTypes.IdType -> getId(index)
             ComplexOrmTypes.Boolean -> getInt(index) != 0
             ComplexOrmTypes.Int -> getInt(index)
             ComplexOrmTypes.Long -> getLong(index)
             ComplexOrmTypes.Float -> getFloat(index)
             ComplexOrmTypes.String -> getString(index)
-            ComplexOrmTypes.ByteArray -> getBlob(index)
-            ComplexOrmTypes.Date -> Day(getString(index))
+            ComplexOrmTypes.Date -> Date(getString(index))
             ComplexOrmTypes.DateTime -> CommonDateTime(getInt(index) * 1000L)
-            ComplexOrmTypes.Uuid -> getId(index)
+            ComplexOrmTypes.ByteArray -> getBlob(index)
         }
     }
 }

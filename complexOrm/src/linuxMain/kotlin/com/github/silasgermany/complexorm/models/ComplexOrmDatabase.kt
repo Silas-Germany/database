@@ -4,7 +4,7 @@ import cnames.structs.sqlite3
 import cnames.structs.sqlite3_stmt
 import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
-import com.github.silasgermany.complexormapi.Day
+import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import kotlinx.cinterop.*
 import sqlite3.*
@@ -69,7 +69,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             null -> "null"
             is String -> "'$this'"
             is Boolean -> if (this) "1" else "0"
-            is Day -> this.asSql
+            is Date -> this.asSql
             is CommonDateTime -> "${this.getMillis() / 1000}"
             is ByteArray -> {
                 blobValues.add(this)
