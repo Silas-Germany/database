@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormapi.Date
 
 @ComplexOrmAllTables
 interface Model {
-    class SchemaTest(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
+    class SchemaTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
         @ComplexOrmDefault(false.toString())
         val boolean: Boolean by initMap
         @ComplexOrmDefault(1.toString())
@@ -24,6 +24,10 @@ interface Model {
         val dateTime: CommonDateTime by initMap
         val byteArray: ByteArray by initMap
 
-        val nullableString222: String? by initMap
+        val nullableEntry: String? by initMap
+
+        val connectedEntry: ReferenceClass by initMap
+        val connectedEntries: List<ReferenceClass> by initMap
     }
+    class ReferenceClass(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap)
 }
