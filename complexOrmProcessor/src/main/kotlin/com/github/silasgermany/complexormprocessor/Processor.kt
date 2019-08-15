@@ -3,7 +3,6 @@ package com.github.silasgermany.complexormprocessor
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
@@ -23,7 +22,6 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         var file = FileSpec.builder(targetPackage, fileName)
             .addType(
                 TypeSpec.classBuilder(fileName)
-                    .addModifiers(KModifier.ACTUAL)
                     .addSuperinterface(ComplexOrmDatabaseSchemaInterface::class)
                     .addProperty(schemaFileCreator.createNames())
                     .addProperty(schemaFileCreator.createDropTables())
@@ -36,7 +34,6 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
         fileName = "ComplexOrmTableInfo"
         file = FileSpec.builder(targetPackage, fileName)
             .addType(TypeSpec.classBuilder(fileName)
-                .addModifiers(KModifier.ACTUAL)
                 .addSuperinterface(ComplexOrmTableInfoInterface::class)
                 .addProperty(tableInfoFileCreator.createNormalColumnsInfo())
                 .addProperty(tableInfoFileCreator.createConnectedColumnsInfo())

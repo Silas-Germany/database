@@ -6,10 +6,9 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class ComplexOrmTableInfoTest {
-	val tableInfo: ComplexOrmTableInfoInterface = ComplexOrmTableInfo()
+	private val tableInfo: ComplexOrmTableInfoInterface = ComplexOrmTableInfo()
 
-	@Test
-	fun onlyTypeEnums() {
+	@Test fun onlyTypeEnums() {
 		val typeNames = ComplexOrmTypes.values().map { it.name }
 		assertTrue {
 			tableInfo.normalColumns
@@ -17,8 +16,7 @@ class ComplexOrmTableInfoTest {
 		}
 	}
 
-	@Test
-	fun allColumnNamesGiven() {
+	@Test fun allColumnNamesGiven() {
 		val allColumnNames = tableInfo.columnNames.flatMap { it.value.keys }
 		assertTrue {
 			tableInfo.normalColumns
@@ -46,8 +44,7 @@ class ComplexOrmTableInfoTest {
 		}
 	}
 
-	@Test
-	fun allTableClassNamesGiven() {
+	@Test fun allTableClassNamesGiven() {
 		val allTableClassNames = tableInfo.basicTableInfo.keys
 		assertTrue {
 			tableInfo.normalColumns

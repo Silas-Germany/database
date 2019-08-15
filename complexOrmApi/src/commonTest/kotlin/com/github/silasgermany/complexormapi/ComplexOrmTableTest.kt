@@ -7,8 +7,8 @@ import kotlin.test.assertFailsWith
 
 class ComplexOrmTableTest {
 
-    class TestTable(val initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
-        class InnerTable(val initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+    class TestTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
+        class InnerTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
             var recursiveEntry: TestTable by initMap
         }
 
@@ -25,6 +25,7 @@ class ComplexOrmTableTest {
         table.name = expected
         assertEquals(expected, table.name, "Name is same as assigned")
     }
+
     @Test fun testPrint() {
         val table = TestTable()
         var expected = "TestTable"

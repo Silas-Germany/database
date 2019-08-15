@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 
 class ComplexOrmDatabaseSchemaTest {
 
-    val databaseSchema: ComplexOrmDatabaseSchemaInterface = ComplexOrmDatabaseSchema()
+    private val databaseSchema: ComplexOrmDatabaseSchemaInterface = ComplexOrmDatabaseSchema()
 
     @Test fun tableNames() {
         val schemaTables = databaseSchema.tables.filterValues { it == Model.SchemaTable::class }.keys

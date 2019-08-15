@@ -1,7 +1,0 @@
-package com.github.silasgermany.complexorm
-
-import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
-import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-
-expect class ComplexOrmDatabaseSchema() : ComplexOrmDatabaseSchemaInterface
-expect class ComplexOrmTableInfo() : ComplexOrmTableInfoInterface

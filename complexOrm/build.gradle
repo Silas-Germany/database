@@ -111,4 +111,5 @@ task "copyGeneratedFiles" {
         }
     }
     dependsOn "kaptReleaseUnitTestKotlinAndroid"
+    dependsOn "kaptDebugUnitTestKotlinAndroid"
 }
