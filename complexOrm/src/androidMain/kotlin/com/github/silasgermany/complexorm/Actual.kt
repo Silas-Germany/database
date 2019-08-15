@@ -6,7 +6,6 @@ import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.IdType
 import org.joda.time.DateTime
-import org.json.JSONObject
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -17,8 +16,6 @@ actual val databaseSchema: ComplexOrmDatabaseSchemaInterface
 actual val tableInfo: ComplexOrmTableInfoInterface
     get() = Class.forName("com.github.silasgermany.complexorm.ComplexOrmTableInfo")
         .newInstance() as ComplexOrmTableInfoInterface
-actual fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>) =
-    java.isAssignableFrom(table.java)
 
 // Java class information
 actual val KClass<out ComplexOrmTable>.longName: String
@@ -31,5 +28,4 @@ actual abstract class CommonCursor : Cursor {
 actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
-actual typealias CommonJSONObject = JSONObject
 actual typealias CommonDateTime = DateTime

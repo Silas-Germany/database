@@ -8,15 +8,15 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 @Suppress("UNUSED")
-class ComplexOrm(databasePath: String, cacheDir: CommonFile? = null) {
+class ComplexOrm(databasePath: String) {
     private val database = ComplexOrmDatabase(databasePath)
 
     private val complexOrmSchema by lazy { databaseSchema }
     private val complexOrmTableInfo by lazy { tableInfo }
 
-    val complexOrmReader = ComplexOrmReader(database, cacheDir, complexOrmTableInfo)
+    val complexOrmReader = ComplexOrmReader(database, complexOrmTableInfo)
     val complexOrmInitializer =
-        ComplexOrmInitializer(database, complexOrmSchema)
+        ComplexOrmInitializer(database, complexOrmSchema, complexOrmTableInfo)
     val complexOrmWriter = ComplexOrmWriter(database, complexOrmTableInfo)
 
     inline fun <reified T : ComplexOrmTable> read(readTableInfo: ReadTableInfo) =

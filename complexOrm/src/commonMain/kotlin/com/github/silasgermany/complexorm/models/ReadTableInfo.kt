@@ -1,6 +1,6 @@
 package com.github.silasgermany.complexorm.models
 
-import com.github.silasgermany.complexorm.*
+import com.github.silasgermany.complexorm.longName
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.IdType
@@ -69,43 +69,4 @@ class ReadTableInfo constructor(
     fun getSpecialConnectedColumnsValue(key: String) =
             cachedComplexOrmTableInfo.init("specialConnectedColumns").init(key,
                     complexOrmTableInfo.specialConnectedColumns[key] ?: mapOf())
-
-    private var cacheFile: CommonFile? = null
-    fun initFromCache(cacheFile: CommonFile?) {
-        this.cacheFile = cacheFile
-        cacheFile?.takeIf { it.exists() } ?: return
-        val json = CommonJSONObject(cacheFile.commonReadText())
-        json.keys().forEach { json.extract(it) }
-    }
-
-    fun writeToCache() {
-        val cacheFile = cacheFile ?: return
-        val json = CommonJSONObject(cacheFile.commonReadText())
-        cachedComplexOrmTableInfo.forEach allCategories@{ (category, map) ->
-            if (!map.any { it.value.isNotEmpty() }) return@allCategories
-            val innerJson = CommonJSONObject(cacheFile.commonReadText())
-            map.forEach { (key, value) ->
-                val infoJson = CommonJSONObject(cacheFile.commonReadText())
-                if (value.isEmpty()) return@forEach
-                value.forEach { (firstString, secondString) ->
-                    infoJson.put(firstString, secondString)
-                }
-                innerJson.put(key, infoJson)
-            }
-            json.put(category, innerJson)
-        }
-        cacheFile.commonWriteText(json.toString())
-    }
-
-    private fun CommonJSONObject.extract(category: String) {
-        getJSONObject(category).run {
-            keys().forEach { key ->
-                getJSONObject(key).run {
-                    keys().forEach {
-                        cachedComplexOrmTableInfo.init(category).init(key)[it] = getString(it)
-                    }
-                }
-            }
-        }
-    }
 }

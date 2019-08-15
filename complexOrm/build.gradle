@@ -82,6 +82,13 @@ dependencies {
 task "copyGeneratedFiles" {
     doFirst {
         exec {
+            commandLine "mkdir",
+                    "-p",
+                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doFirst {
+        exec {
             commandLine "cp",
                     "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
                     "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"

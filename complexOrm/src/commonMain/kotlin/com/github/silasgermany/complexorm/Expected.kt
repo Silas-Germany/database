@@ -17,22 +17,14 @@ expect abstract class CommonCursor {
     fun getId(columnIndex: Int): IdType
 }
 
-expect class CommonFile(parent: String, child: String) {
-
-    constructor(parent: CommonFile, child: String)
-
+expect class CommonFile constructor(parent: String, child: String) {
+    fun getPath(): String
     fun listFiles(): Array<CommonFile>
     fun delete(): Boolean
     fun exists(): Boolean
 }
 expect fun CommonFile.commonReadText(): String
 expect fun CommonFile.commonWriteText(text: String)
-expect class CommonJSONObject(json: String) {
-    fun keys(): Iterator<String>
-    fun put(name: String, value: Any): CommonJSONObject
-    fun getJSONObject(name: String): CommonJSONObject
-    fun getString(name: String): String
-}
 @Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS")
 expect class CommonDateTime(var1: Long) {
 
@@ -48,7 +40,5 @@ expect class CommonDateTime(var1: Long) {
 // Get generated classes
 expect val databaseSchema: ComplexOrmDatabaseSchemaInterface
 expect val tableInfo: ComplexOrmTableInfoInterface
-// Table class information
-expect fun KClass<out ComplexOrmTable>.isSubClassOf(table: KClass<out ComplexOrmTable>): Boolean
 expect val KClass<out ComplexOrmTable>.longName: String
 val ComplexOrmTable.longName get() = this::class.longName

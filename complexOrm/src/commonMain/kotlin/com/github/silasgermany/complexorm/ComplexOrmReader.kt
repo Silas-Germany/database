@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
-class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface, private val cacheDir: CommonFile? = null,
+class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface,
                                             complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
@@ -15,12 +15,6 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
     val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)
 
     private fun ReadTableInfo.getTableName(tableClassName: String) = getBasicTableInfoFirstValue(tableClassName)
-
-    init {
-        cacheDir?.listFiles()?.forEach {
-            it.delete()
-        }
-    }
 
     fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = complexOrmQuery.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = complexOrmQuery.queryMap(sql, f)
@@ -33,7 +27,6 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
             table: KClass<T>,
             readTableInfo: ReadTableInfo
     ): List<T> {
-        if (cacheDir != null) readTableInfo.initFromCache(CommonFile(cacheDir, "complex_orm_$table"))
         val result = complexOrmQuery.query(table.longName
             .replace("$", "."), readTableInfo).map { it.second }
 
@@ -125,7 +118,6 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
                 readTableInfo.nextRequests.remove(requestTable)
             }
         }
-        readTableInfo.writeToCache()
         @Suppress("UNCHECKED_CAST")
         return (result as List<T>)
     }
