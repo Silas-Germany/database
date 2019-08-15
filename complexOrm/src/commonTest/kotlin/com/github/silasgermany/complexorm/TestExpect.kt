@@ -1,0 +1,9 @@
+package com.github.silasgermany.complexorm
+
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+
+expect fun initCommonDateTime()
+
+expect val databaseSchema: ComplexOrmDatabaseSchemaInterface
+expect val tableInfo: ComplexOrmTableInfoInterface

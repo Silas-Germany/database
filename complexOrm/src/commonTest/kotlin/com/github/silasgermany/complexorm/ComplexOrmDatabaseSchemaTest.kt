@@ -6,18 +6,18 @@ import kotlin.test.assertEquals
 
 class ComplexOrmDatabaseSchemaTest {
 
-    private val databaseSchema: ComplexOrmDatabaseSchemaInterface = ComplexOrmDatabaseSchema()
+    private val currentDatabaseSchema: ComplexOrmDatabaseSchemaInterface = databaseSchema
 
     @Test fun tableNames() {
-        val schemaTables = databaseSchema.tables.filterValues { it == Model.SchemaTable::class }.keys
+        val schemaTables = currentDatabaseSchema.tables.filterValues { it == Model.SchemaTable::class }.keys
         assertEquals(setOf("schema_table", "schema_table_connected_entries"), schemaTables,
             "Correct table with connected many-to-many connected tables are shown")
     }
 
     @Test fun allTableNamesExistInOtherMaps() {
-        databaseSchema.tables.keys.forEach {
-            databaseSchema.dropTableCommands.getValue(it)
-            databaseSchema.createTableCommands.getValue(it)
+        currentDatabaseSchema.tables.keys.forEach {
+            currentDatabaseSchema.dropTableCommands.getValue(it)
+            currentDatabaseSchema.createTableCommands.getValue(it)
         }
     }
 
@@ -35,12 +35,12 @@ class ComplexOrmDatabaseSchemaTest {
                 "      'nullable_entry' TEXT,\n" +
                 "      'connected_entry_id' INTEGER NOT NULL REFERENCES 'reference_table'('id') ON DELETE CASCADE\n" +
                 "      );"
-        assertEquals(expect, databaseSchema.createTableCommands.getValue("schema_table"))
+        assertEquals(expect, currentDatabaseSchema.createTableCommands.getValue("schema_table"))
         expect = "CREATE TABLE 'schema_table_connected_entries'(\n" +
                 "      'schema_table_id' INTEGER NOT NULL REFERENCES 'schema_table'(id) ON DELETE CASCADE,\n" +
                 "      'reference_table_id' INTEGER NOT NULL REFERENCES 'reference_table'(id) ON DELETE CASCADE,\n" +
                 "      PRIMARY KEY ('schema_table_id','reference_table_id')\n" +
                 "      );"
-        assertEquals(expect, databaseSchema.createTableCommands.getValue("schema_table_connected_entries"))
+        assertEquals(expect, currentDatabaseSchema.createTableCommands.getValue("schema_table_connected_entries"))
     }
 }

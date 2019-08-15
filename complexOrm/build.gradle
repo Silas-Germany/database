@@ -87,14 +87,14 @@ task "copyGeneratedFiles" {
                     "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
         }
     }
-    doFirst {
+    doLast {
         exec {
             commandLine "cp",
                     "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
                     "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
         }
     }
-    doFirst {
+    doLast {
         exec {
             commandLine "cp",
                     "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt",

@@ -16,7 +16,10 @@ actual abstract class CommonCursor {
     actual fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
 }
 
+@Suppress("unused")
 actual class CommonFile actual constructor(private val parent: String, private val child: String) {
+
+    actual fun getPath() = "$parent/$child"
 
     actual fun listFiles(): Array<CommonFile> {
         val dir = opendir(getPath())
@@ -33,11 +36,8 @@ actual class CommonFile actual constructor(private val parent: String, private v
 
     actual fun exists() = access(getPath(), F_OK) != -1
 
-    actual fun getPath() = "$parent/$child"
-
 }
 
-@ExperimentalUnsignedTypes
 actual fun CommonFile.commonReadText(): String {
     val file = fopen(getPath(), "r") ?: throw IllegalStateException("Can't open the file")
     val result = StringBuilder()
@@ -59,40 +59,51 @@ actual fun CommonFile.commonWriteText(text: String) {
     fclose(file)
 }
 
-actual val databaseSchema: com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
-    get() = null!!//ComplexOrmDatabaseSchema()
-actual val tableInfo: com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-    get() = null!!//ComplexOrmTableInfo()
-
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
     get() = toString()
 
-@ExperimentalUnsignedTypes
-@Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS", "unused")
+@Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS", "unused", "unused")
 actual class CommonDateTime actual constructor(var1: Long) {
-    private val epochTime: time_t = var1
-    actual open fun toString(var1: String) =
-        memScoped {
-            val result = allocArray<ByteVar>(var1.length)
-            strftime(result, var1.length.toULong(), var1, localtime(epochTime.toCPointer()))
-            result.toKString()
-        }
+
+    private val epochTime: time_t = var1 / 1000
 
     actual open fun getYear() =
-        localtime(epochTime.toCPointer())!!.pointed.tm_year + 1900
+        localtime(cValuesOf(epochTime))!!.pointed.tm_year + 1900
 
     actual fun getMonthOfYear() =
-        localtime(epochTime.toCPointer())!!.pointed.tm_mon
+        localtime(cValuesOf(epochTime))!!.pointed.tm_mon + 1
 
     actual fun getDayOfMonth() =
-        localtime(epochTime.toCPointer())!!.pointed.tm_mday
+        localtime(cValuesOf(epochTime))!!.pointed.tm_mday
+
+    actual fun getMillis(): Long = epochTime * 1000
 
     actual fun plusMonths(var1: Int): CommonDateTime {
-        val time = localtime(epochTime.toCPointer())!!
+        val time = localtime(cValuesOf(epochTime))!!
         time.pointed.tm_mon += 1
         return CommonDateTime(mktime(time))
     }
 
-    actual fun getMillis(): Long = epochTime
-
+    actual open fun toString(var1: String): String {
+        val formatMap = mapOf(
+            "ddd" to "%a",
+            "yyyy" to "%Y",
+            "MM" to "%m",
+            "dd" to "%d",
+            "hh" to "%H",
+            "mm" to "%m",
+            "ss" to "%S",
+            "zzz" to "%Z"
+        )
+        val formatString = formatMap.toList().fold(var1) { format, (old, new) -> format.replace(old, new) }
+        if (formatString.matches(".*(?!%).[A-Za-z].*".toRegex())) {
+            throw IllegalArgumentException("Format should only contain: ${formatMap.keys}. It is: '$var1'")
+        }
+        return memScoped {
+            val neededResultSize = var1.length + 1
+            val result = allocArray<ByteVar>(neededResultSize)
+            strftime(result, neededResultSize.convert(), formatString, localtime(cValuesOf(epochTime)))
+            result.toKString()
+        }
+    }
 }

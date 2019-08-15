@@ -6,68 +6,68 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class ComplexOrmTableInfoTest {
-	private val tableInfo: ComplexOrmTableInfoInterface = ComplexOrmTableInfo()
+	private val currentTableInfo: ComplexOrmTableInfoInterface = tableInfo
 
 	@Test fun onlyTypeEnums() {
 		val typeNames = ComplexOrmTypes.values().map { it.name }
 		assertTrue {
-			tableInfo.normalColumns
+			currentTableInfo.normalColumns
 				.all { it.value.all { columnInfo -> columnInfo.value in typeNames } }
 		}
 	}
 
 	@Test fun allColumnNamesGiven() {
-		val allColumnNames = tableInfo.columnNames.flatMap { it.value.keys }
+		val allColumnNames = currentTableInfo.columnNames.flatMap { it.value.keys }
 		assertTrue {
-			tableInfo.normalColumns
+			currentTableInfo.normalColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 		assertTrue {
-			tableInfo.connectedColumns
+			currentTableInfo.connectedColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 		assertTrue {
-			tableInfo.joinColumns
+			currentTableInfo.joinColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 		assertTrue {
-			tableInfo.reverseConnectedColumns
+			currentTableInfo.reverseConnectedColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 		assertTrue {
-			tableInfo.reverseJoinColumns
+			currentTableInfo.reverseJoinColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 		assertTrue {
-			tableInfo.specialConnectedColumns
+			currentTableInfo.specialConnectedColumns
 				.all { it.value.all { columnInfo -> columnInfo.key in allColumnNames } }
 		}
 	}
 
 	@Test fun allTableClassNamesGiven() {
-		val allTableClassNames = tableInfo.basicTableInfo.keys
+		val allTableClassNames = currentTableInfo.basicTableInfo.keys
 		assertTrue {
-			tableInfo.normalColumns
+			currentTableInfo.normalColumns
 				.all { it.key in allTableClassNames }
 		}
 		assertTrue {
-			tableInfo.connectedColumns
+			currentTableInfo.connectedColumns
 				.all { it.key in allTableClassNames }
 		}
 		assertTrue {
-			tableInfo.joinColumns
+			currentTableInfo.joinColumns
 				.all { it.key in allTableClassNames }
 		}
 		assertTrue {
-			tableInfo.reverseConnectedColumns
+			currentTableInfo.reverseConnectedColumns
 				.all { it.key in allTableClassNames }
 		}
 		assertTrue {
-			tableInfo.reverseJoinColumns
+			currentTableInfo.reverseJoinColumns
 				.all { it.key in allTableClassNames }
 		}
 		assertTrue {
-			tableInfo.specialConnectedColumns
+			currentTableInfo.specialConnectedColumns
 				.all { it.key in allTableClassNames }
 		}
 	}
