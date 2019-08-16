@@ -1,26 +1,30 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.Date
-import com.github.silasgermany.complexormapi.className
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ExpectTest {
 
-	class InnerClass
+	private val dateTime = CommonDateTime(1549202706000L)
 
-	@Test fun className() {
-		assertEquals("Date", Date::class.className)
-		assertEquals("InnerClass", InnerClass::class.className)
+	@Test fun getYearTest() {
+		assertEquals(2019, dateTime.getYear())
 	}
 
-	@Test fun date() {
-		initCommonDateTime()
-		val dateTime = CommonDateTime(1565885791000L)
-		assertEquals(2019, dateTime.getYear())
-		assertEquals(8, dateTime.getMonthOfYear())
-		assertEquals(15, dateTime.getDayOfMonth())
-		assertEquals(1565885791000L, dateTime.getMillis())
-		assertEquals("2019-08-15", dateTime.toString("yyyy-MM-dd"))
+	@Test fun getMonthOfYearTest() {
+		assertEquals(2, dateTime.getMonthOfYear())
+	}
+
+	@Test fun getDayOfMonthTest() {
+		assertEquals(3, dateTime.getDayOfMonth())
+	}
+
+	@Test fun getMillisTest() {
+		assertEquals(1549202706000L, dateTime.getMillis())
+	}
+
+	@Test fun toStringTest() {
+		assertEquals("02,07,Sun", dateTime.toString("MM,hh,E"))
+		assertEquals("Sunday 03 February 2019 19:35:06", dateTime.toString("EEEEE dd MMMMM yyyy HH:mm:ss"))
 	}
 }

@@ -53,17 +53,11 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                 keyFound = true
                 if (value == null) {
                     if (sqlKey != "id") contentValues[sqlKey] = null
-                } else when (ComplexOrmTypes.values().find { it.name == type }
-                    ?: throw IllegalStateException("NOT A TYPE: $type (${ComplexOrmTypes.values().map { it.name }}")) {
-                    ComplexOrmTypes.IdType -> contentValues[sqlKey] = (value as IdType)
-                    ComplexOrmTypes.Boolean -> contentValues[sqlKey] = if (value as Boolean) 1 else 0
-                    ComplexOrmTypes.Int -> contentValues[sqlKey] = value as Int
-                    ComplexOrmTypes.Long -> contentValues[sqlKey] = value as Long
-                    ComplexOrmTypes.Float -> contentValues[sqlKey] = value as Float
-                    ComplexOrmTypes.String -> contentValues[sqlKey] = value as String
-                    ComplexOrmTypes.Date -> contentValues[sqlKey] = (value as Date).asSql
-                    ComplexOrmTypes.DateTime -> contentValues[sqlKey] = ((value as CommonDateTime).getMillis() / 1000).toInt()
-                    ComplexOrmTypes.ByteArray -> contentValues[sqlKey] = value as ByteArray
+                } else contentValues[sqlKey] = when (ComplexOrmTypes.values().find { it.name == type }) {
+                    ComplexOrmTypes.Date -> (value as Date).asSql
+                    ComplexOrmTypes.Boolean -> if (value as Boolean) 1 else 0
+                    ComplexOrmTypes.DateTime -> ((value as CommonDateTime).getMillis() / 1000).toInt()
+                    else -> value
                 }
             }
             connectedColumns[sqlKey]?.let {
@@ -86,8 +80,8 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
             }
             when (sqlKey) {
                 in joinColumns,
-                    in reverseJoinColumns,
-                    in reverseConnectedColumns -> keyFound = true
+                in reverseJoinColumns,
+                in reverseConnectedColumns -> keyFound = true
             }
             if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $tableClassName")
         }

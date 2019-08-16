@@ -86,21 +86,23 @@ actual class CommonDateTime actual constructor(var1: Long) {
 
     actual open fun toString(var1: String): String {
         val formatMap = mapOf(
-            "ddd" to "%a",
+            "EEEEE" to "%A",
+            "MMMMM" to "%B",
             "yyyy" to "%Y",
             "MM" to "%m",
             "dd" to "%d",
-            "hh" to "%H",
-            "mm" to "%m",
+            "hh" to "%I",
+            "mm" to "%M",
             "ss" to "%S",
-            "zzz" to "%Z"
-        )
+            "HH" to "%H",
+            "E" to "%a"
+            )
         val formatString = formatMap.toList().fold(var1) { format, (old, new) -> format.replace(old, new) }
         if (formatString.matches(".*(?!%).[A-Za-z].*".toRegex())) {
-            throw IllegalArgumentException("Format should only contain: ${formatMap.keys}. It is: '$var1'")
+            throw IllegalArgumentException("Format should only contain: ${formatMap.keys}. It is: '$var1' (-> $formatString)")
         }
         return memScoped {
-            val neededResultSize = var1.length + 1
+            val neededResultSize = var1.length + 30
             val result = allocArray<ByteVar>(neededResultSize)
             strftime(result, neededResultSize.convert(), formatString, localtime(cValuesOf(epochTime)))
             result.toKString()
