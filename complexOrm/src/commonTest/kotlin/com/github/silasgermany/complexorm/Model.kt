@@ -25,6 +25,9 @@ interface Model {
 
         val connectedEntry: ReferenceTable by initMap
         val connectedEntries: List<ReferenceTable> by initMap
+
+        val status: Status by initMap
+        enum class Status { Active, Inactive }
     }
 
     class ReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {

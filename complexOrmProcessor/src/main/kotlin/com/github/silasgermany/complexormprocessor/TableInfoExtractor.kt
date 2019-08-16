@@ -100,8 +100,10 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
                         InternComplexOrmTypes.ComplexOrmTables -> "${value.asType()}".removeSurrounding("()java.util.List<", ">")
                         else -> null
                     }
-                    types[valueName] =
-                        ColumnType(it, isNullable(value), table)
+                    types[valueName] = if (it == InternComplexOrmTypes.Enum) {
+                        val enumType = value.asType().toString().removePrefix("()")
+                        ColumnType(it, isNullable(value), table, enumType)
+                    } else ColumnType(it, isNullable(value), table)
                 }
             }
         }
@@ -150,6 +152,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
                 return when {
                     typeName.startsWith("java.util.List") -> InternComplexOrmTypes.ComplexOrmTables
                     typeName in allTableTypes -> InternComplexOrmTypes.ComplexOrmTable
+                    allTableTypes.any { typeName.startsWith(it) } -> InternComplexOrmTypes.Enum
                     else -> null
                 }
             }

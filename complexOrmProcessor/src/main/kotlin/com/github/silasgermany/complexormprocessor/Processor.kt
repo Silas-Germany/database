@@ -41,6 +41,7 @@ class Processor(processingEnvironment: ProcessingEnvironment) {
                 .addProperty(tableInfoFileCreator.createReverseJoinColumnsInfo())
                 .addProperty(tableInfoFileCreator.createReverseConnectedColumnsInfo())
                 .addProperty(tableInfoFileCreator.createSpecialConnectedColumnsInfo())
+                .addProperty(tableInfoFileCreator.createEnumColumnsInfo())
                 .addProperty(tableInfoFileCreator.createConstructors())
                 .addProperty(tableInfoFileCreator.createBasicTableInfo())
                 .addProperty(tableInfoFileCreator.createColumnNames())

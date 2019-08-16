@@ -31,13 +31,50 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                                 "Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
                                         "(Don't delegate it with a map, if it's not a column)"
                             )
-                        "\n\t\t\"${column.columnName}\" to \"${column.columnType.type}\""
+                        val type = if (column.columnType.type == InternComplexOrmTypes.Enum) {
+                            column.columnType.enumType
+                        } else column.columnType.type
+                        "\n\t\t\"${column.columnName}\" to \"$type\""
                     }
                 }
             }.takeUnless { it.isEmpty() }
                 ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
         }.joinToString(",")
         return PropertySpec.builder("normalColumns", normalForeignColumnsType)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("mapOf($normalColumnInfo)")
+            .build()
+    }
+
+    fun createEnumColumnsInfo(): PropertySpec {
+        val normalColumnInfo = tableInfoList.mapNotNull { (className, tableInfo) ->
+            val rootTableColumnNames = (if (tableInfo.isRoot) tableInfo else getRootTableInfo(tableInfo)).columns.map {
+                if (it.columnType.type == InternComplexOrmTypes.ComplexOrmTable)
+                    it.columnName + "_id"
+                else it.columnName
+            }
+            val writtenColumns = mutableSetOf<String>()
+            tableInfo.columns.mapNotNull { column ->
+                if (!writtenColumns.add(column.columnName)) null
+                else when (column.columnType.type) {
+                    InternComplexOrmTypes.ComplexOrmTable, InternComplexOrmTypes.ComplexOrmTables -> null
+                    else -> {
+                        if (column.idName !in rootTableColumnNames)
+                            throw java.lang.IllegalArgumentException(
+                                "Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
+                                        "(Don't delegate it with a map, if it's not a column)"
+                            )
+                        if (column.columnType.type != InternComplexOrmTypes.Enum) null
+                        else {
+                            val type = column.columnType.enumType
+                            "\n\t\t\"${column.columnName}\" to \"$type\""
+                        }
+                    }
+                }
+            }.takeUnless { it.isEmpty() }
+                ?.run { "\n\"$className\" to mapOf(" + joinToString(",", postfix = "\n\t)") }
+        }.joinToString(",")
+        return PropertySpec.builder("enumColumns", enumStringMapType)
             .addModifiers(KModifier.OVERRIDE)
             .initializer("mapOf($normalColumnInfo)")
             .build()
@@ -275,6 +312,10 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
             stringType,
             stringMapType
         )
+    private val enumType get() = Enum::class.asTypeName()
+    private val enumListType get() = List::class.asClassName().parameterizedBy(WildcardTypeName.producerOf(enumType))
+    private val enumMapType get() = Map::class.asClassName().parameterizedBy(String::class.asTypeName(), enumListType)
+    private val enumStringMapType get() = Map::class.asClassName().parameterizedBy(String::class.asTypeName(), enumMapType)
 
     private val nullableAnyType get() = Any::class.asTypeName().copy(true)
     private val nullableAnyMapType get() = MutableMap::class.asClassName().parameterizedBy(stringType, nullableAnyType)

@@ -1,20 +1,11 @@
 package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class ComplexOrmTableInfoTest {
 	private val currentTableInfo: ComplexOrmTableInfoInterface = tableInfo
-
-	@Test fun onlyTypeEnums() {
-		val typeNames = ComplexOrmTypes.values().map { it.name }
-		assertTrue {
-			currentTableInfo.normalColumns
-				.all { it.value.all { columnInfo -> columnInfo.value in typeNames } }
-		}
-	}
 
 	@Test fun allColumnNamesGiven() {
 		val allColumnNames = currentTableInfo.columnNames.flatMap { it.value.keys }

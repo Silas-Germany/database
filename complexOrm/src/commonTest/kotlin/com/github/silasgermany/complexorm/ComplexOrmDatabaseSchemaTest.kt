@@ -33,7 +33,8 @@ class ComplexOrmDatabaseSchemaTest {
                 "      'date_time' TEXT NOT NULL DEFAULT 1565762054,\n" +
                 "      'byte_array' BLOB NOT NULL,\n" +
                 "      'nullable_entry' TEXT,\n" +
-                "      'connected_entry_id' INTEGER NOT NULL REFERENCES 'reference_table'('id') ON DELETE CASCADE\n" +
+                "      'connected_entry_id' INTEGER NOT NULL REFERENCES 'reference_table'('id') ON DELETE CASCADE,\n" +
+                "      'status' INTEGER NOT NULL\n" +
                 "      );"
         assertEquals(expect, currentDatabaseSchema.createTableCommands.getValue("schema_table"))
         expect = "CREATE TABLE 'schema_table_connected_entries'(\n" +

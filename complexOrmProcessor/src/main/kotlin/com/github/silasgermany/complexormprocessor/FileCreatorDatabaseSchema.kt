@@ -92,6 +92,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             InternComplexOrmTypes.Boolean,
                             InternComplexOrmTypes.Date,
                             InternComplexOrmTypes.Long,
+                            InternComplexOrmTypes.Enum,
                             InternComplexOrmTypes.Int -> "INTEGER"
                             InternComplexOrmTypes.Float -> "REAL"
                             InternComplexOrmTypes.IdType -> "BLOB"
@@ -138,7 +139,8 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             }
             InternComplexOrmTypes.Int,
             InternComplexOrmTypes.Long,
-            InternComplexOrmTypes.DateTime -> {
+            InternComplexOrmTypes.DateTime,
+                InternComplexOrmTypes.Enum -> {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Throwable) {

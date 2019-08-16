@@ -10,6 +10,7 @@ enum class InternComplexOrmTypes {
     Date,
     DateTime,
     ByteArray,
+    Enum,
     ComplexOrmTable,
     ComplexOrmTables
 }
