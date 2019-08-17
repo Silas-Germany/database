@@ -1,0 +1,30 @@
+package com.github.silasgermany.complexorm
+
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import kotlin.String
+import kotlin.collections.Map
+import kotlin.jvm.JvmWildcard
+import kotlin.reflect.KClass
+
+actual class ComplexOrmDatabaseSchema : ComplexOrmDatabaseSchemaInterface {
+  override val tables: Map<String, KClass<out ComplexOrmTable>> = mapOf(
+      "schema_test" to com.github.silasgermany.complexorm.Model.SchemaTest::class)
+
+  override val dropTableCommands: Map<String, String> = mapOf(
+      "schema_test" to """DROP TABLE IF EXISTS 'schema_test';""")
+
+  override val createTableCommands: Map<String, String> = mapOf(
+      "schema_test" to """CREATE TABLE 'schema_test'(
+      'id' BLOB NOT NULL PRIMARY KEY,
+      'boolean' INTEGER NOT NULL DEFAULT 0,
+      'int' INTEGER NOT NULL DEFAULT 1,
+      'long' INTEGER NOT NULL DEFAULT 2,
+      'float' REAL NOT NULL DEFAULT 3.1,
+      'string' TEXT NOT NULL DEFAULT 'testDefault',
+      'date' INTEGER NOT NULL DEFAULT '2019-01-01',
+      'date_time' TEXT NOT NULL DEFAULT 1565762054,
+      'byte_array' BLOB NOT NULL,
+      'nullable_string222' TEXT
+      );""")
+}
