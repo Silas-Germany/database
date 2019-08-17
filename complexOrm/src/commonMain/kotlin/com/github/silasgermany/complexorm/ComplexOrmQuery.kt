@@ -10,8 +10,8 @@ import kotlin.reflect.KProperty1
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
                                            private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = database.queryForEach(sql, f)
-    fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = database.queryMap(sql, f)
+    fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) = database.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = database.queryMap(sql, f)
 
     fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: IdType, returnClass: KClass<V>): V? {
         return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
@@ -111,7 +111,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
                     .any { it.value == "$tableClassName;$connectedColumnName" } &&
                     readTableInfo.has(connectedColumnName)
 
-    private fun readColumns(tableClassName: String, cursor: CommonCursor, readTableInfo: ReadTableInfo,
+    private fun readColumns(tableClassName: String, cursor: ComplexOrmCursor, readTableInfo: ReadTableInfo,
                             connectedColumn: String?, specialConnectedColumn: String? = null): Pair<IdType?, ComplexOrmTable?> {
         val id = cursor.getValue(readTableInfo.readIndex++, ComplexOrmTypes.IdType.name) as IdType?
 
@@ -190,7 +190,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         return connectedId to databaseEntry
     }
 
-    private fun CommonCursor.getValue(index: Int, type: String): Any? {
+    private fun ComplexOrmCursor.getValue(index: Int, type: String): Any? {
         return if (isNull(index)) null
         else when (type.asType) {
             ComplexOrmTypes.IdType -> getId(index)

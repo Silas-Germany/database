@@ -49,7 +49,7 @@ actual fun CommonFile.commonWriteText(text: String) {
 }
 
 actual val KClass<out com.github.silasgermany.complexormapi.ComplexOrmTable>.longName: String
-    get() = toString()
+    get() = this.qualifiedName!!
 
 @Suppress("NON_FINAL_MEMBER_IN_FINAL_CLASS", "unused", "unused")
 actual class CommonDateTime actual constructor(var1: Long) {

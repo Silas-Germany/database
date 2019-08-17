@@ -7,7 +7,7 @@ import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
-interface CommonCursor {
+interface ComplexOrmCursor {
     fun isNull(columnIndex: Int): Boolean
     fun getInt(columnIndex: Int): Int
     fun getLong(columnIndex: Int): Long

@@ -95,8 +95,8 @@ class ComplexOrm(databasePath: String) {
     var version: Int
     get() = complexOrmInitializer.version
     set(value) { complexOrmInitializer.version = value }
-    fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
-    fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = complexOrmReader.queryMap(sql, f)
+    fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
     inline fun <T>doInTransaction(f: () -> T) = complexOrmWriter.doInTransaction(f)
 }

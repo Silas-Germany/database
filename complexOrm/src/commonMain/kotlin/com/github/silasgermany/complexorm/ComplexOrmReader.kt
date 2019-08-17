@@ -13,8 +13,8 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
 
     private fun ReadTableInfo.getTableName(tableClassName: String) = getBasicTableInfoFirstValue(tableClassName)
 
-    fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = complexOrmQuery.queryForEach(sql, f)
-    fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = complexOrmQuery.queryMap(sql, f)
+    fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) = complexOrmQuery.queryForEach(sql, f)
+    fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = complexOrmQuery.queryMap(sql, f)
 
     inline fun <reified T : ComplexOrmTable> read(
             readTableInfo: ReadTableInfo

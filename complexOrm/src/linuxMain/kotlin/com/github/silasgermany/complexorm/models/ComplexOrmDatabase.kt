@@ -2,8 +2,8 @@ package com.github.silasgermany.complexorm.models
 
 import cnames.structs.sqlite3
 import cnames.structs.sqlite3_stmt
-import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import kotlinx.cinterop.*
@@ -59,9 +59,10 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     private fun Any?.sqlValue(blobValues: MutableList<ByteArray>) =
         when (this) {
             null -> "null"
+            is IdType -> asSql
             is String -> "'$this'"
             is Boolean -> if (this) "1" else "0"
-            is Date -> this.asSql
+            is Date -> asSql
             is CommonDateTime -> "${this.getMillis() / 1000}"
             is ByteArray -> {
                 blobValues.add(this)
@@ -86,7 +87,6 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 "VALUES(${valuesWithId.values.joinToString(",") { it.sqlValue(blobValues) }});"
         if (blobValues.isEmpty()) execSQL(sql)
         else execSqlWithBlob(sql, blobValues)
-        sqlite3_last_insert_rowid(db)
         return valuesWithId["id"] as IdType
     }
 
@@ -107,10 +107,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
     
     override fun execSQL(sql: String) {
+        println(sql)
         sqlite3_exec(db, sql, null, null, null).checkResult()
     }
 
-    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor {
+    class Cursor(private val it: CPointer<sqlite3_stmt>) : ComplexOrmCursor {
         override fun isNull(columnIndex: Int): Boolean =
             sqlite3_column_type(it, columnIndex) == SQLITE_NULL
         override fun getInt(columnIndex: Int): Int =
@@ -143,12 +144,12 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         }
     }
 
-    actual override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
+    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
         println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
             while (stepStatus == SQLITE_ROW) {
-                f(Cursor(it))
+                f(Cursor(it) as ComplexOrmCursor)
                 stepStatus = sqlite3_step(it)
             }
             if (stepStatus != SQLITE_DONE) {
@@ -156,10 +157,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             }
         }
     }
-    actual override inline fun <T> queryMap(
-        sql: String,
-        f: (CommonCursor) -> T
-    ): List<T> {
+    actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
         println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
@@ -177,13 +175,9 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     override var version: Int
         get() {
-            return useSqlStatement("PRAGMA schema_version;") {
-                if (sqlite3_step(it) == SQLITE_ROW) {
-                    sqlite3_column_int(it, 0)
-                } else {
-                    throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
-                }
-            }
+            return queryMap("PRAGMA schema_version;") {
+                it.getInt(0)
+            }.first()
         }
         set(value) {
             execSQL("PRAGMA schema_version = $value;")

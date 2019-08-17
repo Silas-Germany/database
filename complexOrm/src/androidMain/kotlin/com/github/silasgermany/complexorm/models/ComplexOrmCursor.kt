@@ -3,10 +3,10 @@ package com.github.silasgermany.complexorm.models
 import android.database.CrossProcessCursor
 import android.database.Cursor
 import android.database.CursorWindow
-import com.github.silasgermany.complexorm.CommonCursor
+import com.github.silasgermany.complexorm.ComplexOrmCursor
 import java.io.Closeable
 
-class ComplexOrmCursor(cursor: Cursor): CommonCursor, Closeable {
+class ComplexOrmCursor(cursor: Cursor): ComplexOrmCursor, Closeable {
 
     private val cursor: Cursor?
     private var window = CursorWindow(null)

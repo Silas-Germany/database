@@ -3,8 +3,8 @@ package com.github.silasgermany.complexorm.models
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
-import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import java.util.*
@@ -59,18 +59,18 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         database.execSQL(sql)
     }
 
-    actual override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
+    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
         database.rawQuery(sql, null).use {
             it.moveToFirst()
-            while (it.moveToNext()) f(it as CommonCursor)
+            while (it.moveToNext()) f(it as ComplexOrmCursor)
         }
     }
     @SuppressLint("Recycle")
-    actual override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> {
+    actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             cursor.moveToFirst()
-            return (0 until cursor.count).map { _ -> f(cursor as CommonCursor).apply { cursor.moveToNext() } }
+            return (0 until cursor.count).map { _ -> f(cursor as ComplexOrmCursor).apply { cursor.moveToNext() } }
         }
     }
 

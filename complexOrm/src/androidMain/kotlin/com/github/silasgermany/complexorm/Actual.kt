@@ -21,6 +21,7 @@ actual val KClass<out ComplexOrmTable>.longName: String
 
 // Classes (typealias in Java)
 actual typealias CommonFile = File
+
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)
 actual typealias CommonDateTime = DateTime
