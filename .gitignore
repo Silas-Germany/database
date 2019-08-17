@@ -7,3 +7,4 @@
 .externalNativeBuild
 keystore.properties
 .attach_pid*
+*.bak

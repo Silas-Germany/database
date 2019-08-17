@@ -27,7 +27,7 @@ android {
         test.java.srcDir("src/androidTest/kotlin")
     }
 }
-
+version = "1.1"
 kotlin {
     android('android')
     linuxX64("linux") {
@@ -37,7 +37,12 @@ kotlin {
         }
         binaries { executable() }
     }
-    iosX64("ios") { binaries { framework() } }
+    iosX64("ios") {
+        compilations.main.cinterops {
+            sqlite3
+        }
+        binaries { framework() }
+    }
     sourceSets {
         commonMain {
             dependencies {
@@ -106,19 +111,33 @@ task "copyGeneratedFiles" {
     doLast {
         exec {
             commandLine "sed",
+                    "-i.bak",
                     "s/ @JvmWildcard//",
-                    "-i",
                     "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
         }
     }
     doLast {
         exec {
             commandLine "sed",
+                    "-i.bak",
                     "s/import kotlin.jvm.JvmWildcard//",
-                    "-i",
                     "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
         }
     }
     dependsOn "kaptReleaseUnitTestKotlinAndroid"
     dependsOn "kaptDebugUnitTestKotlinAndroid"
+}
+
+task iosTest {
+    def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
+    dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
+    group = JavaBasePlugin.VERIFICATION_GROUP
+    description = "Runs tests for target 'ios' on an iOS simulator"
+
+    doLast {
+        def binary = kotlin.targets.ios.binaries.getTest('DEBUG').outputFile
+        exec {
+            commandLine 'xcrun', 'simctl', 'spawn', device, binary.absolutePath
+        }
+    }
 }
