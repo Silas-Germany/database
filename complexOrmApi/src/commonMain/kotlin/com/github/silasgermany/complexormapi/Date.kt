@@ -1,10 +1,6 @@
 package com.github.silasgermany.complexormapi
 
-data class Date(
-    val year: Int,
-    val month: Int,
-    val day: Int
-) {
+data class Date(val year: Int, val month: Int, val day: Int) {
     constructor(sqlDate: String) : this(sqlDate.split('-').map(String::toInt))
 
     init {

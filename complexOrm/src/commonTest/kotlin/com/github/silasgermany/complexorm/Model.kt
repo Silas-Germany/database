@@ -45,4 +45,8 @@ interface Model {
         val specialId: String by initMap
     }
 
+    class ReaderTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        val name: String by initMap
+    }
+
 }

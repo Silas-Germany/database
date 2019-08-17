@@ -1,21 +1,10 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.IdType
 import kotlinx.cinterop.*
 import platform.posix.*
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
-actual abstract class CommonCursor {
-    actual abstract fun isNull(columnIndex: Int): Boolean
-    actual abstract fun getInt(columnIndex: Int): Int
-    actual abstract fun getLong(columnIndex: Int): Long
-    actual abstract fun getFloat(columnIndex: Int): Float
-    actual abstract fun getString(columnIndex: Int): String
-    actual abstract fun getBlob(columnIndex: Int): ByteArray
-    actual fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
-}
-
 @Suppress("unused")
 actual class CommonFile actual constructor(private val parent: String, private val child: String) {
 

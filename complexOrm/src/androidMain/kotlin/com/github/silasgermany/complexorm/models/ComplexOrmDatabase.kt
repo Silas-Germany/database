@@ -2,7 +2,6 @@ package com.github.silasgermany.complexorm.models
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
-import android.database.CrossProcessCursor
 import android.database.sqlite.SQLiteDatabase
 import com.github.silasgermany.complexorm.CommonCursor
 import com.github.silasgermany.complexorm.CommonDateTime
@@ -69,11 +68,9 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     @SuppressLint("Recycle")
     actual override inline fun <T> queryMap(sql: String, f: (CommonCursor) -> T): List<T> {
         val cursor = database.rawQuery(sql, null)
-        val ownCursor = (cursor as? CrossProcessCursor)?.let { ComplexOrmCursor(it) }
-            ?.takeIf { ownCursor -> ownCursor.valid } ?: cursor
-        ownCursor.use {
-            it.moveToFirst()
-            return (0 until it.count).map { _ -> f(it as CommonCursor).apply { it.moveToNext() } }
+        ComplexOrmCursor(cursor).use {
+            cursor.moveToFirst()
+            return (0 until cursor.count).map { _ -> f(cursor as CommonCursor).apply { cursor.moveToNext() } }
         }
     }
 

@@ -7,14 +7,14 @@ import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
-expect abstract class CommonCursor {
-    abstract fun isNull(columnIndex: Int): Boolean
-    abstract fun getInt(columnIndex: Int): Int
-    abstract fun getLong(columnIndex: Int): Long
-    abstract fun getFloat(columnIndex: Int): Float
-    abstract fun getString(columnIndex: Int): String
-    abstract fun getBlob(columnIndex: Int): ByteArray
-    fun getId(columnIndex: Int): IdType
+interface CommonCursor {
+    fun isNull(columnIndex: Int): Boolean
+    fun getInt(columnIndex: Int): Int
+    fun getLong(columnIndex: Int): Long
+    fun getFloat(columnIndex: Int): Float
+    fun getString(columnIndex: Int): String
+    fun getBlob(columnIndex: Int): ByteArray
+    fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
 }
 
 expect class CommonFile constructor(parent: String, child: String) {

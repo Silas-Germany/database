@@ -11,8 +11,6 @@ import kotlin.reflect.KProperty1
 open class ComplexOrmQueryBuilder internal constructor(private val complexOrmReader: ComplexOrmReader,
                                                        private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
-
     private val basicTableInfo = complexOrmTableInfo.basicTableInfo
     private val normalColumns = complexOrmTableInfo.normalColumns
     private val connectedColumns = complexOrmTableInfo.connectedColumns
@@ -107,7 +105,7 @@ open class ComplexOrmQueryBuilder internal constructor(private val complexOrmRea
                             whereArgument.joinToString { it?.let { (it as IdType).asSql } ?: "x''" }
                         !whereArgument.any { it != null } -> "NULL"
                         whereArgument.any { it is ComplexOrmTable } ->
-                            whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.toString() ?: "-1" }
+                            whereArgument.joinToString { (it as? ComplexOrmTable)?.id?.asSql ?: "-1" }
                         else -> throw IllegalArgumentException("Collection it not of type String, Int or null")
                     }
                 }

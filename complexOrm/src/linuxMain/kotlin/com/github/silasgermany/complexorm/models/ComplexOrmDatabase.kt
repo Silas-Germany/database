@@ -14,14 +14,6 @@ import uuid.uuid_t
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
 
-    init {
-        memScoped {
-            val id: uuid_t = allocArray(16)
-            uuid_generate(id)
-            println(id)
-        }
-    }
-
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
             throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
@@ -118,7 +110,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         sqlite3_exec(db, sql, null, null, null).checkResult()
     }
 
-    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor() {
+    class Cursor(private val it: CPointer<sqlite3_stmt>) : CommonCursor {
         override fun isNull(columnIndex: Int): Boolean =
             sqlite3_column_type(it, columnIndex) == SQLITE_NULL
         override fun getInt(columnIndex: Int): Int =
@@ -152,6 +144,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     actual override inline fun <T> queryForEach(sql: String, f: (CommonCursor) -> T) {
+        println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
             while (stepStatus == SQLITE_ROW) {
@@ -167,6 +160,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         sql: String,
         f: (CommonCursor) -> T
     ): List<T> {
+        println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
             val result = mutableListOf<T>()

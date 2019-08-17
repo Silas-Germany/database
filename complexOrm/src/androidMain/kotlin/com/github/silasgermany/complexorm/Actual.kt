@@ -1,10 +1,8 @@
 package com.github.silasgermany.complexorm
 
-import android.database.Cursor
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-import com.github.silasgermany.complexormapi.IdType
 import org.joda.time.DateTime
 import java.io.File
 import kotlin.reflect.KClass
@@ -22,9 +20,6 @@ actual val KClass<out ComplexOrmTable>.longName: String
     get() = java.name.replace("$", ".")
 
 // Classes (typealias in Java)
-actual abstract class CommonCursor : Cursor {
-    actual fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
-}
 actual typealias CommonFile = File
 actual fun File.commonReadText(): String = readText()
 actual fun File.commonWriteText(text: String) = writeText(text)

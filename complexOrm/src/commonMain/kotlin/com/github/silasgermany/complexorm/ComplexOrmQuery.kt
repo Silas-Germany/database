@@ -10,8 +10,6 @@ import kotlin.reflect.KProperty1
 class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
                                            private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
-    private val IdType.asSql get() = "x'${toString().replace("-", "")}'"
-
     fun queryForEach(sql: String, f: (CommonCursor) -> Unit) = database.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (CommonCursor) -> T) = database.queryMap(sql, f)
 

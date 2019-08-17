@@ -34,6 +34,11 @@ class ComplexOrmInitializer internal constructor(
         createTableIfNotExists(table)
     }
 
+    fun recreateAllTables() {
+        complexOrmSchema.dropTableCommands.values.forEach { database.execSQL(it) }
+        complexOrmSchema.createTableCommands.values.forEach { database.execSQL(it) }
+    }
+
     fun createAllTables() {
         complexOrmSchema.createTableCommands.values.forEach { database.execSQL(it) }
     }

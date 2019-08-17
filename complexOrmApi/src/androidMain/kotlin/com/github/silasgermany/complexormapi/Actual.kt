@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 // Replace with Int or Long if such an ID should be used
 actual class IdType(private val uuid: UUID) {
 
-    constructor(bytes: ByteArray) : this(ByteBuffer.wrap(bytes).run { UUID(long, long) }) {
+    actual constructor(bytes: ByteArray) : this(ByteBuffer.wrap(bytes).run { UUID(long, long) }) {
         if (bytes.size != 16) throw IllegalArgumentException("Wrong byte size (${bytes.size})")
     }
 
@@ -18,8 +18,8 @@ actual class IdType(private val uuid: UUID) {
             .array()
     }
 
-    actual fun nicePrint(): String = "$uuid"
-    actual override fun toString() = "x'${uuid.toString().replace("-", "")}'"
+    actual override fun toString(): String = "$uuid"
+    actual val asSql get() = "x'${uuid.toString().replace("-", "")}'"
 }
 
 actual val KClass<*>.className: String get() = java.simpleName

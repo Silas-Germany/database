@@ -8,7 +8,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
     val shortClassName get() = this::class.className
 
     @Suppress("unused")
-    private val ComplexOrmTable.printWithId get() = "$shortClassName(${id?.nicePrint() ?: "?"})"
+    private val ComplexOrmTable.printWithId get() = "$shortClassName(${id?.toString() ?: "?"})"
 
     override fun toString(): String {
         return map.toList().joinToString(prefix = "$shortClassName{", postfix = "}") { (key, value) ->
@@ -20,7 +20,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 is String -> "\'$value\'"
                 is ByteArray -> "ByteArray(size: ${value.size})"
                 null -> "null"
-                is IdType -> value.nicePrint()
+                is IdType -> value.toString()
                 else -> "$value"
             }
         }
@@ -43,7 +43,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
                 is String -> "\'$value\'"
                 is ByteArray -> "ByteArray(size: ${value.size})"
                 null -> "null"
-                is IdType -> value.nicePrint()
+                is IdType -> value.toString()
                 else -> "$value"
             }
         }

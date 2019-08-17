@@ -9,9 +9,6 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                                             private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
-    private val IdType?.asSql get() = this?.let { _ ->
-        "x'${toString().replace("-", "")}'"
-    }
     fun execSQL(sql: String) = database.execSQL(sql)
 
     fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
