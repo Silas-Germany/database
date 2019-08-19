@@ -39,11 +39,12 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     private fun execSqlWithBlob(sql: String, blobValues: MutableList<ByteArray>) {
+        println("${blobValues.size} -> $sql")
         useSqlStatement(sql) {
-            (1..blobValues.size).forEach { index ->
+            (0 until blobValues.size).forEach { index ->
                 sqlite3_bind_blob(
                     it,
-                    index,
+                    index + 1,
                     blobValues[index].refTo(0),
                     blobValues[index].size,
                     SQLITE_TRANSIENT
@@ -60,8 +61,8 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         when (this) {
             null -> "null"
             is IdType -> asSql
-            is String -> "'$this'"
             is Boolean -> if (this) "1" else "0"
+            is String -> "'$this'"
             is Date -> asSql
             is CommonDateTime -> "${this.getMillis() / 1000}"
             is ByteArray -> {

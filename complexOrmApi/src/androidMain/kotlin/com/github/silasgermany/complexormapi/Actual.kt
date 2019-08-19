@@ -18,8 +18,11 @@ actual class IdType(private val uuid: UUID) {
             .array()
     }
 
-    actual override fun toString(): String = "$uuid"
     actual val asSql get() = "x'${uuid.toString().replace("-", "")}'"
+
+    actual override fun toString(): String = "$uuid"
+    actual override fun equals(other: Any?) = uuid == (other as? IdType)?.uuid
+    actual override fun hashCode() = uuid.hashCode()
 }
 
 actual val KClass<*>.className: String get() = java.simpleName

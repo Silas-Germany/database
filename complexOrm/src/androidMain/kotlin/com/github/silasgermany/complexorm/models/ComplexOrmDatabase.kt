@@ -27,17 +27,18 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     private val Map<String, Any?>.asContentValues get() = ContentValues().apply {
         forEach { (key, value) ->
-            if (value is IdType) put(key, value.bytes)
-            else when (value) {
-                is String -> put(key, value)
-                is Int -> put(key, value)
+            when (value) {
+                null -> putNull(key)
+                is IdType -> put(key, value.bytes)
                 is Boolean -> put(key, value)
+                is Int -> put(key, value)
                 is Long -> put(key, value)
+                is Float -> put(key, value)
+                is String -> put(key, value)
                 is Date -> put(key, value.asSql)
                 is CommonDateTime -> put(key, (value.millis / 1000).toInt())
                 is ByteArray -> put(key, value)
-                is IdType -> put(key, value.bytes)
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("$value has unknown type: ${value::class} (value for $key)")
             }
         }
     }

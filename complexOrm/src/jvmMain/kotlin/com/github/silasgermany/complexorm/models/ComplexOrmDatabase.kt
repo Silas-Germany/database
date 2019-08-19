@@ -29,9 +29,10 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     private fun execSqlWithBlob(sql: String, blobValues: MutableList<ByteArray>): Int {
+        println("${blobValues.size} -> $sql")
         val statement = database.prepareStatement(sql)
-        (1..blobValues.size).forEach { index ->
-            statement.setBytes(index, blobValues[index])
+        (0 until blobValues.size).forEach { index ->
+            statement.setBytes(index + 1, blobValues[index])
         }
         return statement.executeUpdate()
             .also { blobValues.clear() }
@@ -41,8 +42,8 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         when (this) {
             null -> "null"
             is IdType -> asSql
-            is String -> "'$this'"
             is Boolean -> if (this) "1" else "0"
+            is String -> "'$this'"
             is Date -> asSql
             is CommonDateTime -> "${this.millis / 1000}"
             is ByteArray -> {
