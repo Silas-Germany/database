@@ -4,6 +4,7 @@ import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
 class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface,
@@ -39,7 +40,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterfac
                 val columnName = column.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2")
                         .toLowerCase().takeUnless { it == "id" }?.plus("_id") ?: "id"
                 val fullColumnName = "\"${readTableInfo.getTableName(missingEntryTable)}\".\"$columnName\""
-                val where = "WHERE $fullColumnName IN (${missingEntries.joinToString { "${it.map[column]}" }})"
+                val where = "WHERE $fullColumnName IN (${missingEntries.joinToString { (it.map[column] as IdType?)?.asSql ?: "null," }})"
                 readTableInfo.connectedColumn = fullColumnName
                 complexOrmQuery.query(missingEntryTable, readTableInfo, where)
                 readTableInfo.notAlreadyLoaded.remove(missingEntryTable)

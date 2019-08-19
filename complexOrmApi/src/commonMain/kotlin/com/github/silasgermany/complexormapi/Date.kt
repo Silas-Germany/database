@@ -13,7 +13,7 @@ data class Date(val year: Int, val month: Int, val day: Int) {
         if (sqlDateParts.size != 3) throw IllegalArgumentException("$sqlDateParts is not in the correct SQL format")
     }
 
-    val asSql by lazy { "$year-${month.twoDigits}-${day.twoDigits}" }
+    val asSql by lazy { "'$year-${month.twoDigits}-${day.twoDigits}'" }
 
     private val Int.twoDigits get() =
         toString().padStart(2, '0')

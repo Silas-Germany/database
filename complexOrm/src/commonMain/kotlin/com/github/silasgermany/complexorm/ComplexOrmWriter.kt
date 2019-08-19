@@ -1,7 +1,10 @@
 package com.github.silasgermany.complexorm
 
 import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
-import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -47,27 +50,22 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
             val sqlKey = key.toSql()
             var keyFound = false
             normalColumns[sqlKey]?.also { type ->
+                if (type !in ComplexOrmTypes.values().map { it.name })
+                    throw IllegalArgumentException("Can't save value $value (unknown type: $type)")
                 keyFound = true
-                if (value == null) {
-                    if (sqlKey != "id") contentValues[sqlKey] = null
-                } else contentValues[sqlKey] = when (ComplexOrmTypes.values().find { it.name == type }) {
-                    ComplexOrmTypes.Date -> (value as Date).asSql
-                    ComplexOrmTypes.Boolean -> if (value as Boolean) 1 else 0
-                    ComplexOrmTypes.DateTime -> ((value as CommonDateTime).getMillis() / 1000).toInt()
-                    else -> value
+                if (value != null || sqlKey != "id") {
+                    contentValues[sqlKey] = value
                 }
             }
             connectedColumns[sqlKey]?.let {
                 keyFound = true
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
-                    if (connectedEntry != null) {
-                        if (connectedEntry.id == null) {
-                            if (!writeDeep) return@let
-                            write(connectedEntry)
-                        }
-                        contentValues["${sqlKey.toSql()}_id"] = connectedEntry.id
-                    } else contentValues["${sqlKey.toSql()}_id"] = null
+                    if (connectedEntry?.run { id == null } == true) {
+                        if (!writeDeep) return@let
+                        write(connectedEntry, writeDeep)
+                    }
+                    contentValues["${sqlKey.toSql()}_id"] = connectedEntry?.id
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
                 }
@@ -99,7 +97,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
-                            write(joinTableEntry)
+                            write(joinTableEntry, writeDeep)
                         }
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         save("${tableName}_$sqlKey", innerContentValues)
@@ -119,7 +117,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
-                            write(joinTableEntry)
+                            write(joinTableEntry, writeDeep)
                         }
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         save("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues)
@@ -137,7 +135,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                         joinTableEntry as ComplexOrmTable
                         if (joinTableEntry.id == null) {
                             if (!writeDeep) return@let
-                            write(joinTableEntry)
+                            write(joinTableEntry, writeDeep)
                         }
                         innerContentValues["${reverseConnectedTableDataSecond}_id"] = table.id
                         database.updateOne(connectedTableName, innerContentValues, joinTableEntry.id)
@@ -163,14 +161,11 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
 
     fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType, value: R) {
         val contentValues = mutableMapOf<String, Any?>()
-        when (value) {
-            is Int -> contentValues[column.name.toSql()] = value
-            is String -> contentValues[column.name.toSql()] = value
-            is Long -> contentValues[column.name.toSql()] = value
-            is Boolean -> contentValues[column.name.toSql()] = value
-            is ByteArray -> contentValues[column.name.toSql()] = value
-            else -> throw IllegalArgumentException("Can't save value $value (unknown type)")
+        var columnName = column.name.toSql()
+        if (tableInfo.normalColumns[table.longName]?.get(columnName) == null) {
+            columnName += "_id"
         }
+        contentValues[columnName] = value
         contentValues["id"] = id
         save(table.tableName, contentValues)
     }

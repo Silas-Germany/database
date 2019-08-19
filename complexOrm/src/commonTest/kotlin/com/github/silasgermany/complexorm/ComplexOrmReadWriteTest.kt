@@ -7,6 +7,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 internal class ComplexOrmReadWriteTest: Helper() {
 
@@ -78,9 +79,34 @@ internal class ComplexOrmReadWriteTest: Helper() {
         assertEquals(1, entries.size)
         val readEntry = entries.first()
         assertEquals(writeEntry.id, readEntry.id)
-        assertEquals(writeEntry.connectedEntry?.id, readEntry.connectedEntry?.id)
-        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.id)
-        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.id)
-        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.anotherReaderEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.anotherReaderEntry?.id)
+        assertEquals(writeEntry.connectedEntry!!.id, readEntry.connectedEntry!!.id)
+        assertEquals(writeEntry.connectedEntry!!.anotherReaderEntry.id, readEntry.connectedEntry!!.anotherReaderEntry.id)
+        assertEquals(writeEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.id, readEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.id)
+        assertEquals(writeEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.id, readEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.id)
+        assertNull(readEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.connectedEntry)
+    }
+
+    @Test fun readRecursive() {
+        val id = generatedId
+        val innerId = generatedId
+        val writeEntry = ReaderTable(mutableMapOf("id" to id))
+        writeEntry.connectedEntry = ReaderReferenceTable().apply {
+            anotherReaderEntry = ReaderTable().apply {
+                connectedEntry = ReaderReferenceTable().apply {
+                    anotherReaderEntry = ReaderTable(mutableMapOf("id" to innerId))
+                            // It's not saving entries that have an ID
+                        .also { database.save(it) }
+                }
+            }
+        }
+        database.save(writeEntry)
+        database.saveOneColumn(ReaderTable::connectedEntry, innerId, writeEntry.connectedEntry?.id)
+        val entries = database.query.get<ReaderTable>().filter { it.id == id }
+        assertEquals(1, entries.size)
+        val readEntry = entries.first()
+        assertEquals(writeEntry.connectedEntry!!.id, readEntry.connectedEntry!!.id)
+        assertEquals(writeEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.id, readEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.id)
+        assertEquals(writeEntry.connectedEntry!!.id,
+            readEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.anotherReaderEntry.connectedEntry!!.id)
     }
 }

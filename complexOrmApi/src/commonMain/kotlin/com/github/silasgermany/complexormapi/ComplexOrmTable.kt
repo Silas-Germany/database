@@ -28,7 +28,7 @@ abstract class ComplexOrmTable(val map: MutableMap<String, Any?>) {
 
     fun showRecursive(): String =
         showRecursive(mutableSetOf(shortClassName to id))
-    fun showRecursive(alreadyPrinted: MutableSet<Pair<String, IdType?>>): String {
+    private fun showRecursive(alreadyPrinted: MutableSet<Pair<String, IdType?>>): String {
         return map.toList().joinToString(prefix = "$shortClassName{", postfix = "}") { (key, value) ->
             "$key: " + when (value) {
                 is ComplexOrmTable -> {

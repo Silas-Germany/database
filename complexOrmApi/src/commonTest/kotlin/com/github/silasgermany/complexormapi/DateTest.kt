@@ -9,7 +9,7 @@ class DateTest {
 
     @Test fun twoDigits() {
         val day = Date(2000, 1, 1)
-        assertEquals("2000-01-01", day.asSql, "Has two digits for month and day")
+        assertEquals("'2000-01-01'", day.asSql, "Has two digits for month and day")
     }
 
     @Test fun invalidDates() {
@@ -32,12 +32,12 @@ class DateTest {
     @Test fun sqlConversion() {
         var day = Date(2000, 1, 1)
         assertEquals(Date("2000-01-01"), day, "Parses correctly ($day)")
-        assertEquals("2000-01-01", day.asSql, "Parses correctly ($day)")
+        assertEquals("'2000-01-01'", day.asSql, "Parses correctly ($day)")
         day = Date(2000, 12, 1)
         assertEquals(Date("2000-12-01"), day, "Parses correctly ($day)")
-        assertEquals("2000-12-01", day.asSql, "Parses correctly ($day)")
+        assertEquals("'2000-12-01'", day.asSql, "Parses correctly ($day)")
         day = Date(2000, 1, 31)
         assertEquals(Date("2000-01-31"), day, "Parses correctly ($day)")
-        assertEquals("2000-01-31", day.asSql, "Parses correctly ($day)")
+        assertEquals("'2000-01-31'", day.asSql, "Parses correctly ($day)")
     }
 }
