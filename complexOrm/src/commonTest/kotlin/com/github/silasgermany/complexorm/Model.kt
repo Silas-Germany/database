@@ -4,7 +4,7 @@ import com.github.silasgermany.complexormapi.*
 
 @ComplexOrmAllTables
 interface Model {
-    class SchemaTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
+    class ColumnTypesTable(initMap: MutableMap<String, Any?> = default): ComplexOrmTable(initMap) {
         @ComplexOrmDefault(false.toString())
         var boolean: Boolean by initMap
         @ComplexOrmDefault(1.toString())
@@ -46,7 +46,11 @@ interface Model {
     }
 
     class ReaderTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
-        var testValue: String by initMap
+        var testValue: String? by initMap
+        var connectedEntry: ReaderReferenceTable? by initMap
     }
 
+    class ReaderReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        var anotherReaderEntry: ReaderTable by initMap
+    }
 }

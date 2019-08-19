@@ -66,7 +66,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                             if (!writeDeep) return@let
                             write(connectedEntry)
                         }
-                        contentValues["${sqlKey.toSql()}_id"] = connectedEntry.id.toString()
+                        contentValues["${sqlKey.toSql()}_id"] = connectedEntry.id
                     } else contentValues["${sqlKey.toSql()}_id"] = null
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)

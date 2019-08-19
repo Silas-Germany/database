@@ -1,7 +1,6 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.Model.ReaderTable
-import com.github.silasgermany.complexorm.Model.SchemaTable
+import com.github.silasgermany.complexorm.Model.*
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.random.Random
@@ -38,7 +37,7 @@ internal class ComplexOrmReadWriteTest: Helper() {
     }
 
     @Test fun readWriteAllColumnTypes() {
-        val writeEntry = SchemaTable()
+        val writeEntry = ColumnTypesTable()
         writeEntry.boolean = true
         writeEntry.int = 100
         writeEntry.long = Int.MAX_VALUE + 10L
@@ -50,7 +49,7 @@ internal class ComplexOrmReadWriteTest: Helper() {
         writeEntry.nullableEntry = "test_value"
         database.save(writeEntry)
         assertNotNull(writeEntry.id)
-        val entries = database.query.get<SchemaTable>()
+        val entries = database.query.get<ColumnTypesTable>()
         assertEquals(1, entries.size)
         val readEntry = entries.first()
         assertEquals(writeEntry.id, readEntry.id)
@@ -62,5 +61,26 @@ internal class ComplexOrmReadWriteTest: Helper() {
         assertEquals(writeEntry.dateTime.getMillis(), readEntry.dateTime.getMillis())
         assertEquals(writeEntry.byteArray.toList(), readEntry.byteArray.toList())
         assertEquals(writeEntry.nullableEntry, readEntry.nullableEntry)
+    }
+
+    @Test fun writeDeep() {
+        val id = generatedId
+        val writeEntry = ReaderTable(mutableMapOf("id" to id))
+        writeEntry.connectedEntry = ReaderReferenceTable().apply {
+            anotherReaderEntry = ReaderTable().apply {
+                connectedEntry = ReaderReferenceTable().apply {
+                    anotherReaderEntry = ReaderTable()
+                }
+            }
+        }
+        database.save(writeEntry)
+        val entries = database.query.get<ReaderTable>().filter { it.id == id }
+        assertEquals(1, entries.size)
+        val readEntry = entries.first()
+        assertEquals(writeEntry.id, readEntry.id)
+        assertEquals(writeEntry.connectedEntry?.id, readEntry.connectedEntry?.id)
+        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.id)
+        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.id)
+        assertEquals(writeEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.anotherReaderEntry?.id, readEntry.connectedEntry?.anotherReaderEntry?.connectedEntry?.anotherReaderEntry?.id)
     }
 }
