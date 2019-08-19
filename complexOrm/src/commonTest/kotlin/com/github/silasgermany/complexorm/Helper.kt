@@ -1,3 +1,10 @@
 package com.github.silasgermany.complexorm
 
-expect open class Helper()
+open class Helper {
+
+    protected val database by lazy { ComplexOrm("/tmp/database.db") }
+
+    protected fun resetDatabase() {
+        database.recreateAllTables()
+    }
+}

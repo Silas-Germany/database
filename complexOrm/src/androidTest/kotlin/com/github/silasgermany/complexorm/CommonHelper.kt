@@ -8,7 +8,7 @@ import org.robolectric.annotation.Config
 
 @Config(manifest=Config.NONE)
 @RunWith(RobolectricTestRunner::class)
-actual open class Helper {
+actual open class CommonHelper: Helper() {
     init {
         DateTimeZone.setDefault(DateTimeZone.forOffsetHoursMinutes(5, 30))
     }

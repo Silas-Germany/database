@@ -27,7 +27,9 @@ class ComplexOrm(databasePath: String) {
     inline fun <reified T: ComplexOrmTable, reified R: Any>getOneColumn(column: KProperty1<T, R?>, id: IdType) =
             complexOrmReader.complexOrmQuery.getOneColumn(T::class, column, id, R::class)
 
-    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: IdType, value: R?) =
+    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, entry: ComplexOrmTable, value: R?) =
+        complexOrmWriter.saveOneColumn(T::class, column, entry.id, value)
+    inline fun <reified T: ComplexOrmTable, reified R: Any>saveOneColumn(column: KProperty1<T, R?>, id: IdType?, value: R?) =
             complexOrmWriter.saveOneColumn(T::class, column, id, value)
 
     fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: IdType, newId: IdType) =

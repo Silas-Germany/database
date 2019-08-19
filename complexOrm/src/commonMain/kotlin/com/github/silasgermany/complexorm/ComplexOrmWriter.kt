@@ -159,7 +159,8 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
         return database.insertOrUpdate(table, contentValues)
     }
 
-    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType, value: R) {
+    fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType?, value: R) {
+        id ?: return
         val contentValues = mutableMapOf<String, Any?>()
         var columnName = column.name.toSql()
         if (tableInfo.normalColumns[table.longName]?.get(columnName) == null) {

@@ -5,7 +5,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class ComplexOrmTableInfoTest: Helper() {
+class ComplexOrmTableInfoTest: CommonHelper() {
 	private val currentTableInfo: ComplexOrmTableInfoInterface = tableInfo
 
 	@Test fun onlyTypeEnums() {
