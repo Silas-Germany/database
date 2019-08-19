@@ -3,7 +3,7 @@ package com.github.silasgermany.complexorm
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CommonDateTimeTest {
+class CommonDateTimeTest: Helper() {
 
 	private val dateTime = CommonDateTime(1549202706000L)
 

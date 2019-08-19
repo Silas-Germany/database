@@ -60,17 +60,18 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
-        database.rawQuery(sql, null).use {
+        val cursor = database.rawQuery(sql, null)
+        ComplexOrmCursor(cursor).use {
             it.moveToFirst()
-            while (it.moveToNext()) f(it as ComplexOrmCursor)
+            repeat(it.count) { _ -> f(it) }
         }
     }
     @SuppressLint("Recycle")
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
-            cursor.moveToFirst()
-            return (0 until cursor.count).map { _ -> f(cursor as ComplexOrmCursor).apply { cursor.moveToNext() } }
+            it.moveToFirst()
+            return (0 until it.count).map { _ -> f(it).apply { it.moveToNext() } }
         }
     }
 
@@ -78,6 +79,5 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         get() = database.version
         set(value) { database.version = value }
 
-    override fun close() =
-        database.close()
+    override fun close() = database.close()
 }

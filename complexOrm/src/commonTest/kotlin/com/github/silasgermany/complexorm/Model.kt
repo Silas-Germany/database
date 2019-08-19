@@ -46,7 +46,7 @@ interface Model {
     }
 
     class ReaderTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
-        val testValue: String by initMap
+        var testValue: String by initMap
     }
 
 }

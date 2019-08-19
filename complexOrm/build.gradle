@@ -29,6 +29,7 @@ android {
 }
 version = "1.1"
 kotlin {
+    jvm()
     android('android')
     linuxX64("linux") {
         compilations.main.cinterops {
@@ -55,6 +56,8 @@ kotlin {
             dependencies {
                 implementation kotlin('test-common')
                 implementation kotlin('test-annotations-common')
+
+                implementation project(":complexOrmApi")
             }
         }
         androidMain {
@@ -69,16 +72,29 @@ kotlin {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')
 
-                //noinspection GradleDependency
-                implementation "joda-time:joda-time:2.10.2"
-                implementation "org.xerial:sqlite-jdbc:3.28.0"
-                implementation project(":complexOrmApi")
+                implementation 'net.danlew:android.joda:2.10.2'
+
+                implementation  "org.robolectric:robolectric:4.3"
             }
         }
         iosMain { }
         iosTest { }
         linuxMain { }
         linuxTest { }
+        jvmMain {
+            dependencies {
+                implementation kotlin('stdlib-jdk8')
+                //noinspection GradleDependency
+                implementation "joda-time:joda-time:2.10.2"
+                implementation "org.xerial:sqlite-jdbc:3.28.0"
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation kotlin('test')
+                implementation kotlin('test-junit')
+            }
+        }
     }
 }
 
@@ -87,6 +103,43 @@ dependencies {
 }
 
 task "copyGeneratedFiles" {
+    doFirst {
+        exec {
+            commandLine "mkdir",
+                    "-p",
+                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "cp",
+                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
+                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "cp",
+                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt",
+                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "sed",
+                    "-i.bak",
+                    "s/ @JvmWildcard//",
+                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
+        }
+    }
+    doLast {
+        exec {
+            commandLine "sed",
+                    "-i.bak",
+                    "s/import kotlin.jvm.JvmWildcard//",
+                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
+        }
+    }
     doFirst {
         exec {
             commandLine "mkdir",

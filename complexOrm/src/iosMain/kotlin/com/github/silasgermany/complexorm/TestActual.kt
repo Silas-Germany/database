@@ -1,6 +1,9 @@
 package com.github.silasgermany.complexorm
 
-actual val databaseSchema: com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+
+actual val databaseSchema: ComplexOrmDatabaseSchemaInterface
     get() = null!!
-actual val tableInfo: com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+actual val tableInfo: ComplexOrmTableInfoInterface
     get() = null!!

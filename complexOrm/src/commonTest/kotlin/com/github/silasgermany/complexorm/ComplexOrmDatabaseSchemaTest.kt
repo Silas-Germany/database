@@ -4,7 +4,7 @@ import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ComplexOrmDatabaseSchemaTest {
+class ComplexOrmDatabaseSchemaTest: Helper() {
 
     private val currentDatabaseSchema: ComplexOrmDatabaseSchemaInterface = databaseSchema
 

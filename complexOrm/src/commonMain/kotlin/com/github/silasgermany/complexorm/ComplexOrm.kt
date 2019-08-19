@@ -45,8 +45,8 @@ class ComplexOrm(databasePath: String) {
             complexOrmInitializer.replaceTable<T>()
     fun <T: ComplexOrmTable>replaceTable(table: KClass<T>) =
             complexOrmInitializer.replaceTable(table)
-    fun createAllTables() =
-            complexOrmInitializer.createAllTables()
+    fun recreateAllTables() = complexOrmInitializer.recreateAllTables()
+    fun createAllTables() = complexOrmInitializer.createAllTables()
 
     fun save(table: ComplexOrmTable, writeDeep: Boolean = true) =
             complexOrmWriter.save(table, writeDeep)

@@ -5,7 +5,7 @@ import com.github.silasgermany.complexormapi.className
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ExpectTest {
+class ExpectTest: Helper() {
 
 	class InnerClass
 

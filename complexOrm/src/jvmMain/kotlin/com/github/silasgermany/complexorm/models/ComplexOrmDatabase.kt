@@ -10,11 +10,11 @@ import java.sql.ResultSet
 import java.util.*
 
 @Suppress("OVERRIDE_BY_INLINE", "unused")
-class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
 
     val database: Connection = DriverManager.getConnection("jdbc:sqlite:$path")
 
-    override inline fun <T>doInTransaction(f: () -> T): T {
+    actual override inline fun <T>doInTransaction(f: () -> T): T {
         database.autoCommit = false
         return try {
             f().also {
@@ -23,6 +23,8 @@ class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         } catch (e: Throwable) {
             database.rollback()
             throw e
+        } finally {
+            database.autoCommit = true
         }
     }
 
@@ -118,24 +120,24 @@ class ComplexOrmDatabase(path: String) : ComplexOrmDatabaseInterface {
         }
     }
 
-    override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
         println(sql)
         useSqlStatement(sql) {
             while (it.next()) {
                 f(Cursor(it))
             }
+            it.close()
         }
     }
-    override inline fun <T> queryMap(
-        sql: String,
-        f: (ComplexOrmCursor) -> T
-    ): List<T> {
+
+    actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
         println(sql)
         useSqlStatement(sql) {
             val result = mutableListOf<T>()
             while (it.next()) {
                 result.add(f(Cursor(it)))
             }
+            it.close()
             return result
         }
     }
