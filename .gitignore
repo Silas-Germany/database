@@ -8,3 +8,5 @@
 keystore.properties
 .attach_pid*
 *.bak
+iosMain
+iosTest
