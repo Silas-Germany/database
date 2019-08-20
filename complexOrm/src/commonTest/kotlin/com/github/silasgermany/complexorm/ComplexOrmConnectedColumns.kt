@@ -5,6 +5,7 @@ import com.github.silasgermany.complexorm.Model.ReaderTable
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 internal class ComplexOrmConnectedColumns: CommonHelper() {
@@ -21,6 +22,7 @@ internal class ComplexOrmConnectedColumns: CommonHelper() {
             }
         }
         database.save(writeEntry)
+        assertNotNull(writeEntry.id)
         val entries = database.query.get<ReaderTable>().filter { it.id == writeEntry.id }
         assertEquals(1, entries.size)
         val readEntry = entries.first()

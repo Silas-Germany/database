@@ -70,9 +70,15 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int {
         val blobValues = mutableListOf<ByteArray>()
-        val sql = "UPDATE $table SET " +
-                "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
-                "WHERE $whereClause;"
+        val sql = if (values.isNotEmpty()) {
+            "UPDATE $table SET " +
+                    "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
+                    "WHERE $whereClause;"
+        } else {
+            "UPDATE $table SET " +
+                    "id=id" +
+                    "WHERE $whereClause;"
+        }
         return if (blobValues.isEmpty()) execSQLWithResult(sql)
         else execSqlWithBlob(sql, blobValues)
     }
@@ -142,16 +148,6 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             return result
         }
     }
-
-    override var version: Int
-        get() {
-            return queryMap("PRAGMA schema_version;") {
-                it.getInt(0)
-            }.first()
-        }
-        set(value) {
-            execSQL("PRAGMA schema_version = $value;")
-        }
 
     override fun close() =
         database.close()

@@ -35,7 +35,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 is Long -> put(key, value)
                 is Float -> put(key, value)
                 is String -> put(key, value)
-                is Date -> put(key, value.asSql)
+                is Date -> put(key, value.toString())
                 is CommonDateTime -> put(key, (value.millis / 1000).toInt())
                 is ByteArray -> put(key, value)
                 else -> throw IllegalArgumentException("$value has unknown type: ${value::class} (value for $key)")
@@ -75,10 +75,6 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             return (0 until it.count).map { _ -> f(it).apply { it.moveToNext() } }
         }
     }
-
-    override var version: Int
-        get() = database.version
-        set(value) { database.version = value }
 
     override fun close() = database.close()
 }

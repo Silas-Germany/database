@@ -14,8 +14,12 @@ interface ComplexOrmDatabaseInterface {
         return insert(table, values)
     }
     fun insert(table: String, values: Map<String, Any?>): IdType
-    fun updateOne(table: String, values: Map<String, Any?>, id: IdType?) =
-        id?.let { update(table, values, "id=${id.asSql}") } == 1
+    fun updateOne(table: String, values: Map<String, Any?>, id: IdType?): Boolean {
+        id ?: return false
+        val valuesWithoutId = values.toMutableMap().apply { remove("id") }
+        return update(table, valuesWithoutId, "id=${id.asSql}") == 1
+    }
+    // TODO: Needs test for empty values update
     fun update(table: String, values: Map<String, Any?>, whereClause: String): Int
     fun deleteOne(table: String, id: IdType?) =
         id?.let { delete(table, "id=${id.asSql}") } == 1
@@ -24,5 +28,13 @@ interface ComplexOrmDatabaseInterface {
     fun <T>queryForEach(sql: String, f: (ComplexOrmCursor) -> T)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T>
     var version: Int
+        get() {
+            return queryMap("PRAGMA user_version;") {
+                it.getInt(0)
+            }.first()
+        }
+        set(value) {
+            execSQL("PRAGMA user_version = $value;")
+        }
     fun close()
 }
