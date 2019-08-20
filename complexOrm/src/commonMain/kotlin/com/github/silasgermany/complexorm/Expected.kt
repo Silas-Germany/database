@@ -1,20 +1,21 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
-import com.github.silasgermany.complexormapi.ComplexOrmTable
-import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
-import com.github.silasgermany.complexormapi.IdType
+import com.github.silasgermany.complexormapi.*
 import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
 interface ComplexOrmCursor {
     fun isNull(columnIndex: Int): Boolean
+    fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
+    fun getBoolean(columnIndex: Int) = getInt(columnIndex) != 0
     fun getInt(columnIndex: Int): Int
     fun getLong(columnIndex: Int): Long
     fun getFloat(columnIndex: Int): Float
     fun getString(columnIndex: Int): String
+    fun getDate(columnIndex: Int) = Date(getString(columnIndex))
+    fun getDateTime(columnIndex: Int) =
+        CommonDateTime(getInt(columnIndex) * 1000L)
     fun getBlob(columnIndex: Int): ByteArray
-    fun getId(columnIndex: Int): IdType = IdType(getBlob(columnIndex))
 }
 
 expect class CommonFile constructor(parent: String, child: String) {

@@ -16,7 +16,8 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
-            throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
+            val message = sqlite3_errmsg(db)?.toKString()
+            throw IllegalStateException("Error ($this): $message")
         }
     }
 
@@ -99,7 +100,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 "WHERE $whereClause;"
         } else {
             "UPDATE $table SET " +
-                    "id=id" +
+                    "id=id " +
                     "WHERE $whereClause;"
         }
         if (blobValues.isEmpty()) execSQL(sql)
@@ -114,6 +115,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
     
     override fun execSQL(sql: String) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         sqlite3_exec(db, sql, null, null, null).checkResult()
     }
@@ -151,7 +153,24 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         }
     }
 
+    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
+        useSqlStatement(sql) {
+            when (sqlite3_step(it)) {
+                SQLITE_ROW -> {}
+                SQLITE_DONE -> return null
+                else -> throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
+            }
+            return f(Cursor(it))
+                .apply {
+                    if (sqlite3_step(it) != SQLITE_DONE)
+                        throw IllegalArgumentException("Request ($sql) returns more than one entry")
+                }
+        }
+    }
     actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
@@ -165,6 +184,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         }
     }
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
@@ -181,6 +201,6 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     override fun close() {
-        sqlite3_close(db).checkResult()
+        sqlite3_close_v2(db).checkResult()
     }
 }

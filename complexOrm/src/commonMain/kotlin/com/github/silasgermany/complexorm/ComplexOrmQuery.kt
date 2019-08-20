@@ -14,17 +14,22 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = database.queryMap(sql, f)
 
     fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: IdType, returnClass: KClass<V>): V? {
-        return database.queryMap("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql}") {
+        return database.queryOne("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql};") {
             @Suppress("UNCHECKED_CAST")
             if (it.isNull(0)) null
             else when (returnClass) {
-                Boolean::class -> (it.getInt(0) == 0) as V
+                IdType::class -> it.getId(0) as V
+                Boolean::class -> it.getBoolean(0) as V
                 Int::class -> it.getInt(0) as V
                 Long::class -> it.getLong(0) as V
+                Float::class -> it.getFloat(0) as V
                 String::class -> it.getString(0) as V
+                Date::class -> it.getDate(0) as V
+                CommonDateTime::class -> it.getDateTime(0) as V
+                ByteArray::class -> it.getBlob(0) as V
                 else -> throw IllegalArgumentException("Doesn't have type ${returnClass.className}")
             }
-        }.firstOrNull()
+        }
     }
 
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
@@ -199,8 +204,8 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             ComplexOrmTypes.Long -> getLong(index)
             ComplexOrmTypes.Float -> getFloat(index)
             ComplexOrmTypes.String -> getString(index)
-            ComplexOrmTypes.Date -> Date(getString(index))
-            ComplexOrmTypes.DateTime -> CommonDateTime(getInt(index) * 1000L)
+            ComplexOrmTypes.Date -> getDate(index)
+            ComplexOrmTypes.DateTime -> getDateTime(index)
             ComplexOrmTypes.ByteArray -> getBlob(index)
         }
     }

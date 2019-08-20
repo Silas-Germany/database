@@ -76,7 +76,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                     "WHERE $whereClause;"
         } else {
             "UPDATE $table SET " +
-                    "id=id" +
+                    "id=id " +
                     "WHERE $whereClause;"
         }
         return if (blobValues.isEmpty()) execSQLWithResult(sql)
@@ -89,6 +89,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     override fun execSQL(sql: String) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         val statement = database.createStatement()
         statement.execute(sql)
@@ -120,31 +121,46 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     inline fun <T>useSqlStatement(sql: String, useStatement: (ResultSet) -> T): T {
         val statement = database.createStatement()
         @Suppress("ConvertTryFinallyToUseCall")
+        var resultSet: ResultSet? = null
         try {
-            return useStatement(statement.executeQuery(sql))
+            resultSet = statement.executeQuery(sql)
+            return useStatement(resultSet)
         } finally {
+            resultSet?.close()
             statement.close()
         }
     }
 
+    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
+        useSqlStatement(sql) {
+            it.next()
+            return f(Cursor(it))
+                .apply {
+                    if (it.next()) throw IllegalArgumentException("Request ($sql) returns more than one entry")
+                }
+        }
+    }
+
     actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             while (it.next()) {
                 f(Cursor(it))
             }
-            it.close()
         }
     }
 
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             val result = mutableListOf<T>()
             while (it.next()) {
                 result.add(f(Cursor(it)))
             }
-            it.close()
             return result
         }
     }

@@ -9,8 +9,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class ComplexOrmNormalColumns: CommonHelper() {
+internal class ComplexOrmNormalColumns: CommonHelper(), ComplexOrmHelper {
 
+    override val database by lazy { ComplexOrm("/tmp/database.db") }
     init { resetDatabase() }
 
     @Test fun readWriteOneColumn() {

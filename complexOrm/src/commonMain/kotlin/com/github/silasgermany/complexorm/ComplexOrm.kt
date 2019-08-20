@@ -101,4 +101,5 @@ class ComplexOrm(databasePath: String) {
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
     inline fun <T>doInTransaction(f: () -> T) = complexOrmWriter.doInTransaction(f)
+    fun close() = database.close()
 }

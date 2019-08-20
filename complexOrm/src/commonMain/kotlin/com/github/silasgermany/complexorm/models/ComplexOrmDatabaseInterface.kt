@@ -4,6 +4,9 @@ import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.IdType
 
 interface ComplexOrmDatabaseInterface {
+    var foreignKeyConstraint: Boolean
+    get() = queryOne("PRAGMA foreign_keys;") { it.getBoolean(0) }!!
+    set(value) { execSQL("PRAGMA foreign_keys=${if (value) "ON" else "OFF"};") }
     fun <T>doInTransaction(f: () -> T): T
     fun insertOrUpdate(table: String, values: Map<String, Any?>): IdType {
         if (values["id"] != null) {
@@ -19,19 +22,19 @@ interface ComplexOrmDatabaseInterface {
         val valuesWithoutId = values.toMutableMap().apply { remove("id") }
         return update(table, valuesWithoutId, "id=${id.asSql}") == 1
     }
-    // TODO: Needs test for empty values update
     fun update(table: String, values: Map<String, Any?>, whereClause: String): Int
     fun deleteOne(table: String, id: IdType?) =
         id?.let { delete(table, "id=${id.asSql}") } == 1
     fun delete(table: String, whereClause: String): Int
     fun execSQL(sql: String)
+    fun <T>queryOne(sql: String, f: (ComplexOrmCursor) -> T): T?
     fun <T>queryForEach(sql: String, f: (ComplexOrmCursor) -> T)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T>
     var version: Int
         get() {
-            return queryMap("PRAGMA user_version;") {
+            return queryOne("PRAGMA user_version;") {
                 it.getInt(0)
-            }.first()
+            }!!
         }
         set(value) {
             execSQL("PRAGMA user_version = $value;")

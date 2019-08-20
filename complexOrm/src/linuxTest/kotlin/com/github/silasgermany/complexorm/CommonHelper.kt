@@ -1,6 +1,6 @@
 package com.github.silasgermany.complexorm
 
-actual open class CommonHelper: Helper() {
+actual open class CommonHelper {
     init {
         _databaseSchema = ComplexOrmDatabaseSchema()
         _tableInfo = ComplexOrmTableInfo()

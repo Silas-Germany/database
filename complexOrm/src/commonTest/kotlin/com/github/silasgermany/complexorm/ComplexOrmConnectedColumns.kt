@@ -8,8 +8,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-internal class ComplexOrmConnectedColumns: CommonHelper() {
+internal class ComplexOrmConnectedColumns: CommonHelper(), ComplexOrmHelper {
 
+    override val database by lazy { ComplexOrm("/tmp/database.db") }
     init { resetDatabase() }
 
     @Test fun writeDeep() {

@@ -1,3 +1,3 @@
 package com.github.silasgermany.complexorm
 
-expect open class CommonHelper(): Helper
+expect open class CommonHelper()

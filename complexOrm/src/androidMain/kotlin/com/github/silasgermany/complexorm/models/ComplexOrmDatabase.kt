@@ -57,10 +57,28 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         database.delete(table, whereClause, null)
 
     override fun execSQL(sql: String) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
         database.execSQL(sql)
     }
+    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
+        val cursor = database.rawQuery(sql, null)
+        ComplexOrmCursor(cursor).use {
+            when (it.count) {
+                1 -> {}
+                0 -> return null
+                else -> throw IllegalArgumentException("Request ($sql) returns more than one entry: ${it.count}")
+            }
+            it.moveToFirst()
+            return f(it)
+        }
 
+    }
     actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             it.moveToFirst()
@@ -69,6 +87,8 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
     @SuppressLint("Recycle")
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
+        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             it.moveToFirst()
