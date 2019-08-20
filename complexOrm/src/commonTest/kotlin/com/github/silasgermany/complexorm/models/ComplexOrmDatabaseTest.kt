@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexorm.models
 
 import com.github.silasgermany.complexorm.CommonFile
-import com.github.silasgermany.complexorm.CommonHelper
+import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.random.Random
 import kotlin.test.*

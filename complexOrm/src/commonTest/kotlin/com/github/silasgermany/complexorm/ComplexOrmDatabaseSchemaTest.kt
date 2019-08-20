@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexorm.models.Model
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import kotlin.test.Test

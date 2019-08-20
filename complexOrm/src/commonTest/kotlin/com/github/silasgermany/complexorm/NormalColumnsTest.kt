@@ -1,5 +1,7 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.helper.CommonHelper
+import com.github.silasgermany.complexorm.helper.ComplexOrmHelper
 import com.github.silasgermany.complexorm.models.Model.ColumnTypesTable
 import com.github.silasgermany.complexorm.models.Model.ReaderTable
 import com.github.silasgermany.complexormapi.Date
@@ -9,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-internal class ComplexOrmNormalColumns: CommonHelper(), ComplexOrmHelper {
+internal class NormalColumnsTest: CommonHelper(), ComplexOrmHelper {
 
     override val database by lazy { ComplexOrm("/tmp/database.db") }
     init { resetDatabase() }

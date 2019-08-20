@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.helper.CommonHelper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

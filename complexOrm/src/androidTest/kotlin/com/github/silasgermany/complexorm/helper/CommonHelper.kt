@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.helper
 
 import org.joda.time.DateTimeZone
 import org.junit.Test

@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexorm
 
+import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import kotlin.test.Test

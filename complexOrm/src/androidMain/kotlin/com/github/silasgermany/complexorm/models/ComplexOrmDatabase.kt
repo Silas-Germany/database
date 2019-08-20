@@ -16,6 +16,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     val database: SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(path, null)
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
+        if (database.inTransaction()) return f()
         database.beginTransaction()
         return try {
             f().also {

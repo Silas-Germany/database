@@ -29,7 +29,8 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     }
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
-        execSQL("BEGIN TRANSACTION;")
+        if (sqlite3_get_autocommit(db) == 0) return f()
+         execSQL("BEGIN TRANSACTION;")
         return try {
             f().also {
                 execSQL("COMMIT TRANSACTION;")

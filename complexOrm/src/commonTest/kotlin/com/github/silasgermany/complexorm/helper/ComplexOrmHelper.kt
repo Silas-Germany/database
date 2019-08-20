@@ -1,5 +1,7 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.helper
 
+import com.github.silasgermany.complexorm.CommonFile
+import com.github.silasgermany.complexorm.ComplexOrm
 import kotlin.test.AfterTest
 
 interface ComplexOrmHelper {

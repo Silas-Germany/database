@@ -16,6 +16,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
     val database: Connection = DriverManager.getConnection("jdbc:sqlite:$path")
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
+        if (!database.autoCommit) return f()
         database.autoCommit = false
         return try {
             f().also {
