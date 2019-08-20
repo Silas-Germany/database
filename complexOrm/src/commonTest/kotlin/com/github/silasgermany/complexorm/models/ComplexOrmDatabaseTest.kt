@@ -76,7 +76,8 @@ class ComplexOrmDatabaseTest: CommonHelper() {
     }
 
     @Test fun testClose() {
+        database.version
         database.close()
-        assertFails { database.doInTransaction {  } }
+        assertFails { database.version }
     }
 }
