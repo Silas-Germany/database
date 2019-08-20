@@ -1,13 +1,13 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import kotlin.reflect.KClass
 
 class ComplexOrmInitializer internal constructor(
-    private val database: ComplexOrmDatabaseInterface,
+    private val database: ComplexOrmDatabase,
     private val complexOrmSchema: ComplexOrmDatabaseSchemaInterface,
     private val tableInfo: ComplexOrmTableInfoInterface
 ) {

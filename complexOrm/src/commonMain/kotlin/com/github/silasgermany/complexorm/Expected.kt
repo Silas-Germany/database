@@ -16,9 +16,25 @@ interface ComplexOrmCursor {
     fun getDateTime(columnIndex: Int) =
         CommonDateTime(getInt(columnIndex) * 1000L)
     fun getBlob(columnIndex: Int): ByteArray
+    @Suppress("UNCHECKED_CAST", "IMPLICIT_CAST_TO_ANY")
+    fun <T: Any>get(columnIndex: Int, returnClass: KClass<T>): T? =
+        if (isNull(columnIndex)) null
+        else when (returnClass) {
+            IdType::class -> getId(columnIndex)
+            Boolean::class -> getBoolean(columnIndex)
+            Int::class -> getInt(columnIndex)
+            Long::class -> getLong(columnIndex)
+            Float::class -> getFloat(columnIndex)
+            String::class -> getString(columnIndex)
+            Date::class -> getDate(columnIndex)
+            CommonDateTime::class -> getDateTime(columnIndex)
+            ByteArray::class -> getBlob(columnIndex)
+            else -> throw IllegalArgumentException("Unknown column class: $returnClass")
+        } as T
 }
 
-expect class CommonFile constructor(parent: String, child: String) {
+expect class CommonFile(parent: String, child: String) {
+    constructor(pathname: String)
     fun getPath(): String
     fun listFiles(): Array<CommonFile>
     fun delete(): Boolean

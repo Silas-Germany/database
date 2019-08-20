@@ -6,9 +6,10 @@ import kotlin.reflect.KClass
 
 // Classes (typealias in Java)
 @Suppress("unused")
-actual class CommonFile actual constructor(private val parent: String, private val child: String) {
+actual class CommonFile actual constructor(private val pathname: String) {
 
-    actual fun getPath() = "$parent/$child"
+    actual constructor(parent: String, child: String) : this("$parent/$child")
+    actual fun getPath() = pathname
 
     actual fun listFiles(): Array<CommonFile> {
         val dir = opendir(getPath())

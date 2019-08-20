@@ -8,6 +8,7 @@ import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import java.util.*
+import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
@@ -24,6 +25,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             database.endTransaction()
         }
     }
+    actual override inline fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T =
+        doInTransaction {
+            execSQL("PRAGMA defer_foreign_keys=ON;")
+            f()
+        }
 
     private val Map<String, Any?>.asContentValues get() = ContentValues().apply {
         forEach { (key, value) ->
@@ -61,7 +67,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         println(sql)
         database.execSQL(sql)
     }
-    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+
+    actual inline fun <reified T: Any> queryOne(sql: String): T? =
+        queryOne(sql, T::class)
+    @Suppress("UNCHECKED_CAST")
+    actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         val cursor = database.rawQuery(sql, null)
@@ -72,11 +82,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 else -> throw IllegalArgumentException("Request ($sql) returns more than one entry: ${it.count}")
             }
             it.moveToFirst()
-            return f(it)
+            return it.get(0, returnClass)
         }
 
     }
-    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+    actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         val cursor = database.rawQuery(sql, null)

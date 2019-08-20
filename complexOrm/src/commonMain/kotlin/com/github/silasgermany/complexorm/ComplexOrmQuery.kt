@@ -1,35 +1,23 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexorm.models.RequestInfo
-import com.github.silasgermany.complexormapi.*
+import com.github.silasgermany.complexormapi.ComplexOrmTable
+import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
+import com.github.silasgermany.complexormapi.ComplexOrmTypes
+import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabaseInterface,
+class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatabase,
                                            private val complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) = database.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = database.queryMap(sql, f)
 
     fun <T: ComplexOrmTable, R, V: Any>getOneColumn(table: KClass<T>, column: KProperty1<T, R>, id: IdType, returnClass: KClass<V>): V? {
-        return database.queryOne("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql};") {
-            @Suppress("UNCHECKED_CAST")
-            if (it.isNull(0)) null
-            else when (returnClass) {
-                IdType::class -> it.getId(0) as V
-                Boolean::class -> it.getBoolean(0) as V
-                Int::class -> it.getInt(0) as V
-                Long::class -> it.getLong(0) as V
-                Float::class -> it.getFloat(0) as V
-                String::class -> it.getString(0) as V
-                Date::class -> it.getDate(0) as V
-                CommonDateTime::class -> it.getDateTime(0) as V
-                ByteArray::class -> it.getBlob(0) as V
-                else -> throw IllegalArgumentException("Doesn't have type ${returnClass.className}")
-            }
-        }
+        return database.run { queryOne("SELECT ${column.name.toSql()} FROM ${table.tableName} WHERE id = ${id.asSql};", returnClass) }
     }
 
     private fun MutableMap<String, Any?>.createClass(tableClassName: String) =
@@ -199,7 +187,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
         return if (isNull(index)) null
         else when (type.asType) {
             ComplexOrmTypes.IdType -> getId(index)
-            ComplexOrmTypes.Boolean -> getInt(index) != 0
+            ComplexOrmTypes.Boolean -> getBoolean(index)
             ComplexOrmTypes.Int -> getInt(index)
             ComplexOrmTypes.Long -> getLong(index)
             ComplexOrmTypes.Float -> getFloat(index)

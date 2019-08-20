@@ -1,5 +1,6 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.models
 
+import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexormapi.*
 
 @ComplexOrmAllTables

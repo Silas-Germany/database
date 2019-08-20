@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.Model.ReaderReferenceTable
-import com.github.silasgermany.complexorm.Model.ReaderTable
+import com.github.silasgermany.complexorm.models.Model.ReaderReferenceTable
+import com.github.silasgermany.complexorm.models.Model.ReaderTable
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import kotlin.test.Test
 import kotlin.test.assertEquals

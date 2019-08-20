@@ -36,7 +36,7 @@ kotlin {
             sqlite3
             uuid
         }
-        binaries { executable() }
+        binaries { sharedLib { baseName = "complexOrm" } }
     }
     iosX64("ios") {
         compilations.main.cinterops {

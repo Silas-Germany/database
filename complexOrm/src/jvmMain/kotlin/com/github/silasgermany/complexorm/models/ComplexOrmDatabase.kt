@@ -8,6 +8,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.util.*
+import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE", "unused")
 actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
@@ -27,6 +28,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             database.autoCommit = true
         }
     }
+    actual override inline fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T =
+        doInTransaction {
+            execSQL("PRAGMA defer_foreign_keys=ON;")
+            f()
+        }
 
     private fun execSqlWithBlob(sql: String, blobValues: MutableList<ByteArray>): Int {
         println("${blobValues.size} -> $sql")
@@ -131,19 +137,21 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         }
     }
 
-    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+    actual inline fun <reified T: Any> queryOne(sql: String): T? =
+        queryOne(sql, T::class)
+    @Suppress("UNCHECKED_CAST")
+    actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             it.next()
-            return f(Cursor(it))
-                .apply {
-                    if (it.next()) throw IllegalArgumentException("Request ($sql) returns more than one entry")
-                }
+            return Cursor(it).get(0, returnClass).apply {
+                if (it.next()) throw IllegalArgumentException("Request ($sql) returns more than one entry")
+            }
         }
     }
 
-    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+    actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {

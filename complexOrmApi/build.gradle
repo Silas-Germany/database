@@ -11,7 +11,7 @@ sourceSets {
 
 kotlin {
     jvm("android")
-    linuxX64("linux") { binaries { executable() } }
+    linuxX64("linux") { binaries { sharedLib { baseName = "complexOrmApi" } } }
     iosX64("ios") { binaries { framework() } }
     sourceSets {
         commonMain {

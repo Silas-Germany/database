@@ -2,12 +2,14 @@ package com.github.silasgermany.complexorm.models
 
 import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.IdType
+import kotlin.reflect.KClass
 
 interface ComplexOrmDatabaseInterface {
     var foreignKeyConstraint: Boolean
-    get() = queryOne("PRAGMA foreign_keys;") { it.getBoolean(0) }!!
+    get() = queryOne("PRAGMA foreign_keys;", Boolean::class)!!
     set(value) { execSQL("PRAGMA foreign_keys=${if (value) "ON" else "OFF"};") }
     fun <T>doInTransaction(f: () -> T): T
+    fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T
     fun insertOrUpdate(table: String, values: Map<String, Any?>): IdType {
         if (values["id"] != null) {
             val worked = updateOne(table, values, values["id"] as IdType)
@@ -27,14 +29,12 @@ interface ComplexOrmDatabaseInterface {
         id?.let { delete(table, "id=${id.asSql}") } == 1
     fun delete(table: String, whereClause: String): Int
     fun execSQL(sql: String)
-    fun <T>queryOne(sql: String, f: (ComplexOrmCursor) -> T): T?
-    fun <T>queryForEach(sql: String, f: (ComplexOrmCursor) -> T)
+    fun <T: Any>ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T?
+    fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T>
     var version: Int
         get() {
-            return queryOne("PRAGMA user_version;") {
-                it.getInt(0)
-            }!!
+            return queryOne("PRAGMA user_version;", Int::class)!!
         }
         set(value) {
             execSQL("PRAGMA user_version = $value;")

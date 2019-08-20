@@ -27,16 +27,19 @@ class ComplexOrmDatabaseTest: CommonHelper() {
         database.insert("reference", mapOf("test_id" to id))
         id = IdType(Random.nextBytes(16))
         assertFails {
-            database.doInTransaction {
-                database.execSQL("PRAGMA defer_foreign_keys=ON;")
+            database.doInTransactionWithDeferredForeignKeys {
                 database.insert("reference", mapOf("test_id" to id))
             }
+        }
+        database.doInTransactionWithDeferredForeignKeys {
+            database.insert("reference", mapOf("test_id" to id))
+            database.insert("test", mapOf("id" to id))
         }
     }
 
     @Test fun testInsert() {
         database.insert("test", mapOf("value" to 1))
-        val value = database.queryOne("SELECT value FROM test;") { it.getInt(0) }
+        val value: Int? = database.queryOne("SELECT value FROM test;")
         assertEquals(1, value)
     }
 
@@ -53,14 +56,13 @@ class ComplexOrmDatabaseTest: CommonHelper() {
         database.insert("test", mapOf("value" to 1))
         database.insert("test", mapOf("value" to 2))
         database.delete("test", "value=1")
-        val value = database.queryOne("SELECT value FROM test;") { it.getInt(0) }
+        val value: Int? = database.queryOne("SELECT value FROM test;")
         assertEquals(2, value)
     }
 
     @Test fun testExecSQL() {
-        val value = database
+        val value: String? = database
             .queryOne("SELECT name FROM sqlite_master WHERE type='table';")
-            { it.getString(0) }
         assertEquals("test", value)
     }
 

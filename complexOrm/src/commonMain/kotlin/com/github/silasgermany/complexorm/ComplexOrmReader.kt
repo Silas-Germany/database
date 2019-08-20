@@ -1,13 +1,13 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.models.ComplexOrmDatabaseInterface
+import com.github.silasgermany.complexorm.models.ComplexOrmDatabase
 import com.github.silasgermany.complexorm.models.ReadTableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.reflect.KClass
 
-class ComplexOrmReader internal constructor(database: ComplexOrmDatabaseInterface,
+class ComplexOrmReader internal constructor(database: ComplexOrmDatabase,
                                             complexOrmTableInfo: ComplexOrmTableInfoInterface) {
 
     val complexOrmQuery = ComplexOrmQuery(database, complexOrmTableInfo)

@@ -1,7 +1,7 @@
 package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.Model.ColumnTypesTable
-import com.github.silasgermany.complexorm.Model.ReaderTable
+import com.github.silasgermany.complexorm.models.Model.ColumnTypesTable
+import com.github.silasgermany.complexorm.models.Model.ReaderTable
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.random.Random

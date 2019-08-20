@@ -10,6 +10,7 @@ import kotlinx.cinterop.*
 import sqlite3.*
 import uuid.uuid_generate
 import uuid.uuid_t
+import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
@@ -38,6 +39,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             throw e
         }
     }
+    actual override inline fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T =
+        doInTransaction {
+            execSQL("PRAGMA defer_foreign_keys=ON;")
+            f()
+        }
 
     private fun execSqlWithBlob(sql: String, blobValues: MutableList<ByteArray>) {
         println("${blobValues.size} -> $sql")
@@ -153,7 +159,10 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         }
     }
 
-    actual override inline fun <T> queryOne(sql: String, f: (ComplexOrmCursor) -> T): T? {
+    actual inline fun <reified T: Any> queryOne(sql: String): T? =
+        queryOne(sql, T::class)
+    @Suppress("UNCHECKED_CAST")
+    actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
@@ -162,20 +171,19 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
                 SQLITE_DONE -> return null
                 else -> throw IllegalStateException(sqlite3_errmsg(db)?.toKString())
             }
-            return f(Cursor(it))
-                .apply {
-                    if (sqlite3_step(it) != SQLITE_DONE)
-                        throw IllegalArgumentException("Request ($sql) returns more than one entry")
-                }
+            return Cursor(it).get(0, returnClass).apply {
+                if (sqlite3_step(it) != SQLITE_DONE)
+                    throw IllegalArgumentException("Request ($sql) returns more than one entry")
+            }
         }
     }
-    actual override inline fun <T> queryForEach(sql: String, f: (ComplexOrmCursor) -> T) {
+    actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
             var stepStatus: Int = sqlite3_step(it)
             while (stepStatus == SQLITE_ROW) {
-                f(Cursor(it) as ComplexOrmCursor)
+                f(Cursor(it))
                 stepStatus = sqlite3_step(it)
             }
             if (stepStatus != SQLITE_DONE) {
