@@ -26,7 +26,7 @@ class CommonDateTimeTest: CommonHelper() {
 	}
 
 	@Test fun testToString() {
-		assertEquals("02,07,Sun", dateTime.toString("MM,hh,E"))
 		assertEquals("Sunday 03 February 2019 19:35:06", dateTime.toString("EEEEE dd MMMMM yyyy HH:mm:ss"))
+		assertEquals("02,07,Sun", dateTime.toString("MM,hh,E"))
 	}
 }

@@ -23,6 +23,10 @@ actual class IdType(private val uuid: UUID) {
     actual override fun toString(): String = "$uuid"
     actual override fun equals(other: Any?) = uuid == (other as? IdType)?.uuid
     actual override fun hashCode() = uuid.hashCode()
+
+    actual companion object {
+        actual val sqlType = "BLOB"
+    }
 }
 
 actual val KClass<*>.className: String get() = java.simpleName

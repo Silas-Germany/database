@@ -10,6 +10,10 @@ expect class IdType(bytes: ByteArray) {
     override fun toString(): String
     override fun equals(other: Any?): Boolean
     override fun hashCode(): Int
+
+    companion object {
+        val sqlType: String
+    }
 }
 
 expect val KClass<*>.className: String

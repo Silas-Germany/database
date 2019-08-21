@@ -71,7 +71,18 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                 }
             }
             specialConnectedColumns[sqlKey]?.let {
-                throw UnsupportedOperationException("Can't save (yet) entries, that have special connected columns")
+                keyFound = true
+                try {
+                    val (_, connectedColumnName) = it.split(';')
+                    val connectedEntry = (value as ComplexOrmTable?)
+                    if (connectedEntry?.run { id == null } == true) {
+                        if (!writeDeep) return@let
+                        write(connectedEntry, writeDeep)
+                    }
+                    contentValues["${sqlKey.toSql()}_id"] = connectedEntry?.map?.get(connectedColumnName)
+                } catch (e: Throwable) {
+                    throw IllegalArgumentException("Couldn't save connected table entry: $value (${e.message})", e)
+                }
             }
             when (sqlKey) {
                 in joinColumns,

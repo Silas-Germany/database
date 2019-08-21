@@ -69,4 +69,6 @@ class ReadTableInfo constructor(
     fun getSpecialConnectedColumnsValue(key: String) =
             cachedComplexOrmTableInfo.init("specialConnectedColumns").init(key,
                     complexOrmTableInfo.specialConnectedColumns[key] ?: mapOf())
+    fun checkSpecialConnectedColumnsValue(table: String?, column: String?) =
+        complexOrmTableInfo.specialConnectedColumns.values.any { "$table;$column" in it.values }
 }

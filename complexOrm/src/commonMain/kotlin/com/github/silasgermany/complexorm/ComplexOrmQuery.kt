@@ -75,7 +75,7 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             readTableInfo.loadingTables.remove(tableClassName)
         }
         readTableInfo.getSpecialConnectedColumnsValue(tableClassName).forEach { (connectedColumnName, connectedTableInfo) ->
-            val (connectedTableClassName, connectedTableColumn) = connectedTableInfo.split(';').let { it[0] to it[1] }
+            val (connectedTableClassName, connectedTableColumn) = connectedTableInfo.split(';')
             if (isReverselyLoaded(tableClassName, connectedColumnName, readTableInfo)) return@forEach
             if (readTableInfo.alreadyGiven(connectedTableClassName)) {
                 columns.add("(\"$tableName\".\"${connectedColumnName}_id\")")
@@ -113,7 +113,10 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
-            databaseMap[specialConnectedColumn ?: "id"] = id
+            println("Current information: $tableClassName;$readTableInfo;$connectedColumn;$specialConnectedColumn")
+            if (readTableInfo.checkSpecialConnectedColumnsValue(tableClassName, specialConnectedColumn)) {
+                databaseMap[specialConnectedColumn!!] = id
+            } else databaseMap[specialConnectedColumn?.plus("Id") ?: "id"] = id
             val table = databaseMap.createClass(tableClassName)
             readTableInfo.addMissingTable(tableClassName, table)
             return connectedId to table

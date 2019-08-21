@@ -42,6 +42,10 @@ actual class IdType actual constructor(actual val bytes: ByteArray) {
     actual override fun equals(other: Any?) =
         (other as? IdType)?.bytes?.contentEquals(bytes) ?: false
     actual override fun hashCode() = bytes.contentHashCode()
+
+    actual companion object {
+        actual val sqlType = "BLOB"
+    }
 }
 
 actual val KClass<*>.className

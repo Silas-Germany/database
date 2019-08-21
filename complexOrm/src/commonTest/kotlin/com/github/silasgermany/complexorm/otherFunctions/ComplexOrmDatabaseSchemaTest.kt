@@ -36,14 +36,13 @@ class ComplexOrmDatabaseSchemaTest: CommonHelper() {
                 "      'date_time' TEXT NOT NULL DEFAULT 1565762054,\n" +
                 "      'byte_array' BLOB NOT NULL,\n" +
                 "      'nullable_entry' TEXT,\n" +
-                "      'connected_entry_id' INTEGER REFERENCES 'reference_table'('id') ON DELETE SET NULL\n" +
+                "      'connected_entry_id' BLOB REFERENCES 'reference_table'('id') ON DELETE SET NULL\n" +
                 "      );"
         assertEquals(expect, currentDatabaseSchema.createTableCommands.getValue("column_types_table"))
         expect = "CREATE TABLE\n" +
                 "          'column_types_table_connected_entries'(\n" +
-                "      'column_types_table_id' INTEGER NOT NULL REFERENCES 'column_types_table'(id) ON DELETE\n" +
-                "          CASCADE,\n" +
-                "      'reference_table_id' INTEGER NOT NULL REFERENCES 'reference_table'(id) ON DELETE CASCADE,\n" +
+                "      'column_types_table_id' BLOB NOT NULL REFERENCES 'column_types_table'(id) ON DELETE CASCADE,\n" +
+                "      'reference_table_id' BLOB NOT NULL REFERENCES 'reference_table'(id) ON DELETE CASCADE,\n" +
                 "      PRIMARY KEY ('column_types_table_id','reference_table_id')\n" +
                 "      );"
         assertEquals(expect, currentDatabaseSchema.createTableCommands.getValue("column_types_table_connected_entries"))

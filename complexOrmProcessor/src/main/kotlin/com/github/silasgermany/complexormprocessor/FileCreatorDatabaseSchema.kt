@@ -63,7 +63,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             val writtenColumns = mutableSetOf("id")
             val uniqueColumns = mutableMapOf<Int, MutableList<String>>()
             val indexColumns = mutableMapOf<Int, MutableList<String>>()
-            val columns = arrayOf("'id' BLOB NOT NULL PRIMARY KEY") +
+            val columns = arrayOf("'id' ${IdType.sqlType} NOT NULL PRIMARY KEY") +
                     tableInfo.columns.mapNotNull { column ->
                         if (!writtenColumns.add(column.idName)) return@mapNotNull null
                         var columnExtra = ""
@@ -94,7 +94,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             InternComplexOrmTypes.Long,
                             InternComplexOrmTypes.Int -> "INTEGER"
                             InternComplexOrmTypes.Float -> "REAL"
-                            InternComplexOrmTypes.IdType -> "BLOB"
+                            InternComplexOrmTypes.IdType -> IdType.sqlType
                             InternComplexOrmTypes.ByteArray -> "BLOB"
                             InternComplexOrmTypes.ComplexOrmTables -> {
                                 relatedTables.add(createRelatedTableCommand(tableInfo.tableName!!, column))
@@ -113,7 +113,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                                             !column.columnType.nullable -> "CASCADE"
                                     else -> "SET NULL"
                                 }
-                                return@mapNotNull "'${column.idName}' INTEGER$columnExtra " +
+                                return@mapNotNull "'${column.idName}' ${IdType.sqlType}$columnExtra " +
                                         "REFERENCES '${referenceTable.tableName!!}'('$connectedColumn') ON DELETE $onDelete"
                             }
                         }
@@ -168,8 +168,8 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
         val secondColumnName = if (referenceTableName == tableName) "second_$referenceTableName"
         else referenceTableName
         return "\n\"${tableName}_${column.columnName}\" to \"\"\"CREATE TABLE '${tableName}_${column.columnName}'(\n" +
-                "'${tableName}_id' INTEGER NOT NULL REFERENCES '$tableName'(id) ON DELETE CASCADE,\n" +
-                "'${secondColumnName}_id' INTEGER NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
+                "'${tableName}_id' ${IdType.sqlType} NOT NULL REFERENCES '$tableName'(id) ON DELETE CASCADE,\n" +
+                "'${secondColumnName}_id' ${IdType.sqlType} NOT NULL REFERENCES '$referenceTableName'(id) ON DELETE CASCADE,\n" +
                 "PRIMARY KEY ('${tableName}_id','${secondColumnName}_id')\n" +
                 ");\"\"\""
     }

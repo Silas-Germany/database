@@ -38,7 +38,7 @@ class ComplexOrmReader internal constructor(database: ComplexOrmDatabase,
                         .takeIf { it.size == 1 }?.first()?.key
                         ?: throw IllegalStateException("Should have exactly one entry")
                 val columnName = column.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2")
-                        .toLowerCase().takeUnless { it == "id" }?.plus("_id") ?: "id"
+                        .toLowerCase()
                 val fullColumnName = "\"${readTableInfo.getTableName(missingEntryTable)}\".\"$columnName\""
                 val where = "WHERE $fullColumnName IN (${missingEntries.joinToString { (it.map[column] as IdType?)?.asSql ?: "null," }})"
                 readTableInfo.connectedColumn = fullColumnName

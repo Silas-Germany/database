@@ -71,6 +71,6 @@ interface Model {
         val advancedEntries: List<AdvancedTable> by initMap
         val advancedTable: AdvancedTable? by initMap
         val specialAdvancedEntry: AdvancedTable? by initMap
-        var special: Int? by initMap
+        var special: IdType? by initMap
     }
 }
