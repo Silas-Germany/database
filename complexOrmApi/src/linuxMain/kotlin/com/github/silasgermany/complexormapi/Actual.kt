@@ -2,7 +2,7 @@ package com.github.silasgermany.complexormapi
 
 import kotlin.reflect.KClass
 
-actual class IdType actual constructor(val bytes: ByteArray) {
+actual class IdType actual constructor(actual val bytes: ByteArray) {
 
     init {
         if (bytes.size != 16) throw IllegalArgumentException("Wrong byte size (${bytes.size})")

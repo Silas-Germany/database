@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
-actual class ActualTest {
+class IdClass {
 
     @Test fun idClassCorrectlyImplemented() {
         val id = IdType(byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16))
@@ -13,5 +13,13 @@ actual class ActualTest {
         assertFails("Too few bytes") { IdType(ByteArray(15)) }
         assertFails("Too many bytes") { IdType(ByteArray(17)) }
         IdType(ByteArray(16))
+        assertEquals(IdType(id.bytes).bytes.toList(), id.bytes.toList(),
+            "Bytes return correct value")
+    }
+
+    @Test fun idClassEquals() {
+        val id = generatedId
+        assertEquals(id, IdType(id.bytes.copyOf()))
+        assertEquals(id.hashCode(), IdType(id.bytes.copyOf()).hashCode())
     }
 }

@@ -81,7 +81,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
             if (!keyFound) throw IllegalArgumentException("Couldn't find column $sqlKey in $tableClassName")
         }
         try {
-            save(tableName, contentValues)?.let { table.map["id"] = it }
+            database.insertOrUpdate(tableName, contentValues)?.let { table.map["id"] = it }
         } catch (e: Throwable) {
             throw IllegalArgumentException("Couldn't save table entries: $table (${e.message})", e)
         }
@@ -100,7 +100,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                             write(joinTableEntry, writeDeep)
                         }
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
-                        save("${tableName}_$sqlKey", innerContentValues)
+                        database.insertOrUpdate("${tableName}_$sqlKey", innerContentValues, false)
                     }
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
@@ -120,7 +120,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                             write(joinTableEntry, writeDeep)
                         }
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
-                        save("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues)
+                        database.insertOrUpdate("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues, false)
                     }
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save joined table entries: $value (${e.message})", e)
@@ -152,11 +152,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
 
     private fun delete(table: String, column: String, id: IdType?) {
         id ?: return
-        database.delete(table, "$column=$id")
-    }
-
-    private fun save(table: String, contentValues: MutableMap<String, Any?>): IdType? {
-        return database.insertOrUpdate(table, contentValues)
+        database.delete(table, "$column=${id.asSql}")
     }
 
     fun <T: ComplexOrmTable, R> saveOneColumn(table: KClass<T>, column: KProperty1<T, R?>, id: IdType?, value: R) {
@@ -168,7 +164,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
         }
         contentValues[columnName] = value
         contentValues["id"] = id
-        save(table.tableName, contentValues)
+        database.insertOrUpdate(table.tableName, contentValues)
     }
 
     fun <T: ComplexOrmTable> changeId(table: KClass<T>, oldId: IdType, newId: IdType) {

@@ -10,15 +10,21 @@ interface ComplexOrmDatabaseInterface {
     set(value) { execSQL("PRAGMA foreign_keys=${if (value) "ON" else "OFF"};") }
     fun <T>doInTransaction(f: () -> T): T
     fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T
-    fun insertOrUpdate(table: String, values: Map<String, Any?>): IdType {
+    fun insertOrUpdate(table: String, values: Map<String, Any?>, needsId: Boolean = true): IdType? {
         if (values["id"] != null) {
             val worked = updateOne(table, values, values["id"] as IdType)
-            if (!worked) return insert(table, values)
+            if (!worked) {
+                return if (needsId) insert(table, values)
+                else insertWithoutId(table, values).let { null }
+            }
             return values["id"] as IdType
         }
-        return insert(table, values)
+        return if (needsId) insert(table, values)
+        else insertWithoutId(table, values).let { null }
     }
+    fun insertWithoutId(table: String, values: Map<String, Any?>)
     fun insert(table: String, values: Map<String, Any?>): IdType
+
     fun updateOne(table: String, values: Map<String, Any?>, id: IdType?): Boolean {
         id ?: return false
         val valuesWithoutId = values.toMutableMap().apply { remove("id") }

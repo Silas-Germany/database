@@ -68,4 +68,10 @@ class ComplexOrmTableTest {
         assertEquals(expected, table.showRecursive(),
             "All is working, even if same ID with different table or different recursion depths of entries")
     }
+
+    @Test fun testEquals() {
+        val id = generatedId
+        assertEquals(TestTable(init(id)), TestTable(init(IdType(id.bytes.copyOf()))))
+        assertEquals(TestTable(init(id)).hashCode(), TestTable(init(IdType(id.bytes.copyOf()))).hashCode())
+    }
 }

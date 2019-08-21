@@ -1,9 +1,11 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.mainFunctions
 
+import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.ComplexOrm
 import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexorm.helper.ComplexOrmHelper
 import com.github.silasgermany.complexorm.models.Model.ColumnTypesTable
-import com.github.silasgermany.complexorm.models.Model.ReaderTable
+import com.github.silasgermany.complexorm.models.Model.SimpleTable
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.random.Random
@@ -18,17 +20,17 @@ internal class NormalColumnsTest: CommonHelper(), ComplexOrmHelper {
 
     @Test fun readWriteOneColumn() {
         val id = IdType(Random.nextBytes(16))
-        database.saveOneColumn(ReaderTable::testValue, id, "test_value")
-        val result = database.getOneColumn(ReaderTable::testValue, id)
+        database.saveOneColumn(SimpleTable::testValue, id, "test_value")
+        val result = database.getOneColumn(SimpleTable::testValue, id)
         assertEquals("test_value", result)
     }
 
     @Test fun readWriteEntry() {
-        val writeEntry = ReaderTable()
+        val writeEntry = SimpleTable()
         writeEntry.testValue = "test_value"
         database.save(writeEntry)
         assertNotNull(writeEntry.id)
-        val entries = database.query.get<ReaderTable>()
+        val entries = database.query.get<SimpleTable>()
         assertEquals(1, entries.size)
         val readEntry = entries.first()
         assertEquals(writeEntry.testValue, readEntry.testValue)

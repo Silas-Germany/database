@@ -1,6 +1,7 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.otherFunctions
 
 import com.github.silasgermany.complexorm.helper.CommonHelper
+import com.github.silasgermany.complexorm.tableInfo
 import com.github.silasgermany.complexormapi.ComplexOrmTableInfoInterface
 import com.github.silasgermany.complexormapi.ComplexOrmTypes
 import kotlin.test.Test

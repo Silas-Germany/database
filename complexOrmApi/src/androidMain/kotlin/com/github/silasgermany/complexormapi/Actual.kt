@@ -11,7 +11,7 @@ actual class IdType(private val uuid: UUID) {
         if (bytes.size != 16) throw IllegalArgumentException("Wrong byte size (${bytes.size})")
     }
 
-    val bytes: ByteArray get() = uuid.run {
+    actual val bytes: ByteArray get() = uuid.run {
         ByteBuffer.allocate(2 * Long.SIZE_BYTES)
             .putLong(mostSignificantBits)
             .putLong(leastSignificantBits)

@@ -1,5 +1,6 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.otherFunctions
 
+import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexorm.helper.CommonHelper
 import kotlin.test.Test
 import kotlin.test.assertEquals

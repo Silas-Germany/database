@@ -60,6 +60,13 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             else -> "$this"
         }
 
+    override fun insertWithoutId(table: String, values: Map<String, Any?>) {
+        val blobValues = mutableListOf<ByteArray>()
+        val sql = "INSERT OR REPLACE INTO $table(${values.keys.joinToString(",")})" +
+                "VALUES(${values.values.joinToString(",") { it.sqlValue(blobValues) }});"
+        if (blobValues.isEmpty()) execSQL(sql)
+        else execSqlWithBlob(sql, blobValues)
+    }
     override fun insert(table: String, values: Map<String, Any?>): IdType {
         // For UUID Id only
         val valuesWithId = if (values["id"] != null) values
@@ -67,11 +74,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
             val id = IdType(UUID.randomUUID())
             values + ("id" to id)
         }
-        val blobValues = mutableListOf<ByteArray>()
-        val sql = "INSERT OR REPLACE INTO $table(${valuesWithId.keys.joinToString(",")})" +
-                "VALUES(${valuesWithId.values.joinToString(",") { it.sqlValue(blobValues) }});"
-        if (blobValues.isEmpty()) execSQL(sql)
-        else execSqlWithBlob(sql, blobValues)
+        insertWithoutId(table, valuesWithId)
         return valuesWithId["id"] as IdType
     }
 

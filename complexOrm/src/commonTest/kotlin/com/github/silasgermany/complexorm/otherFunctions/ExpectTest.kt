@@ -1,4 +1,4 @@
-package com.github.silasgermany.complexorm
+package com.github.silasgermany.complexorm.otherFunctions
 
 import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexormapi.Date

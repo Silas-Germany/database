@@ -46,12 +46,31 @@ interface Model {
         var special: String by initMap
     }
 
-    class ReaderTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+    class SimpleTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
         var testValue: String? by initMap
-        var connectedEntry: ReaderReferenceTable? by initMap
+        var connectedEntry: SimpleReferenceTable? by initMap
     }
 
-    class ReaderReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
-        var anotherReaderEntry: ReaderTable by initMap
+    class SimpleReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        var anotherSimpleEntry: SimpleTable by initMap
+    }
+
+    class AdvancedTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        var normalEntries: List<AdvancedReferenceTable> by initMap
+        @ComplexOrmReverseJoinColumn("advancedEntries")
+        var reverseJoinEntries: List<AdvancedReferenceTable> by initMap
+        @ComplexOrmReverseConnectedColumn()
+        var reverseNormalEntries: List<AdvancedReferenceTable> by initMap
+        @ComplexOrmReverseConnectedColumn("specialAdvancedEntry")
+        var reverseSpecialEntries: List<AdvancedReferenceTable> by initMap
+        @ComplexOrmSpecialConnectedColumn("special")
+        var specialConnectedEntry: AdvancedReferenceTable? by initMap
+    }
+
+    class AdvancedReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        val advancedEntries: List<AdvancedTable> by initMap
+        val advancedTable: AdvancedTable? by initMap
+        val specialAdvancedEntry: AdvancedTable? by initMap
+        var special: Int? by initMap
     }
 }
