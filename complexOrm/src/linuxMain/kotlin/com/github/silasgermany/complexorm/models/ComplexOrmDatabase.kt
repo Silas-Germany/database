@@ -82,7 +82,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     override fun insertWithoutId(table: String, values: Map<String, Any?>) {
         val blobValues = mutableListOf<ByteArray>()
-        val sql = "INSERT OR REPLACE INTO $table(${values.keys.joinToString(",")})" +
+        val sql = "INSERT INTO $table(${values.keys.joinToString(",")})" +
                 "VALUES(${values.values.joinToString(",") { it.sqlValue(blobValues) }});"
         if (blobValues.isEmpty()) execSQL(sql)
         else execSqlWithBlob(sql, blobValues)

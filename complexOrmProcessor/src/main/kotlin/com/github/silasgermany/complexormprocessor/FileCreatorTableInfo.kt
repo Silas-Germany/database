@@ -27,7 +27,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                     InternComplexOrmTypes.ComplexOrmTable, InternComplexOrmTypes.ComplexOrmTables -> null
                     else -> {
                         if (column.idName !in rootTableColumnNames)
-                            throw java.lang.IllegalArgumentException(
+                            throw IllegalArgumentException(
                                 "Column ${column.idName} of table $className not in root table: $rootTableColumnNames " +
                                         "(Don't delegate it with a map, if it's not a column)"
                             )
@@ -66,7 +66,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                         if (specialConnectedColumn != null) null
                         else {
                             if (column.columnName !in rootTableColumnNames)
-                                throw java.lang.IllegalArgumentException(
+                                throw IllegalArgumentException(
                                     "Column ${column.name} of table $className not in root table: ${getRootTableName(
                                         tableInfo
                                     )} " +
@@ -100,7 +100,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                         else if (!writtenColumns.add(column.columnName)) null
                         else {
                             if (column.columnName !in rootTableColumnNames)
-                                throw java.lang.IllegalArgumentException(
+                                throw IllegalArgumentException(
                                     "Column ${column.name} of table $className not in root table: ${getRootTableName(
                                         tableInfo
                                     )} " +
@@ -190,7 +190,7 @@ class FileCreatorTableInfo(private val tablesInfo: MutableMap<String, TableInfo>
                 else when (column.columnType.type) {
                     InternComplexOrmTypes.ComplexOrmTable -> {
                         if (column.columnName !in rootTableColumnNames)
-                            throw java.lang.IllegalArgumentException(
+                            throw IllegalArgumentException(
                                 "Column ${column.name} of table $className not in root table: ${getRootTableName(
                                     tableInfo
                                 )} " +

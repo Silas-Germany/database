@@ -34,7 +34,7 @@ annotation class ComplexOrmUnique
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class ComplexOrmIndex(val group: Int = 1)
+annotation class ComplexOrmIndex(val group: Int = 0)
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
@@ -46,7 +46,7 @@ annotation class ComplexOrmDeleteRestrict
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class ComplexOrmUniqueIndex(val group: Int = 1)
+annotation class ComplexOrmUniqueIndex(val group: Int = 0)
 
 
 @Target(AnnotationTarget.PROPERTY)

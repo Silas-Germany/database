@@ -21,7 +21,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
     private val allTables = mutableListOf<Pair<Element, Boolean>>()
     private val sqlTableName = ComplexOrmTable::class.java.canonicalName
     private val allTableInfo = mutableMapOf<String, TableInfo>()
-        .run { withDefault { throw java.lang.IllegalArgumentException("Couldn't find table $it (available tables: $keys)") } }
+        .run { withDefault { throw IllegalArgumentException("Couldn't find table $it (available tables: $keys)") } }
 
 
     private val allRootTableTypes: List<String> by lazy { allTables.filter { it.second }.map { "${it.first.asType()}" } }

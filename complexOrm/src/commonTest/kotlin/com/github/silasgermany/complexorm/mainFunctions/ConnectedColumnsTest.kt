@@ -1,10 +1,10 @@
 package com.github.silasgermany.complexorm.mainFunctions
 
 import com.github.silasgermany.complexorm.ComplexOrm
+import com.github.silasgermany.complexorm.Model.SimpleReferenceTable
+import com.github.silasgermany.complexorm.Model.SimpleTable
 import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexorm.helper.ComplexOrmHelper
-import com.github.silasgermany.complexorm.models.Model.SimpleReferenceTable
-import com.github.silasgermany.complexorm.models.Model.SimpleTable
 import com.github.silasgermany.complexormapi.ComplexOrmTable
 import kotlin.test.Test
 import kotlin.test.assertEquals

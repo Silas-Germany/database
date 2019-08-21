@@ -1,6 +1,5 @@
-package com.github.silasgermany.complexorm.models
+package com.github.silasgermany.complexorm
 
-import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexormapi.*
 
 @ComplexOrmAllTables
@@ -68,9 +67,34 @@ interface Model {
     }
 
     class AdvancedReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
-        val advancedEntries: List<AdvancedTable> by initMap
-        val advancedTable: AdvancedTable? by initMap
-        val specialAdvancedEntry: AdvancedTable? by initMap
+        var advancedEntries: List<AdvancedTable> by initMap
+        var advancedTable: AdvancedTable? by initMap
+        var specialAdvancedEntry: AdvancedTable? by initMap
         var special: IdType? by initMap
     }
+
+    class PropertiesTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap) {
+        @ComplexOrmUnique
+        var uniqueEntry: String? by initMap
+        @ComplexOrmUniqueIndex
+        var doubleUniqueEntry1: String? by initMap
+        @ComplexOrmUniqueIndex
+        var doubleUniqueEntry2: String? by initMap
+        @ComplexOrmUniqueIndex(1)
+        var tripleUniqueEntry1: String? by initMap
+        @ComplexOrmUniqueIndex(1)
+        var tripleUniqueEntry2: String? by initMap
+        @ComplexOrmUniqueIndex(1)
+        var tripleUniqueEntry3: String? by initMap
+        @ComplexOrmProperty("CHECK(LENGTH(maxLengthEntry) <= 3)")
+        var maxLengthEntry: String? by initMap
+        var defaultSetNullRestriction: PropertiesReferenceTable? by initMap
+        var defaultDeleteRestriction: PropertiesReferenceTable by initMap
+        @ComplexOrmDeleteRestrict
+        var deleteRestrictEntry: PropertiesReferenceTable? by initMap
+        @ComplexOrmDeleteCascade
+        var deleteCascadeEntry: PropertiesReferenceTable? by initMap
+    }
+    
+    class PropertiesReferenceTable(initMap: MutableMap<String, Any?> = default) : ComplexOrmTable(initMap)
 }

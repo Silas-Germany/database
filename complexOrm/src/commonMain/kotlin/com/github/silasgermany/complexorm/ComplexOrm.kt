@@ -50,8 +50,9 @@ class ComplexOrm(databasePath: String) {
     fun recreateAllTables() = complexOrmInitializer.recreateAllTables()
     fun createAllTables() = complexOrmInitializer.createAllTables()
 
-    fun save(table: ComplexOrmTable, writeDeep: Boolean = true) =
-            complexOrmWriter.save(table, writeDeep)
+    fun delete(entry: ComplexOrmTable?) = complexOrmWriter.delete(entry)
+    fun save(entry: ComplexOrmTable, writeDeep: Boolean = true) =
+            complexOrmWriter.save(entry, writeDeep)
 
     private val tables get() = complexOrmSchema.tables
     val allTables = tables.values.toList()

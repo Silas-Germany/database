@@ -14,9 +14,12 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
     fun execSQL(sql: String) = database.execSQL(sql)
 
-    fun save(table: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
+    fun delete(entry: ComplexOrmTable?) =
+        if (entry == null) false
+        else database.deleteOne(entry::class.tableName, entry.id)
+    fun save(entry: ComplexOrmTable, writeDeep: Boolean = true): Boolean {
         return database.doInTransaction {
-            write(table, writeDeep)
+            write(entry, writeDeep)
         }
     }
 

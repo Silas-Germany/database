@@ -1,10 +1,10 @@
 package com.github.silasgermany.complexorm.mainFunctions
 
 import com.github.silasgermany.complexorm.ComplexOrm
+import com.github.silasgermany.complexorm.Model.AdvancedReferenceTable
+import com.github.silasgermany.complexorm.Model.AdvancedTable
 import com.github.silasgermany.complexorm.helper.CommonHelper
 import com.github.silasgermany.complexorm.helper.ComplexOrmHelper
-import com.github.silasgermany.complexorm.models.Model.AdvancedReferenceTable
-import com.github.silasgermany.complexorm.models.Model.AdvancedTable
 import com.github.silasgermany.complexormapi.IdType
 import kotlin.random.Random
 import kotlin.test.Test

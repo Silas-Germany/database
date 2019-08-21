@@ -1,8 +1,8 @@
 package com.github.silasgermany.complexorm.otherFunctions
 
+import com.github.silasgermany.complexorm.Model
 import com.github.silasgermany.complexorm.databaseSchema
 import com.github.silasgermany.complexorm.helper.CommonHelper
-import com.github.silasgermany.complexorm.models.Model
 import com.github.silasgermany.complexormapi.ComplexOrmDatabaseSchemaInterface
 import kotlin.test.Test
 import kotlin.test.assertEquals

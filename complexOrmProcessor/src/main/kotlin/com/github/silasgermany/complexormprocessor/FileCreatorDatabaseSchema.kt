@@ -80,10 +80,10 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                             columnExtra += " UNIQUE"
                         }
                         column.getAnnotationValue(ComplexOrmUniqueIndex::class)?.let {
-                            uniqueColumns.getOrPut(it as? Int ?: 1) { mutableListOf() }.add("'${column.idName}'")
+                            uniqueColumns.getOrPut(it as? Int ?: 0) { mutableListOf() }.add("'${column.idName}'")
                         }
                         column.getAnnotationValue(ComplexOrmIndex::class)?.let {
-                            indexColumns.getOrPut(it as? Int ?: 1) { mutableListOf() }.add(column.idName)
+                            indexColumns.getOrPut(it as? Int ?: 0) { mutableListOf() }.add(column.idName)
                         }
                         // Get type
                         val complexOrmType = when (column.columnType.type) {
@@ -134,7 +134,7 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
             InternComplexOrmTypes.Boolean -> when (defaultValue) {
                 "false" -> "0"
                 "true" -> "1"
-                else -> throw java.lang.IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
+                else -> throw IllegalArgumentException("Use \"\${true}\" or \"\${false}\" for default values of ${type.name} (not $defaultValue)")
             }
             InternComplexOrmTypes.Int,
             InternComplexOrmTypes.Long,
@@ -142,14 +142,14 @@ class FileCreatorDatabaseSchema(tableInfo: MutableMap<String, TableInfo>) {
                 try {
                     defaultValue.toLong().toString()
                 } catch (e: Throwable) {
-                    throw java.lang.IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
+                    throw IllegalArgumentException("Use something like \"\${1}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
             InternComplexOrmTypes.Float -> {
                 try {
                     defaultValue.toFloat().toString()
                 } catch (e: Throwable) {
-                    throw java.lang.IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
+                    throw IllegalArgumentException("Use something like \"\${1.0}\" for default values of ${type.name} (not $defaultValue)")
                 }
             }
             InternComplexOrmTypes.String,
