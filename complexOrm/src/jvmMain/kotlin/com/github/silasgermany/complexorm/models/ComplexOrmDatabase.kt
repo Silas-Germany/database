@@ -77,15 +77,9 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int {
         val blobValues = mutableListOf<ByteArray>()
-        val sql = if (values.isNotEmpty()) {
-            "UPDATE $table SET " +
-                    "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
-                    "WHERE $whereClause;"
-        } else {
-            "UPDATE $table SET " +
-                    "id=id " +
-                    "WHERE $whereClause;"
-        }
+        val sql = "UPDATE $table SET " +
+                "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
+                "WHERE $whereClause;"
         return if (blobValues.isEmpty()) execSQLWithResult(sql)
         else execSqlWithBlob(sql, blobValues)
     }
@@ -145,7 +139,7 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
         println(sql)
         useSqlStatement(sql) {
-            it.next()
+            if (!it.next()) return null
             return Cursor(it).get(0, returnClass).apply {
                 if (it.next()) throw IllegalArgumentException("Request ($sql) returns more than one entry")
             }

@@ -64,6 +64,7 @@ kotlin {
             dependencies {
                 implementation kotlin('stdlib')
 
+                implementation "org.xerial:sqlite-jdbc:3.28.0"
                 implementation 'net.danlew:android.joda:2.10.2'
             }
         }
@@ -72,6 +73,7 @@ kotlin {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')
 
+                implementation "org.xerial:sqlite-jdbc:3.28.0"
                 implementation 'net.danlew:android.joda:2.10.2'
 
                 implementation  "org.robolectric:robolectric:4.3"
@@ -103,85 +105,26 @@ dependencies {
 }
 
 task "copyGeneratedFiles" {
-    doFirst {
-        exec {
-            commandLine "mkdir",
-                    "-p",
-                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "cp",
-                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
-                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "cp",
-                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt",
-                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "sed",
-                    "-i.bak",
-                    "s/ @JvmWildcard//",
-                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "sed",
-                    "-i.bak",
-                    "s/import kotlin.jvm.JvmWildcard//",
-                    "src/iosTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
-        }
-    }
-    doFirst {
-        exec {
-            commandLine "mkdir",
-                    "-p",
-                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "cp",
-                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt",
-                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "cp",
-                    "build/generated/source/kaptKotlin/releaseUnitTest/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt",
-                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "sed",
-                    "-i.bak",
-                    "s/ @JvmWildcard//",
-                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
-        }
-    }
-    doLast {
-        exec {
-            commandLine "sed",
-                    "-i.bak",
-                    "s/import kotlin.jvm.JvmWildcard//",
-                    "src/linuxTest/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt"
-        }
-    }
     dependsOn "kaptReleaseUnitTestKotlinAndroid"
     dependsOn "kaptDebugUnitTestKotlinAndroid"
+    doLast {
+        exec {
+            commandLine "bash", "copyGeneratedFiles.bash"
+        }
+    }
+}
+
+task "generateIosFiles" {
+    dependsOn "copyGeneratedFiles"
+    doLast {
+        exec {
+            commandLine "bash", "generateIos.bash"
+        }
+    }
 }
 
 task iosTest {
+    dependsOn "generateIosFiles"
     def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
     dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
     group = JavaBasePlugin.VERIFICATION_GROUP

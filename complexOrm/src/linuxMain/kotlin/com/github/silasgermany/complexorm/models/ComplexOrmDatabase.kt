@@ -101,15 +101,9 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int {
         val blobValues = mutableListOf<ByteArray>()
-        val sql = if (values.isNotEmpty()) {
-            "UPDATE $table SET " +
-                "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
-                "WHERE $whereClause;"
-        } else {
-            "UPDATE $table SET " +
-                    "id=id " +
-                    "WHERE $whereClause;"
-        }
+        val sql = "UPDATE $table SET " +
+            "${values.entries.joinToString(",") { "${it.key}=${it.value.sqlValue(blobValues)}" }} " +
+            "WHERE $whereClause;"
         if (blobValues.isEmpty()) execSQL(sql)
         else execSqlWithBlob(sql, blobValues)
         return sqlite3_changes(db)

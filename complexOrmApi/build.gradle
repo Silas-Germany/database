@@ -43,7 +43,16 @@ kotlin {
     }
 }
 
+task "generateIosFiles" {
+    doLast {
+        exec {
+            commandLine "bash", "generateIos.bash"
+        }
+    }
+}
+
 task iosTest {
+    dependsOn "generateIosFiles"
     def device = project.findProperty("iosDevice")?.toString() ?: "iPhone 8"
     dependsOn kotlin.targets.ios.binaries.getTest('DEBUG').linkTaskName
     group = JavaBasePlugin.VERIFICATION_GROUP

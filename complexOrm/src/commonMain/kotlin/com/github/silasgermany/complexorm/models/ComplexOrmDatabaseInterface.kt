@@ -22,6 +22,9 @@ interface ComplexOrmDatabaseInterface {
     fun updateOne(table: String, values: Map<String, Any?>, id: IdType?): Boolean {
         id ?: return false
         val valuesWithoutId = values.toMutableMap().apply { remove("id") }
+        if (valuesWithoutId.isEmpty()) {
+            return queryOne("SELECT 1 FROM $table WHERE id=${id.asSql} LIMIT 1;", Int::class) != null
+        }
         return update(table, valuesWithoutId, "id=${id.asSql}") == 1
     }
     fun update(table: String, values: Map<String, Any?>, whereClause: String): Int

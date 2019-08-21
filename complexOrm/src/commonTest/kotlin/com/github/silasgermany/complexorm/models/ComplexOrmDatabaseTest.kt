@@ -44,12 +44,15 @@ class ComplexOrmDatabaseTest: CommonHelper() {
     }
 
     @Test fun testUpdate() {
-        database.insert("test", mapOf("value" to 1))
+        var id = IdType(Random.nextBytes(16))
+        database.insert("test", mapOf("id" to id, "value" to 1))
         database.insert("test", mapOf("value" to 2))
         database.update("test", mapOf("value" to 3), "value=1")
         val values = database.queryMap("SELECT value FROM test;") { it.getInt(0) }
         assertEquals(setOf(2, 3), values.toSet())
-        database.update("test", mapOf(), "value=1")
+        assertTrue(database.updateOne("test", mapOf(), id))
+        id = IdType(Random.nextBytes(16))
+        assertFalse(database.updateOne("test", mapOf(), id))
     }
 
     @Test fun testDelete() {
@@ -58,12 +61,6 @@ class ComplexOrmDatabaseTest: CommonHelper() {
         database.delete("test", "value=1")
         val value: Int? = database.queryOne("SELECT value FROM test;")
         assertEquals(2, value)
-    }
-
-    @Test fun testExecSQL() {
-        val value: String? = database
-            .queryOne("SELECT name FROM sqlite_master WHERE type='table';")
-        assertEquals("test", value)
     }
 
     @Test fun testQueryForEach() {
