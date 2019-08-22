@@ -1,6 +1,7 @@
 package com.github.silasgermany.complexorm.models
 
 import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.CommonFile
 import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
@@ -11,9 +12,9 @@ import java.util.*
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE", "unused")
-actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOrmDatabaseInterface {
 
-    val database: Connection = DriverManager.getConnection("jdbc:sqlite:$path")
+    val database: Connection = DriverManager.getConnection("jdbc:sqlite:${file.path}")
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (!database.autoCommit) return f()
