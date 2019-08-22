@@ -13,6 +13,8 @@ expect class IdType(bytes: ByteArray) {
 
     companion object {
         val sqlType: String
+        fun generateRandom(): IdType
+        fun generateFromString(value: String): IdType
     }
 }
 

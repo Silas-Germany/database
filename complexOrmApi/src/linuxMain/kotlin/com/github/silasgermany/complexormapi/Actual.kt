@@ -1,5 +1,13 @@
 package com.github.silasgermany.complexormapi
 
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.readBytes
+import uuid.uuid_generate_md5
+import uuid.uuid_generate_random
+import uuid.uuid_get_template
+import uuid.uuid_t
 import kotlin.reflect.KClass
 
 actual class IdType actual constructor(actual val bytes: ByteArray) {
@@ -43,8 +51,20 @@ actual class IdType actual constructor(actual val bytes: ByteArray) {
         (other as? IdType)?.bytes?.contentEquals(bytes) ?: false
     actual override fun hashCode() = bytes.contentHashCode()
 
+    @Suppress("MayBeConstant", "unused")
     actual companion object {
         actual val sqlType = "BLOB"
+        actual fun generateRandom() = memScoped {
+            val id: uuid_t = allocArray(16)
+            uuid_generate_random(id)
+            IdType(id.readBytes(16))
+        }
+        actual fun generateFromString(value: String) = memScoped {
+            val id: uuid_t = allocArray(16)
+            val namespace = uuid_get_template("oid")
+            uuid_generate_md5(id, namespace, value, value.length.convert())
+            IdType(id.readBytes(16))
+        }
     }
 }
 

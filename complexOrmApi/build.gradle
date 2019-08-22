@@ -11,7 +11,12 @@ sourceSets {
 
 kotlin {
     jvm("android")
-    linuxX64("linux") { binaries { sharedLib { baseName = "complexOrmApi" } } }
+    linuxX64("linux") {
+        compilations.main.cinterops {
+            uuid
+        }
+        binaries { sharedLib { baseName = "complexOrmApi" } }
+    }
     iosX64("ios") { binaries { framework() } }
     sourceSets {
         commonMain {

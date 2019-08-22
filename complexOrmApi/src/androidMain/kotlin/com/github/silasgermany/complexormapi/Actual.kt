@@ -26,6 +26,8 @@ actual class IdType(private val uuid: UUID) {
 
     actual companion object {
         actual val sqlType = "BLOB"
+        actual fun generateRandom() = IdType(UUID.randomUUID())
+        actual fun generateFromString(value: String) = IdType(UUID.nameUUIDFromBytes(value.toByteArray()))
     }
 }
 

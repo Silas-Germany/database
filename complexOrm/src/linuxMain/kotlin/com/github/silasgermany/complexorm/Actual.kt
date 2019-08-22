@@ -9,6 +9,7 @@ import kotlin.reflect.KClass
 actual class CommonFile actual constructor(private val pathname: String) {
 
     actual constructor(parent: String, child: String) : this("$parent/$child")
+    actual constructor(parent: CommonFile, child: String) : this(parent.getPath(), child)
     actual fun getPath() = pathname
 
     actual fun listFiles(): Array<CommonFile> {
@@ -25,6 +26,10 @@ actual class CommonFile actual constructor(private val pathname: String) {
     actual fun delete() = remove(getPath()) == 0
 
     actual fun exists() = access(getPath(), F_OK) != -1
+
+    actual fun mkdir() = mkdir(pathname, 511.convert()) == 0
+
+    actual fun getParentFile(): CommonFile  = CommonFile(dirname(pathname.cstr)!!.toKString())
 
 }
 
