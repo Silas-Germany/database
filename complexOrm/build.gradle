@@ -29,8 +29,8 @@ android {
 }
 version = "1.1"
 kotlin {
-    jvm()
     android('android')
+    jvm()
     linuxX64("linux") {
         compilations.main.cinterops {
             sqlite3
