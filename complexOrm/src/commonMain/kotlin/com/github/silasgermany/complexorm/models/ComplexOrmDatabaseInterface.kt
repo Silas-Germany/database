@@ -6,8 +6,8 @@ import kotlin.reflect.KClass
 
 interface ComplexOrmDatabaseInterface {
     var foreignKeyConstraint: Boolean
-    get() = queryOne("PRAGMA foreign_keys;", Boolean::class)!!
-    set(value) { execSQL("PRAGMA foreign_keys=${if (value) "ON" else "OFF"};") }
+        get() = queryOne("PRAGMA foreign_keys;", Boolean::class)!!
+        set(value) { execSQL("PRAGMA foreign_keys=${if (value) "ON" else "OFF"};") }
     fun <T>doInTransaction(f: () -> T): T
     fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T
     fun insertOrUpdate(table: String, values: Map<String, Any?>, needsId: Boolean = true): IdType? {

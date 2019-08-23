@@ -1,9 +1,11 @@
 package com.github.silasgermany.complexorm.models
 
+import com.github.silasgermany.complexorm.CommonFile
 import com.github.silasgermany.complexorm.ComplexOrmCursor
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
+expect class ComplexOrmDatabase(file: CommonFile) : ComplexOrmDatabaseInterface {
 expect class ComplexOrmDatabase(path: String, password: ByteArray? = null) : ComplexOrmDatabaseInterface {
     override inline fun <T> doInTransaction(f: () -> T): T
     override inline fun <T> doInTransactionWithDeferredForeignKeys(f: () -> T): T

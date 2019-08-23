@@ -35,34 +35,34 @@ class ComplexOrmTableTest {
         val id2 = generatedId
         table.oneEntry = TestTable.InnerTable(init(id))
         table.multipleEntries = listOf(TestTable.InnerTable(init(id2)))
-        expected = "TestTable{id: null, name: 'TEST', oneEntry: InnerTable(${id.toString()}), " +
-                "multipleEntries: [InnerTable(${id2.toString()})]}"
+        expected = "TestTable{id: null, name: 'TEST', oneEntry: InnerTable($id), " +
+                "multipleEntries: [InnerTable($id2)]}"
         assertEquals(expected, "$table", "Only ID reference is printed")
         expected = "TestTable{id: null, name: 'TEST', " +
-                "oneEntry: InnerTable{id: ${id.toString()}}, " +
-                "multipleEntries: [InnerTable{id: ${id2.toString()}}]}"
+                "oneEntry: InnerTable{id: $id}, " +
+                "multipleEntries: [InnerTable{id: $id2}]}"
         assertEquals(expected, table.showRecursive(), "All data is printed")
         table.oneEntry.recursiveEntry = table
         expected = "TestTable{id: null, name: 'TEST', " +
                 "oneEntry: InnerTable{" +
-                "id: ${id.toString()}, " +
+                "id: $id, " +
                 "recursiveEntry: TestTable(?)" +
                 "}, " +
-                "multipleEntries: [InnerTable{id: ${id2.toString()}}]}"
+                "multipleEntries: [InnerTable{id: $id2}]}"
         assertEquals(expected, table.showRecursive(), "All data is printed")
         table.multipleEntries.first().recursiveEntry = TestTable(init(id)).apply {
             oneEntry = table.multipleEntries.first()
         }
         expected = "TestTable{id: null, name: 'TEST', " +
                 "oneEntry: InnerTable{" +
-                "id: ${id.toString()}, " +
+                "id: $id, " +
                 "recursiveEntry: TestTable(?)" +
                 "}, " +
                 "multipleEntries: [InnerTable{" +
-                "id: ${id2.toString()}, " +
+                "id: $id2, " +
                 "recursiveEntry: TestTable{" +
-                "id: ${id.toString()}, " +
-                "oneEntry: InnerTable(${id2.toString()})" +
+                "id: $id, " +
+                "oneEntry: InnerTable($id2)" +
                 "}" +
                 "}]}"
         assertEquals(expected, table.showRecursive(),

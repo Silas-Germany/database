@@ -3,6 +3,7 @@ package com.github.silasgermany.complexorm.models
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.CommonFile
 import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
@@ -11,9 +12,9 @@ import java.util.*
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
-actual class ComplexOrmDatabase actual constructor(path: String, password: ByteArray?) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
 
-    var database: SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(path, password, null)
+    var database: SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(file.path, password, null)
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (database.inTransaction()) return f()

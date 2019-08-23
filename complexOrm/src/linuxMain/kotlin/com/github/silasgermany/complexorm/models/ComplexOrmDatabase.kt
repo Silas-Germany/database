@@ -3,6 +3,7 @@ package com.github.silasgermany.complexorm.models
 import cnames.structs.sqlite3
 import cnames.structs.sqlite3_stmt
 import com.github.silasgermany.complexorm.CommonDateTime
+import com.github.silasgermany.complexorm.CommonFile
 import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
@@ -13,7 +14,7 @@ import uuid.uuid_t
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
-actual class ComplexOrmDatabase actual constructor(path: String, password: ByteArray?) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
 
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
@@ -24,7 +25,7 @@ actual class ComplexOrmDatabase actual constructor(path: String, password: ByteA
 
     val db = memScoped {
         val databasePointer = allocPointerTo<sqlite3>()
-        sqlite3_open(path, databasePointer.ptr).checkResult()
+        sqlite3_open(file.getPath(), databasePointer.ptr).checkResult()
         databasePointer.value
     }
 
