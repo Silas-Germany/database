@@ -11,7 +11,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE", "unused")
-actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(path: String, password: ByteArray?) : ComplexOrmDatabaseInterface {
 
     val database: Connection = DriverManager.getConnection("jdbc:sqlite:$path")
 

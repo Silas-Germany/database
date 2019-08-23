@@ -13,7 +13,7 @@ import uuid.uuid_t
 import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
-actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDatabaseInterface {
+actual class ComplexOrmDatabase actual constructor(path: String, password: ByteArray?) : ComplexOrmDatabaseInterface {
 
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
@@ -26,6 +26,11 @@ actual class ComplexOrmDatabase actual constructor(path: String) : ComplexOrmDat
         val databasePointer = allocPointerTo<sqlite3>()
         sqlite3_open(path, databasePointer.ptr).checkResult()
         databasePointer.value
+    }
+
+    init {
+        password?.let { sqlite3_key(db, password.toCValues(), password.size) }
+        execSQL("SELECT count(*) FROM sqlite_master;")
     }
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {

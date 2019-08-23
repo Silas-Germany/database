@@ -77,4 +77,13 @@ class ComplexOrmDatabaseTest: CommonHelper() {
         database.close()
         assertFails { database.version }
     }
+
+    @Test fun passwordIncorrect() {
+        CommonFile("/tmp/decrypted.db").delete()
+        ComplexOrmDatabase("/tmp/decrypted.db", byteArrayOf(1)).apply {
+            execSQL("PRAGMA user_version=1;")
+            close()
+        }
+        assertFails { ComplexOrmDatabase("/tmp/decrypted.db", byteArrayOf(2)).close() }
+    }
 }
