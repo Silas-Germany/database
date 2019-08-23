@@ -16,28 +16,10 @@ actual class IdType actual constructor(actual val bytes: ByteArray) {
         if (bytes.size != 16) throw IllegalArgumentException("Wrong byte size (${bytes.size})")
     }
 
-    actual val asSql: String get() {
-        val hexArray = "0123456789abcdef".toCharArray()
-        val hexChars = CharArray(16 * 2 + 3)
-        hexChars[0] = 'x'
-        hexChars[1] = '\''
-        hexChars[15 * 2 + 4] = '\''
-        (0..15).forEach {
-            val lowestByte = bytes[it].toInt() and 0xFF
-            hexChars[it * 2 + 2] = hexArray[lowestByte ushr 4]
-            hexChars[it * 2 + 3] = hexArray[lowestByte and 0x0F]
-        }
-        return String(hexChars)
-    }
+    actual val asSql: String get() = "x'${bytes.asHex}'"
 
     actual override fun toString(): String {
-        val hexArray = "0123456789abcdef".toCharArray()
-        val hexChars = CharArray(16 * 2)
-        (0..15).forEach {
-            val lowestByte = bytes[it].toInt() and 0xFF
-            hexChars[it * 2] = hexArray[lowestByte ushr 4]
-            hexChars[it * 2 + 1] = hexArray[lowestByte and 0x0F]
-        }
+        val hexChars = bytes.asHex.toCharArray()
         return String(
             hexChars.sliceArray(0..7) + '-' +
                     hexChars.sliceArray(8..11) + '-' +
@@ -65,6 +47,17 @@ actual class IdType actual constructor(actual val bytes: ByteArray) {
             uuid_generate_md5(id, namespace, value, value.length.convert())
             IdType(id.readBytes(16))
         }
+    }
+
+    private val ByteArray.asHex: String get() {
+        val hexArray = "0123456789abcdef".toCharArray()
+        val hexChars = CharArray(size * 2)
+        indices.forEach {
+            val lowestByte = this[it].toInt() and 0xFF
+            hexChars[it * 2] = hexArray[lowestByte ushr 4]
+            hexChars[it * 2 + 1] = hexArray[lowestByte and 0x0F]
+        }
+        return String(hexChars)
     }
 }
 
