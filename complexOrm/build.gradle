@@ -66,6 +66,8 @@ kotlin {
 
                 implementation "org.xerial:sqlite-jdbc:3.28.0"
                 implementation 'net.danlew:android.joda:2.10.2'
+                // sql-cipher
+                implementation "net.zetetic:android-database-sqlcipher:4.2.0@aar"
             }
         }
         androidTest {
@@ -75,6 +77,8 @@ kotlin {
 
                 implementation "org.xerial:sqlite-jdbc:3.28.0"
                 implementation 'net.danlew:android.joda:2.10.2'
+                // sql-cipher
+                implementation "net.zetetic:android-database-sqlcipher:4.2.0@aar"
 
                 implementation  "org.robolectric:robolectric:4.3"
             }
