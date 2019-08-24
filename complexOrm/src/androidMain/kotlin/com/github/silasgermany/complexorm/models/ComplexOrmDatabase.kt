@@ -73,7 +73,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
         database.delete(table, whereClause, null)
 
     override fun execSQL(sql: String) {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         database.execSQL(sql)
     }
@@ -82,7 +82,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
         queryOne(sql, T::class)
     @Suppress("UNCHECKED_CAST")
     actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
@@ -97,7 +97,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     }
     actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
@@ -107,7 +107,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     }
     @SuppressLint("Recycle")
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
