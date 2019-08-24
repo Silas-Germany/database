@@ -11,7 +11,7 @@ class ComplexOrmDatabaseTest: CommonHelper() {
     val database: ComplexOrmDatabase
     init {
         CommonFile("/tmp", "database.db").delete()
-        database = ComplexOrmDatabase("/tmp/database.db")
+        database = ComplexOrmDatabase(CommonFile("/tmp/database.db"))
         database.execSQL("CREATE TABLE test(id PRIMARY KEY, value);")
     }
 

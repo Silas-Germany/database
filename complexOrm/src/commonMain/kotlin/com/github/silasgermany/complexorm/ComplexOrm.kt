@@ -8,8 +8,9 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 @Suppress("UNUSED")
-class ComplexOrm(databasePath: String) {
-    private val database = ComplexOrmDatabase(databasePath)
+class ComplexOrm(private val database: ComplexOrmDatabase) {
+
+    constructor(databasePath: String) : this(ComplexOrmDatabase(CommonFile(databasePath)))
 
     private val complexOrmSchema by lazy { databaseSchema }
     private val complexOrmTableInfo by lazy { tableInfo }

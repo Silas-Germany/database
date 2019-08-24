@@ -94,7 +94,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOr
     }
 
     override fun execSQL(sql: String) {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         val statement = database.createStatement()
         statement.execute(sql)
@@ -140,7 +140,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOr
         queryOne(sql, T::class)
     @Suppress("UNCHECKED_CAST")
     actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         useSqlStatement(sql) {
             if (!it.next()) return null
@@ -151,7 +151,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOr
     }
 
     actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         useSqlStatement(sql) {
             while (it.next()) {
@@ -161,7 +161,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOr
     }
 
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
-        if (!sql.endsWith(';')) throw IllegalArgumentException("SQL commands should end with ';' ($sql)")
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
         println(sql)
         useSqlStatement(sql) {
             val result = mutableListOf<T>()
