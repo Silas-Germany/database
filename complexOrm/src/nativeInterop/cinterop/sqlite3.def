@@ -1,5 +1,10 @@
 headers = sqlite3.h
 headerFilter = sqlite3.h
 package = sqlite3
-linkerOpts = -Llibs/ -lsqlcipher
-compilerOpts = -Ilibs/ -DSQLITE_HAS_CODEC -DSQLITE_TEMP_STORE=2
+
+compilerOpts = -Ilibs/ -DSQLITE_HAS_CODEC
+compilerOpts.linux = -DSQLITE_TEMP_STORE=2
+compilerOpts.ios = -DSQLITE_TEMP_STORE=3 -DSQLCIPHER_CRYPTO_CC -DNDEBUG
+
+linkerOpts.linux = -Llibs/ -lsqlcipher
+linkerOpts.ios = libs/sqlite3.o -framework Security -framework Foundation

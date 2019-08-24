@@ -1,3 +1,4 @@
 build
 src/*/kotlin/com/github/silasgermany/complexorm/ComplexOrmDatabaseSchema.kt
 src/*/kotlin/com/github/silasgermany/complexorm/ComplexOrmTableInfo.kt
+libs/sqlite3.o
