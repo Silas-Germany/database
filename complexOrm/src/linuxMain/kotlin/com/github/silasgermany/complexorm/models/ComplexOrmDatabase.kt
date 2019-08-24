@@ -31,7 +31,11 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     init {
         password?.let { sqlite3_key(db, password.toCValues(), password.size) }
-        execSQL("SELECT count(*) FROM sqlite_master;")
+        try {
+            execSQL("SELECT count(*) FROM sqlite_master;")
+        } catch (e: Throwable) {
+            throw IllegalStateException("Database decrypted with different password")
+        }
     }
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
@@ -141,7 +145,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
             sqlite3_column_double(it, columnIndex).toFloat()
         override fun getString(columnIndex: Int): String {
             val size = sqlite3_column_bytes(it, columnIndex)
-            return sqlite3_column_text(it, columnIndex)?.readBytes(size)?.stringFromUtf8() ?: ""
+            return sqlite3_column_text(it, columnIndex)?.readBytes(size)?.toKString() ?: ""
         }
         override fun getBlob(columnIndex: Int): ByteArray {
             val size = sqlite3_column_bytes(it, columnIndex)

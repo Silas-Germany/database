@@ -16,6 +16,13 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     val database: Connection = DriverManager.getConnection("jdbc:sqlite:${file.path}")
 
+    init {
+        if (version != password?.sum()) {
+            if (version == 0) password?.sum()?.let { version = it }
+            else throw IllegalAccessException("Database decrypted with different password")
+        }
+    }
+
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (!database.autoCommit) return f()
         database.autoCommit = false
