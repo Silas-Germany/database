@@ -31,4 +31,4 @@ actual class IdType(private val uuid: UUID) {
     }
 }
 
-actual val KClass<*>.className: String get() = java.simpleName
+actual val KClass<*>.className: String get() = java.simpleName.split('$').last()

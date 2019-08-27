@@ -102,7 +102,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             it.moveToFirst()
-            repeat(it.count) { _ -> f(it) }
+            repeat(it.count) { _ -> f(it); it.moveToNext() }
         }
     }
     @SuppressLint("Recycle")

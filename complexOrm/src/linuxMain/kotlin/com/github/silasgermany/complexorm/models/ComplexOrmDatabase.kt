@@ -143,10 +143,8 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
             sqlite3_column_double(it, columnIndex).toLong()
         override fun getFloat(columnIndex: Int): Float =
             sqlite3_column_double(it, columnIndex).toFloat()
-        override fun getString(columnIndex: Int): String {
-            val size = sqlite3_column_bytes(it, columnIndex)
-            return sqlite3_column_text(it, columnIndex)?.reinterpret<ByteVar>()?.toKString() ?: ""
-        }
+        override fun getString(columnIndex: Int): String =
+            sqlite3_column_text(it, columnIndex)?.reinterpret<ByteVar>()?.toKString() ?: ""
         override fun getBlob(columnIndex: Int): ByteArray {
             val size = sqlite3_column_bytes(it, columnIndex)
             return sqlite3_column_blob(it, columnIndex)?.readBytes(size) ?: byteArrayOf()

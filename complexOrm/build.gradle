@@ -4,7 +4,7 @@ plugins {
 apply plugin: "com.android.library"
 apply plugin: 'kotlin-android-extensions'
 // Kotlin annotation processor
-apply plugin: 'kotlin-kapt'
+//apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 28
@@ -105,7 +105,7 @@ kotlin {
 }
 
 dependencies {
-    kaptTest project(":complexOrmProcessor")
+    //kaptTest project(":complexOrmProcessor")
 }
 
 task "copyGeneratedFiles" {

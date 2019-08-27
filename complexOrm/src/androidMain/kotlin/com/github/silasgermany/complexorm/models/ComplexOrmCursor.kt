@@ -14,14 +14,14 @@ class ComplexOrmCursor(cursor: Cursor): ComplexOrmCursor, Closeable {
     val count: Int
 
     init {
+        count = cursor.count
         if (cursor !is CrossProcessCursor) {
             window.close()
-            count = cursor.count
             this.cursor = cursor
         } else {
             cursor.fillWindow(0, window)
-            count = window.numRows
-            if (count == (cursor as Cursor).count) {
+            if (count == window.numRows) {
+                cursor.close()
                 this.cursor = null
             } else {
                 window.close()
