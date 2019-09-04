@@ -1,1 +1,3 @@
 include ':complexOrm', ":complexOrmApi", ':complexOrmProcessor', ':example'
+
+enableFeaturePreview("GRADLE_METADATA")
