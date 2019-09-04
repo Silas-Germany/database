@@ -155,6 +155,4 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
             }
         }
     }
-
-
 }
