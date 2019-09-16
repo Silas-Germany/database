@@ -14,7 +14,12 @@ import kotlin.reflect.KClass
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
 
-    var database: SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(file.path, password, null)
+    var database: SQLiteDatabase
+
+    init {
+        file.parentFile.mkdirs()
+        database = SQLiteDatabase.openOrCreateDatabase(file.path, password, null)
+    }
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (database.inTransaction()) return f()
