@@ -84,7 +84,7 @@ class ComplexOrm(private val database: ComplexOrmDatabase) {
     fun <T: ComplexOrmTable, R> fullColumnName(table: KClass<T>, column: KProperty1<T, R>): String =
             table.tableName + "." + columnName(table, column)
 
-    fun <T: ComplexOrmTable> tableName(table: KClass<T>): String = table.tableName
+    fun <T: ComplexOrmTable> tableName(table: KClass<T>): String = complexOrmTableInfo.basicTableInfo.getValue(table.name).first
     inline fun <reified T: ComplexOrmTable, R> columnName(column: KProperty1<T, R>) =
         columnName(T::class, column)
     fun <T: ComplexOrmTable, R> columnName(table: KClass<out ComplexOrmTable>, column: KProperty1<T, R>): String {

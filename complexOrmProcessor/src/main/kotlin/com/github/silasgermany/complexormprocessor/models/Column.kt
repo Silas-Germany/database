@@ -1,5 +1,6 @@
 package com.github.silasgermany.complexormprocessor.models
 
+import java.util.*
 import javax.lang.model.element.AnnotationMirror
 import kotlin.reflect.KClass
 
@@ -8,7 +9,7 @@ data class Column(
     val columnType: ColumnType,
     val annotations: List<AnnotationMirror>
 ) {
-    val columnName = name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
+    val columnName = name.replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase(Locale.ROOT)
     val idName = columnName + if (columnType.type == InternComplexOrmTypes.ComplexOrmTable) "_id" else ""
 
     fun getAnnotationValue(annotationClass: KClass<out Annotation>): Any? {
