@@ -60,11 +60,17 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                     contentValues[sqlKey] = value
                 }
             }
+            connectedColumns[sqlKey.removeSuffix("_id")]?.also { type ->
+                if (sqlKey.endsWith("_id")) {
+                    keyFound = true
+                    contentValues[sqlKey] = value
+                }
+            }
             connectedColumns[sqlKey]?.let {
                 keyFound = true
                 try {
                     val connectedEntry = (value as ComplexOrmTable?)
-                    if (connectedEntry?.run { id == null } == true) {
+                    if (connectedEntry != null) {
                         if (!writeDeep) return@let
                         write(connectedEntry, writeDeep)
                     }
@@ -109,10 +115,8 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                     innerContentValues["${tableName}_id"] = table.id
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
-                        if (joinTableEntry.id == null) {
-                            if (!writeDeep) return@let
-                            write(joinTableEntry, writeDeep)
-                        }
+                        if (!writeDeep) return@let
+                        write(joinTableEntry, writeDeep)
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         database.insertOrUpdate("${tableName}_$sqlKey", innerContentValues, false)
                     }
@@ -129,10 +133,8 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
                     innerContentValues["${tableName}_id"] = table.id
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
-                        if (joinTableEntry.id == null) {
-                            if (!writeDeep) return@let
-                            write(joinTableEntry, writeDeep)
-                        }
+                        if (!writeDeep) return@let
+                        write(joinTableEntry, writeDeep)
                         innerContentValues["${joinTableName}_id"] = joinTableEntry.id
                         database.insertOrUpdate("${joinTableName}_$reverseJoinTableDataSecond", innerContentValues, false)
                     }
@@ -142,17 +144,12 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
             }
             reverseConnectedColumns[sqlKey]?.let { reverseConnectedTableData ->
                 try {
-                    val (reverseConnectedTableDataFirst, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
-                    val connectedTableName = complexOrmTableInfo.basicTableInfo.getValue(reverseConnectedTableDataFirst).first
-                    val innerContentValues = mutableMapOf<String, Any?>()
+                    val (_, reverseConnectedTableDataSecond) = reverseConnectedTableData.split(';').let { it[0] to it[1] }
                     (value as List<*>).forEach { joinTableEntry ->
                         joinTableEntry as ComplexOrmTable
-                        if (joinTableEntry.id == null) {
-                            if (!writeDeep) return@let
-                            write(joinTableEntry, writeDeep)
-                        }
-                        innerContentValues["${reverseConnectedTableDataSecond}_id"] = table.id
-                        database.updateOne(connectedTableName, innerContentValues, joinTableEntry.id)
+                        joinTableEntry.map["${reverseConnectedTableDataSecond}Id"] = table.id
+                        if (!writeDeep) return@let
+                        write(joinTableEntry, writeDeep)
                     }
                 } catch (e: Throwable) {
                     throw IllegalArgumentException("Couldn't save reverse connected table entries: $value (${e.message})", e)
