@@ -11,21 +11,20 @@ class ComplexOrmCursor(cursor: Cursor): ComplexOrmCursor, Closeable {
     private val cursor: Cursor?
     private var window = CursorWindow(false)
     private var cursorPosition = 0
-    val count: Int
+    val count = cursor.count
 
     init {
-        count = cursor.count
         if (cursor !is CrossProcessCursor) {
             window.close()
             this.cursor = cursor
         } else {
             cursor.fillWindow(0, window)
-            if (count == window.numRows) {
-                cursor.close()
-                this.cursor = null
-            } else {
+            if (count != window.numRows) {
                 window.close()
                 this.cursor = cursor
+            } else {
+                cursor.close()
+                this.cursor = null
             }
         }
     }

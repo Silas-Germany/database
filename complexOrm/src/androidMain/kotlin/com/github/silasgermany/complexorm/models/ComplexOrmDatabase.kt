@@ -17,24 +17,26 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     var database: SQLiteDatabase
 
     init {
-        file.parentFile.mkdirs()
+        file.parentFile?.mkdirs()
         database = SQLiteDatabase.openOrCreateDatabase(file.path, password, null)
     }
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (database.inTransaction()) return f()
-        database.beginTransaction()
+        execSQL("BEGIN TRANSACTION;")
         return try {
             f().also {
-                database.setTransactionSuccessful()
+                execSQL("COMMIT TRANSACTION;")
             }
-        } finally {
-            try {
-                database.endTransaction()
-            } catch (e: Throwable) {
-                execSQL("ROLLBACK TRANSACTION;")
-                throw e
+        } catch (e: Throwable) {
+            val foreignKeyProblems = queryMap("PRAGMA foreign_key_check;") {
+                (it.getString(0) to it.getString(2)) to it.getInt(1)
+            }.groupBy({ it.first }) { it.second }
+            execSQL("ROLLBACK TRANSACTION;")
+            if (foreignKeyProblems.isNotEmpty()) {
+                throw IllegalStateException("Foreign Key Constraint failed: $foreignKeyProblems")
             }
+            throw e
         }
     }
     actual override inline fun <T>doInTransactionWithDeferredForeignKeys(f: () -> T): T =
@@ -63,6 +65,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     override fun insertWithoutId(table: String, values: Map<String, Any?>) {
         database.insertWithOnConflict(table, null, values.asContentValues, SQLiteDatabase.CONFLICT_ROLLBACK)
+        println("Inserted $table with $values")
     }
     override fun insert(table: String, values: Map<String, Any?>): IdType {
         val valuesWithId = if (values["id"] != null) values
@@ -73,9 +76,11 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int =
         database.update(table, values.asContentValues, whereClause, null)
+            .also { println("Updated $table with $values at $whereClause") }
 
     override fun delete(table: String, whereClause: String): Int =
         database.delete(table, whereClause, null)
+            .also { println("Deleted $table at $whereClause") }
 
     override fun execSQL(sql: String) {
         require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
