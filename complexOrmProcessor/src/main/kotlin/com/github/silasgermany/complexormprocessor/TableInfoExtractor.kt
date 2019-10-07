@@ -127,7 +127,7 @@ class TableInfoExtractor(private val messager: Messager, private val typeUtils: 
                         true
                     }
                     element.getAnnotation(NotNull::class.java) != null -> false
-                    else -> throw IllegalStateException("Should have annotation, whether value nullable or not: $element")
+                    else -> false//throw IllegalStateException("Should have annotation, whether value nullable or not: $element")
                 }
             }
         }
