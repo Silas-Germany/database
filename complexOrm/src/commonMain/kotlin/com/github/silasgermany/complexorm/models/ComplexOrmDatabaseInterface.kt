@@ -14,13 +14,15 @@ interface ComplexOrmDatabaseInterface {
         if (values["id"] != null) {
             val worked = updateOne(table, values, values["id"] as IdType)
             if (!worked) {
-                return if (needsId) insert(table, values)
-                else insertWithoutId(table, values).let { null }
+                insertWithoutId(table, values)
             }
             return values["id"] as IdType
         }
         return if (needsId) insert(table, values)
-        else insertWithoutId(table, values).let { null }
+        else {
+            insertWithoutId(table, values)
+            null
+        }
     }
     fun insertWithoutId(table: String, values: Map<String, Any?>)
     fun insert(table: String, values: Map<String, Any?>): IdType

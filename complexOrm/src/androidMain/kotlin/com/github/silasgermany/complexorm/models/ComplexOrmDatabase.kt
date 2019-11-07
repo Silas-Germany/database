@@ -34,6 +34,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
             }.groupBy({ it.first }) { it.second }
             execSQL("ROLLBACK TRANSACTION;")
             if (foreignKeyProblems.isNotEmpty()) {
+                println("Database error: $e")
                 throw IllegalStateException("Foreign Key Constraint failed: $foreignKeyProblems")
             }
             throw e
@@ -64,7 +65,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     }
 
     override fun insertWithoutId(table: String, values: Map<String, Any?>) {
-        database.insertWithOnConflict(table, null, values.asContentValues, SQLiteDatabase.CONFLICT_ROLLBACK)
+        database.insertOrThrow(table, null, values.asContentValues)
         println("Inserted $table with $values")
     }
     override fun insert(table: String, values: Map<String, Any?>): IdType {
