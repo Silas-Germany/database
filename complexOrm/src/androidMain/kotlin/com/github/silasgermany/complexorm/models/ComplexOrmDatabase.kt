@@ -8,6 +8,7 @@ import com.github.silasgermany.complexorm.ComplexOrmCursor
 import com.github.silasgermany.complexormapi.Date
 import com.github.silasgermany.complexormapi.IdType
 import net.sqlcipher.database.SQLiteDatabase
+import net.sqlcipher.database.SQLiteException
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -23,7 +24,11 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (database.inTransaction()) return f()
-        execSQL("BEGIN TRANSACTION;")
+        try {
+            execSQL("BEGIN TRANSACTION;")
+        } catch (e: SQLiteException) {
+            return f()
+        }
         return try {
             f().also {
                 execSQL("COMMIT TRANSACTION;")
