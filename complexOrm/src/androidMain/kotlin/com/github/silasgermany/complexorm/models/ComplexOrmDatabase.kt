@@ -2,6 +2,7 @@ package com.github.silasgermany.complexorm.models
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import com.github.silasgermany.complexorm.BuildConfig
 import com.github.silasgermany.complexorm.CommonDateTime
 import com.github.silasgermany.complexorm.CommonFile
 import com.github.silasgermany.complexorm.ComplexOrmCursor
@@ -14,6 +15,8 @@ import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
+
+    val LOG_ENABLED = BuildConfig.BUILD_TYPE == "debug"
 
     var database: SQLiteDatabase
 
@@ -34,14 +37,16 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
                 execSQL("COMMIT TRANSACTION;")
             }
         } catch (e: Throwable) {
+            /*
             val foreignKeyProblems = queryMap("PRAGMA foreign_key_check;") {
                 (it.getString(0) to it.getString(2)) to it.getInt(1)
             }.groupBy({ it.first }) { it.second }
             execSQL("ROLLBACK TRANSACTION;")
             if (foreignKeyProblems.isNotEmpty()) {
-                println("Database error: $e")
-                throw IllegalStateException("Foreign Key Constraint failed: $foreignKeyProblems")
+                throw IllegalStateException("Foreign Key Constraint failed: $foreignKeyProblems", e)
             }
+             */
+            execSQL("ROLLBACK TRANSACTION;")
             throw e
         }
     }
@@ -71,7 +76,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     override fun insertWithoutId(table: String, values: Map<String, Any?>) {
         database.insertOrThrow(table, null, values.asContentValues)
-        println("Inserted $table with $values")
+        if (LOG_ENABLED) println("Inserted $table with $values")
     }
     override fun insert(table: String, values: Map<String, Any?>): IdType {
         val valuesWithId = if (values["id"] != null) values
@@ -82,16 +87,22 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
 
     override fun update(table: String, values: Map<String, Any?>, whereClause: String): Int =
         database.update(table, values.asContentValues, whereClause, null)
-            .also { println("Updated $table with $values at $whereClause") }
+            .also { if (LOG_ENABLED) println("Updated $table with $values at $whereClause") }
 
     override fun delete(table: String, whereClause: String): Int =
         database.delete(table, whereClause, null)
-            .also { println("Deleted $table at $whereClause") }
+            .also { if (LOG_ENABLED) println("Deleted $table at $whereClause") }
 
     override fun execSQL(sql: String) {
         require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
-        println(sql)
+        if (LOG_ENABLED) println(sql)
         database.execSQL(sql)
+    }
+
+    override fun execSQLWithBytes(sql: String, list: List<ByteArray>) {
+        require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
+        if (LOG_ENABLED) println(sql)
+        database.execSQL(sql, list.toTypedArray())
     }
 
     actual inline fun <reified T: Any> queryOne(sql: String): T? =
@@ -99,7 +110,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     @Suppress("UNCHECKED_CAST")
     actual override fun <T : Any> ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T? {
         require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
-        println(sql)
+        if (LOG_ENABLED) println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             when (it.count) {
@@ -114,7 +125,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     }
     actual override inline fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) {
         require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
-        println(sql)
+        if (LOG_ENABLED) println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             it.moveToFirst()
@@ -124,7 +135,7 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: B
     @SuppressLint("Recycle")
     actual override inline fun <T> queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T> {
         require(sql.endsWith(';')) { "SQL commands should end with ';' ($sql)" }
-        println(sql)
+        if (LOG_ENABLED) println(sql)
         val cursor = database.rawQuery(sql, null)
         ComplexOrmCursor(cursor).use {
             it.moveToFirst()
