@@ -13,17 +13,11 @@ import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE", "unused")
 actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
-
-    val database: Connection
-
-    init {
-        Class.forName("org.sqlite.JDBC")
-        database = DriverManager.getConnection("jdbc:sqlite:${file.path}")
-//        if (version != password?.sum() ?: version) {
-//            if (version == 0) password?.sum()?.let { version = it }
-//            else throw IllegalAccessException("Database decrypted with different password")
-//        }
+    override fun execSQLWithBytes(sql: String, list: List<ByteArray>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
+    val database: Connection = DriverManager.getConnection("jdbc:sqlite:${file.path}")
 
     actual override inline fun <T>doInTransaction(f: () -> T): T {
         if (!database.autoCommit) return f()

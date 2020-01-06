@@ -28,6 +28,22 @@ actual class IdType(private val uuid: UUID) {
         actual val sqlType = "BLOB"
         actual fun generateRandom() = IdType(UUID.randomUUID())
         actual fun generateFromString(value: String) = IdType(UUID.nameUUIDFromBytes(value.toByteArray()))
+        actual fun decode(bytes: ByteArray): String = bytes.run {
+            val hexArray = "0123456789abcdef".toCharArray()
+            val hexChars = CharArray(size * 2)
+            indices.forEach {
+                val lowestByte = this[it].toInt() and 0xFF
+                hexChars[it * 2] = hexArray[lowestByte ushr 4]
+                hexChars[it * 2 + 1] = hexArray[lowestByte and 0x0F]
+            }
+            return String(hexChars)
+        }
+
+        actual fun encode(string: String) =
+            ByteArray(16) {
+                (Character.digit(string[it], 16).shl(4) +
+                        Character.digit(string[it], 16)).toByte()
+            }
     }
 }
 

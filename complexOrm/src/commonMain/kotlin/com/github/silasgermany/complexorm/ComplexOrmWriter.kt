@@ -13,6 +13,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
 
     private fun String.toSql() = replace("([a-z0-9])([A-Z]+)".toRegex(), "$1_$2").toLowerCase()
     fun execSQL(sql: String) = database.execSQL(sql)
+    fun execSQLWithBytes(sql: String, bytes: List<ByteArray>) = database.execSQLWithBytes(sql, bytes)
 
     fun delete(entry: ComplexOrmTable?) =
         if (entry == null) false
@@ -170,7 +171,7 @@ class ComplexOrmWriter internal constructor(val database: ComplexOrmDatabase,
         id ?: return
         val contentValues = mutableMapOf<String, Any?>()
         var columnName = column.name.toSql()
-        if (tableInfo.normalColumns[table.longName]?.get(columnName) == null) {
+        if (tableInfo.connectedColumns[table.longName]?.get(columnName) != null) {
             columnName += "_id"
         }
         contentValues[columnName] = value

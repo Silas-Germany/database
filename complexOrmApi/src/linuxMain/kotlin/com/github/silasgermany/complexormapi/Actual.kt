@@ -47,6 +47,14 @@ actual class IdType actual constructor(actual val bytes: ByteArray) {
             uuid_generate_md5(id, namespace, value, value.length.convert())
             IdType(id.readBytes(16))
         }
+
+        actual fun decode(bytes: ByteArray): String {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        actual fun encode(string: String): ByteArray {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
     }
 
     private val ByteArray.asHex: String get() {

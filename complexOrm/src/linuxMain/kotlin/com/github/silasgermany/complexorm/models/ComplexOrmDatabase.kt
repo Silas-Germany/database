@@ -15,6 +15,9 @@ import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(file: CommonFile, password: ByteArray?) : ComplexOrmDatabaseInterface {
+    override fun execSQLWithBytes(sql: String, list: List<ByteArray>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     fun Int.checkResult() {
         if (this != SQLITE_OK) {

@@ -15,6 +15,8 @@ expect class IdType(bytes: ByteArray) {
         val sqlType: String
         fun generateRandom(): IdType
         fun generateFromString(value: String): IdType
+        fun decode(bytes: ByteArray): String
+        fun encode(string: String): ByteArray
     }
 }
 
