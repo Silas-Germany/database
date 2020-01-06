@@ -5,7 +5,7 @@ plugins {
 apply plugin: "com.android.library"
 apply plugin: 'kotlin-android-extensions'
 // Kotlin annotation processor
-apply plugin: 'kotlin-kapt'
+//apply plugin: 'kotlin-kapt'
 
 group 'com.github.silasgermany'
 version '1.1'
@@ -113,7 +113,7 @@ publishing {
 }
 
 dependencies {
-    kaptTest project(":complexOrmProcessor")
+    //kaptTest project(":complexOrmProcessor")
 }
 
 task "copyGeneratedFiles" {

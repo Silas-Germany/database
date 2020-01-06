@@ -38,6 +38,7 @@ interface ComplexOrmDatabaseInterface {
         id?.let { delete(table, "id=${id.asSql}") } == 1
     fun delete(table: String, whereClause: String): Int
     fun execSQL(sql: String)
+    fun execSQLWithBytes(sql: String, list: List<ByteArray>)
     fun <T: Any>ComplexOrmDatabaseInterface.queryOne(sql: String, returnClass: KClass<T>): T?
     fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T): List<T>

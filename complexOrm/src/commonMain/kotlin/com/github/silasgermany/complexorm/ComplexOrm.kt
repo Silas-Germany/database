@@ -102,6 +102,7 @@ class ComplexOrm(private val database: ComplexOrmDatabase) {
     fun queryForEach(sql: String, f: (ComplexOrmCursor) -> Unit) = complexOrmReader.queryForEach(sql, f)
     fun <T>queryMap(sql: String, f: (ComplexOrmCursor) -> T) = complexOrmReader.queryMap(sql, f)
     fun execSQL(sql: String) = complexOrmWriter.execSQL(sql)
+    fun execSQLWithBytes(sql: String, bytes: List<ByteArray>) = complexOrmWriter.execSQLWithBytes(sql, bytes)
     inline fun <T>doInTransaction(f: () -> T) = complexOrmWriter.doInTransaction(f)
     fun close() = database.close()
 }

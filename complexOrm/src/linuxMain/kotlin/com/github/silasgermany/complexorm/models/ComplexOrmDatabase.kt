@@ -15,6 +15,9 @@ import kotlin.reflect.KClass
 
 @Suppress("OVERRIDE_BY_INLINE")
 actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOrmDatabaseInterface {
+    override fun execSQLWithBytes(sql: String, list: List<ByteArray>) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     fun Int.checkResult() {
         if (this != SQLITE_OK) {
@@ -134,10 +137,8 @@ actual class ComplexOrmDatabase actual constructor(file: CommonFile) : ComplexOr
             sqlite3_column_double(it, columnIndex).toLong()
         override fun getFloat(columnIndex: Int): Float =
             sqlite3_column_double(it, columnIndex).toFloat()
-        override fun getString(columnIndex: Int): String {
-            val size = sqlite3_column_bytes(it, columnIndex)
-            return sqlite3_column_text(it, columnIndex)?.readBytes(size)?.stringFromUtf8() ?: ""
-        }
+        override fun getString(columnIndex: Int): String =
+            sqlite3_column_text(it, columnIndex)?.reinterpret<ByteVar>()?.toKString() ?: ""
         override fun getBlob(columnIndex: Int): ByteArray {
             val size = sqlite3_column_bytes(it, columnIndex)
             return sqlite3_column_blob(it, columnIndex)?.readBytes(size) ?: byteArrayOf()

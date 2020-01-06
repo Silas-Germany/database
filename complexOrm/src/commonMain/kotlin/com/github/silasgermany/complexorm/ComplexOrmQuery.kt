@@ -113,7 +113,6 @@ class ComplexOrmQuery internal constructor(private val database: ComplexOrmDatab
             readTableInfo.getTable(tableClassName, id)?.let { return connectedId to it }
             id ?: return connectedId to null
             val databaseMap = ComplexOrmTable.default
-            println("Current information: $tableClassName;$readTableInfo;$connectedColumn;$specialConnectedColumn")
             if (readTableInfo.checkSpecialConnectedColumnsValue(tableClassName, specialConnectedColumn)) {
                 databaseMap[specialConnectedColumn!!] = id
             } else databaseMap[specialConnectedColumn?.plus("Id") ?: "id"] = id
